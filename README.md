@@ -66,6 +66,9 @@ The project policy lives in `AGENTS.md`, and the stage templates live in
 
 ## Main workflow
 
+**Note:** The workflow should be reworked after the 10th step.
+Right now it's like the agent decided not to enhance the CV according to provided advice
+
 ```text
 1. Job Parser
 2. Recruiter Signal Extractor
