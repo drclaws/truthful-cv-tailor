@@ -12,38 +12,69 @@ The project is designed around these guarantees:
 6. **Useful scan signals survive**: optional render tags can preserve verified
    hiring-manager signals that are relevant but do not need primary CV space.
 
-## Quick start
+## Environment Setup
+
+1. Install system tools:
 
 ```bash
-cd cv-codex-agent-starter
-
-make new-job JOB=example-company-role
-# Provide canonical candidate/job inputs and optionally refresh data/master/*.md indexes
-make source-check SOURCES="path/to/original_cv.md path/to/linkedin.md"
+# macOS example
+brew install python pandoc poppler
 ```
+
+Install a LaTeX distribution separately if `pdflatex` is not already available.
+On macOS, BasicTeX or MacTeX both work.
+
+2. Create and activate a local Python environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+```
+
+The core scripts use the Python standard library. Install Python Playwright only
+when you plan to run the browser-based Enhancv validator:
+
+```bash
+python -m pip install playwright
+python -m playwright install chromium
+```
+
+3. Keep local assistant settings outside git. Directories such as `.codex/`,
+`.claude/`, `.cursor/`, `.continue/`, and `.windsurf/` are ignored by default.
+
+4. Verify the local tools you intend to use:
+
+```bash
+python --version
+make --version
+pdftotext -v
+pandoc --version
+pdflatex --version
+```
+
+## Prepare Inputs
+
+Start each CV run with explicit inputs in the request or in files referenced by
+the request:
+
+- Candidate evidence: original CV, LinkedIn/profile notes, portfolio/project
+  notes, GitHub/publication notes, or interview notes.
+- Job targeting: job description, recruiter notes, company notes, and any
+  provided team/interviewer context.
+- Output target: job slug, target page count, export requirements, and whether
+  external validators should run.
+
+The optional project files under `data/master/` and `data/jobs/<job>/` are a
+convenient local structure for repeated runs, but they are not the only valid
+input format.
 
 ## Run The Pipeline
 
-After creating a job folder and adding candidate/job inputs, run the workflow
-from the project root with your preferred local automation setup. The project
-policy lives in `AGENTS.md`, and the stage templates live in `prompts/`.
-
-## Recommended Local Tools
-
-Required for best results:
-
-- An AI coding assistant or local automation runner
-- Python 3.10+
-- LaTeX distribution with `pdflatex`
-- `pdftotext`, `pdffonts`, `pdfinfo` from Poppler/Xpdf-compatible tooling
-- `pandoc` for DOCX export
-
-Optional:
-
-- Playwright MCP for browser-based job page extraction or external validator automation
-- Python Playwright for local browser-based validators such as Enhancv:
-  `python3 -m pip install playwright && python3 -m playwright install chromium`
-- MarkItDown CLI/MCP for importing old PDF/DOCX resumes into Markdown
+Run the workflow from the project root with your preferred local automation
+setup. Include the candidate evidence, job targeting inputs, and desired output
+target in the request, or reference local files that contain those inputs. The
+project policy lives in `AGENTS.md`, and the stage templates live in `prompts/`.
 
 ## Main workflow
 
@@ -80,10 +111,6 @@ validators/external/registry.yaml          External validator plugin registry
 scripts/*.py                               Local ATS and keyword checks
 Makefile                                   Convenience commands
 ```
-
-Use `make source-check SOURCES="..."` when canonical inputs are files. It
-compares source modification times against `experience_bank.md`, `projects.md`,
-and `skills_matrix.md` and reports whether the derived indexes need refresh.
 
 ## Safety rule
 

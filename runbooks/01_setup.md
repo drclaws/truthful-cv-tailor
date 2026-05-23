@@ -1,24 +1,33 @@
 # Setup Runbook
 
-1. Install Codex CLI.
-2. Install Node.js/npm for MCP servers run through `npx`.
-3. Install Python 3.10+.
-4. Install LaTeX and Poppler tools.
-5. Copy `.codex/config.toml.template` to `.codex/config.toml`.
-6. Replace `/ABSOLUTE/PATH/TO/cv-codex-agent-starter` with your actual path.
-7. From project root, run:
+1. Install an AI coding assistant or local automation runner.
+2. Install Python 3.10+.
+3. Install LaTeX, Poppler tools, and Pandoc.
+4. Create and activate a local Python environment:
 
 ```bash
-codex "Summarize active instructions and MCP configuration."
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
 ```
 
-8. Provide canonical candidate inputs for the first run. Optionally refresh
-   `data/master/experience_bank.md`, `data/master/projects.md`, and
-   `data/master/skills_matrix.md` as derived evidence indexes.
-9. Create first job:
+5. Install browser automation dependencies only when running browser-based
+   validators such as Enhancv:
+
+```bash
+python -m pip install playwright
+python -m playwright install chromium
+```
+
+6. Keep local assistant settings outside git.
+7. Provide canonical candidate and job inputs for the first run. Inputs may be
+   included directly in the request or saved in local files referenced by the
+   request.
+8. Optionally create a reusable job folder:
 
 ```bash
 make new-job JOB=company-role
 ```
 
-10. Fill `data/jobs/company-role/job_description.md` and `recruiter_notes.md`.
+9. If using a job folder, fill `data/jobs/company-role/job_description.md` and
+   `recruiter_notes.md`.
