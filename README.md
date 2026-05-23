@@ -12,69 +12,54 @@ The project is designed around these guarantees:
 6. **Useful scan signals survive**: optional render tags can preserve verified
    hiring-manager signals that are relevant but do not need primary CV space.
 
-## Environment Setup
-
-1. Install system tools:
-
-```bash
-# macOS example
-brew install python pandoc poppler
-```
-
-Install a LaTeX distribution separately if `pdflatex` is not already available.
-On macOS, BasicTeX or MacTeX both work.
-
-2. Create and activate a local Python environment:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-```
-
-The core scripts use the Python standard library. Install Python Playwright only
-when you plan to run the browser-based Enhancv validator:
-
-```bash
-python -m pip install playwright
-python -m playwright install chromium
-```
-
-3. Keep local assistant settings outside git. Directories such as `.codex/`,
-`.claude/`, `.cursor/`, `.continue/`, and `.windsurf/` are ignored by default.
-
-4. Verify the local tools you intend to use:
-
-```bash
-python --version
-make --version
-pdftotext -v
-pandoc --version
-pdflatex --version
-```
-
-## Prepare Inputs
+## What The User Provides
 
 Start each CV run with explicit inputs in the request or in files referenced by
-the request:
+the request.
 
 - Candidate evidence: original CV, LinkedIn/profile notes, portfolio/project
-  notes, GitHub/publication notes, or interview notes.
+  notes, GitHub/publication notes, interview notes, or other source material.
 - Job targeting: job description, recruiter notes, company notes, and any
   provided team/interviewer context.
-- Output target: job slug, target page count, export requirements, and whether
+- Output target: job slug, target page count, export formats, and whether
   external validators should run.
+- Constraints: claims to avoid, sensitive facts, preferred positioning, or
+  anything that must stay out of the CV.
+
+Example request:
+
+```text
+Create a targeted one-page CV for <job slug>.
+Use my attached CV and LinkedIn notes as candidate evidence.
+Use the pasted job description and recruiter notes for targeting.
+Run external validators unless setup is missing.
+Export PDF and DOCX.
+```
 
 The optional project files under `data/master/` and `data/jobs/<job>/` are a
 convenient local structure for repeated runs, but they are not the only valid
 input format.
 
+## Local Tools
+
+The agent can create a local `.venv`, run scripts, check tool availability, and
+report missing dependencies. For a complete local run, the machine should have:
+
+- Python 3.10+
+- LaTeX with `pdflatex` for PDF rendering
+- Poppler/Xpdf tools such as `pdftotext`, `pdffonts`, and `pdfinfo`
+- Pandoc for DOCX export
+- Python Playwright and Chromium only for browser-based Enhancv validation
+
 ## Run The Pipeline
 
 Run the workflow from the project root with your preferred local automation
 setup. Include the candidate evidence, job targeting inputs, and desired output
-target in the request, or reference local files that contain those inputs. The
-project policy lives in `AGENTS.md`, and the stage templates live in `prompts/`.
+target in the request, or reference local files that contain those inputs.
+
+The project policy lives in `AGENTS.md`, and the stage templates live in
+`prompts/`. Local assistant settings such as `.codex/`, `.claude/`, `.cursor/`,
+`.continue/`, and `.windsurf/` are intentionally ignored by git.
 
 ## Main workflow
 
