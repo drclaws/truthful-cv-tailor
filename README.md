@@ -1,6 +1,6 @@
-# CV Codex Agent Starter Kit
+# CV Tailoring Pipeline Starter Kit
 
-Starter kit for a Codex-based CV tailoring pipeline.
+Starter kit for a truthful, ATS-friendly CV tailoring pipeline.
 
 The project is designed around these guarantees:
 
@@ -20,14 +20,19 @@ cd cv-codex-agent-starter
 make new-job JOB=example-company-role
 # Provide canonical candidate/job inputs and optionally refresh data/master/*.md indexes
 make source-check SOURCES="path/to/original_cv.md path/to/linkedin.md"
-codex "Run the full CV tailoring pipeline for data/jobs/example-company-role. Follow AGENTS.md."
 ```
 
-## Recommended local tools
+## Run The Pipeline
+
+After creating a job folder and adding candidate/job inputs, run the workflow
+from the project root with your preferred local automation setup. The project
+policy lives in `AGENTS.md`, and the stage templates live in `prompts/`.
+
+## Recommended Local Tools
 
 Required for best results:
 
-- Codex CLI
+- An AI coding assistant or local automation runner
 - Python 3.10+
 - LaTeX distribution with `pdflatex`
 - `pdftotext`, `pdffonts`, `pdfinfo` from Poppler/Xpdf-compatible tooling
@@ -61,8 +66,8 @@ Optional:
 ## Important files
 
 ```text
-AGENTS.md                                  Main Codex project instructions
-prompts/*.md                               Prompt files for each pipeline stage
+AGENTS.md                                  Project operating policy
+prompts/*.md                               Stage templates for the workflow
 templates/cv-ats-agent-template.tex        Production ATS-gated LaTeX template
 templates/template_policy.md               Rules for safe rendering
 data/master/experience_bank.md             Derived candidate evidence index
