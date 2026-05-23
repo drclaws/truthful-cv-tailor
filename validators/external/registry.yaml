@@ -1,0 +1,65 @@
+external_validators:
+  resumly:
+    enabled: true
+    mode: browser_or_manual
+    purpose:
+      - ats_check
+      - resume_quality_check
+      - keyword_feedback
+      - tailoring_feedback
+    input:
+      - final_cv_docx
+      - final_cv_pdf
+      - job_description
+    output:
+      - external_validators/resumly_report.md
+    trust_level: advisory
+    can_modify_cv_directly: false
+
+  jobscan:
+    enabled: false
+    mode: manual_or_browser
+    purpose:
+      - resume_vs_job_match
+      - missing_keywords
+      - ats_match_score
+    input:
+      - final_cv_docx
+      - job_description
+    output:
+      - external_validators/jobscan_report.md
+    trust_level: advisory
+    can_modify_cv_directly: false
+
+  skillsyncer:
+    enabled: false
+    mode: manual_or_browser
+    purpose:
+      - keyword_match
+      - ats_score
+      - missing_skills
+    input:
+      - final_cv_docx
+      - job_description
+    output:
+      - external_validators/skillsyncer_report.md
+    trust_level: advisory
+    can_modify_cv_directly: false
+
+  enhancv:
+    enabled: true
+    mode: browser_or_manual
+    config: validators/external/enhancv.yaml
+    url: https://enhancv.com/resources/resume-checker/
+    purpose:
+      - ats_parse_check
+      - formatting_check
+      - readability_check
+      - resume_quality_check
+    input:
+      - final_cv_pdf
+    output:
+      - external_validators/enhancv_raw.md
+      - external_validators/enhancv_report.md
+    trust_level: advisory
+    can_modify_cv_directly: false

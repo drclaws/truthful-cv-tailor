@@ -1,0 +1,375 @@
+% =============================================================================
+%  Compact ATS-gated CV template for Codex CV Agent
+%
+%  Design intent:
+%   - Candidate-neutral metadata and agent content zones.
+%   - Full-width contact header with visual icons and visible text.
+%   - Main narrative column for Experience / Projects / Education.
+%   - Supporting signal column for Summary / Skills / Languages.
+%
+%  ATS contract:
+%   - Columns are allowed only when rendered PDF extraction remains readable.
+%   - Every critical fact must remain visible text in the document body.
+%   - Icons, color, weight, and column placement may guide humans but cannot
+%     be the only carriers of meaning.
+%   - Final exports must contain no TODO, PLACEHOLDER, or unsupported claim.
+%
+%  Compile twice for stable PDF metadata and page layout:
+%      pdflatex -interaction=nonstopmode final_cv.tex
+%      pdflatex -interaction=nonstopmode final_cv.tex
+%
+%  Mandatory column sanity checks:
+%      pdftotext final_cv.pdf - | head -n 80
+%      pdftotext -layout final_cv.pdf - | head -n 80
+%      pdffonts final_cv.pdf
+%      pdfinfo final_cv.pdf
+% =============================================================================
+
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[
+  left=10mm,
+  right=10mm,
+  top=9mm,
+  bottom=9mm
+]{geometry}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{paracol}
+\usepackage{needspace}
+\usepackage{etoolbox}
+\usepackage{fontawesome5}
+\usepackage[hidelinks]{hyperref}
+
+\pdfgentounicode=1
+\urlstyle{same}
+\renewcommand{\familydefault}{\sfdefault}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlength{\columnsep}{4.5mm}
+\columnratio{0.60}
+\linespread{0.98}
+\pagestyle{empty}
+
+% Reference-inspired contrast with old-template blue contact accents.
+\definecolor{CVText}{HTML}{111111}
+\definecolor{CVNavy}{HTML}{123F83}
+\definecolor{CVBlue}{HTML}{2FA7E8}
+\definecolor{CVRule}{HTML}{C9CED6}
+\definecolor{CVMuted}{HTML}{666D76}
+
+% =============================================================================
+%  CANDIDATE METADATA — FILL FROM VALIDATED ARTIFACTS
+% =============================================================================
+\newif\ifShowLinkedIn
+\newif\ifShowGitHub
+\newif\ifShowHeaderTags
+\ShowLinkedInfalse
+\ShowGitHubfalse
+\ShowHeaderTagsfalse
+
+% BEGIN AGENT CONTENT: Candidate Metadata
+% Enable supported profile links in this zone with \ShowLinkedIntrue and/or
+% \ShowGitHubtrue after filling only the profile alias/handle fields below.
+% Header focus tags are disabled by default. Enable with \ShowHeaderTagstrue
+% only when validation explicitly recommends supported nonredundant scan
+% signals that help positioning without replacing CV body evidence.
+\newcommand{\PersonName}{TODO: Candidate Full Name}
+\newcommand{\PersonRole}{TODO: Target Role Title}
+\newcommand{\HeaderTags}{} % Optional \headertag{Supported Focus Area} list
+\newcommand{\ContactLocation}{TODO: Candidate Location}
+\newcommand{\ContactEmail}{TODO: Candidate Email}
+\newcommand{\ContactPhone}{TODO: Candidate Phone}
+\newcommand{\ContactPhoneTel}{TODO: Candidate Phone for tel link} % E.164 preferred
+\newcommand{\ContactLinkedInAlias}{} % Optional LinkedIn alias only
+\newcommand{\ContactGitHubAlias}{} % Optional GitHub handle only
+\newcommand{\ContactLinkedInUrl}{linkedin.com/in/\ContactLinkedInAlias}
+\newcommand{\ContactGitHubUrl}{github.com/\ContactGitHubAlias}
+\newcommand{\PdfKeywords}{TODO: Target Role, Primary Stack, Relevant Skills}
+% END AGENT CONTENT: Candidate Metadata
+
+\hypersetup{
+  hidelinks,
+  pdfauthor={\PersonName},
+  pdftitle={\PersonName\space--\space\PersonRole\space--\space CV},
+  pdfsubject={Curriculum Vitae},
+  pdfkeywords={\PdfKeywords},
+  pdflang={en-US}
+}
+
+% =============================================================================
+%  ATS-SAFE VISUAL HELPERS
+% =============================================================================
+% Icons are visual only, but ActualText gives text extraction a readable label.
+% Keep the actual contact/date/location values as visible text beside the icon.
+\newcommand{\withactualtext}[2]{%
+  \pdfliteral direct{/Span << /ActualText (#1) >> BDC}%
+  #2%
+  \pdfliteral direct{EMC}%
+}
+\newcommand{\cvicon}[2]{{%
+  \color{CVBlue}%
+  \withactualtext{#2}{\faIcon{#1}}%
+}}
+\newcommand{\cvmetaicon}[2]{{%
+  \color{CVMuted}%
+  \withactualtext{#2}{\faIcon{#1}}%
+}}
+
+% Contact text remains visible; icons only improve scan speed.
+\newcommand{\contactitem}[3]{%
+  \cvicon{#1}{#2: }\hspace{0.28em}{\bfseries #3}%
+}
+
+\newcommand{\contactlink}[4]{%
+  \cvicon{#1}{#2: }\hspace{0.28em}\href{#3}{\bfseries #4}%
+}
+
+% Profile links show only the alias/handle visually, while text extraction gets
+% the full generated URL. The href is also generated from the alias/handle.
+\newcommand{\profilelink}[4]{%
+  \cvicon{#1}{#2: }\hspace{0.28em}%
+  \href{https://#3}{\bfseries\withactualtext{https://#3}{#4}}%
+}
+
+% Header tags are scan aids only; they must be backed by validated evidence.
+\newcommand{\headertag}[1]{%
+  \begingroup
+  \setlength{\fboxsep}{0.22em}%
+  \setlength{\fboxrule}{0.35pt}%
+  \fcolorbox{CVRule}{white}{\footnotesize\bfseries\textcolor{CVText}{#1}}%
+  \endgroup\hspace{0.4em}%
+}
+
+\newcommand{\cvsection}[1]{%
+  \Needspace{3\baselineskip}%
+  \vspace*{1.0em}%
+  {\large\bfseries\color{CVText}\MakeUppercase{#1}}\par
+  \vspace{-0.42em}{\color{CVText}\rule{\linewidth}{1.05pt}}\par
+  \vspace{0.18em}%
+}
+
+\newcommand{\cvsubsection}[1]{%
+  \vspace{0.16em}{\bfseries\color{CVBlue}#1}\par
+}
+
+\setlist[itemize]{
+  label=\textbullet,
+  leftmargin=1.1em,
+  labelsep=0.34em,
+  itemsep=0pt,
+  topsep=0.24em,
+  parsep=0pt,
+  partopsep=0pt
+}
+
+\newcommand{\cvmetadata}[2]{%
+  \cvmetaicon{calendar-alt}{Dates: }\hspace{0.28em}#1%
+  \hspace{0.9em}\cvmetaicon{map-marker-alt}{Location: }\hspace{0.28em}#2\par
+}
+
+% \job{Company}{Location}{Role}{Dates}
+\newcommand{\job}[4]{%
+  \Needspace{4\baselineskip}%
+  \vspace{0.34em}%
+  {\normalsize\bfseries\color{CVText}#3}\par
+  {\bfseries\color{CVBlue}#1}\par
+  \vspace{0.24em}%
+  {\footnotesize\color{CVMuted}\cvmetadata{#4}{#2}}%
+}
+
+% \briefjob{Company}{Location}{Role}{Dates}
+\newcommand{\briefjob}[4]{%
+  \Needspace{2\baselineskip}%
+  \vspace{0.24em}%
+  {\bfseries\color{CVText}#3}\par
+  {\bfseries\color{CVBlue}#1}\par
+  \vspace{0.24em}%
+  {\footnotesize\color{CVMuted}\cvmetadata{#4}{#2}}%
+}
+
+\newcommand{\stack}[1]{%
+  \vspace{0.24em}%
+  {\footnotesize\color{CVMuted}\textbf{Stack:} #1\par}%
+}
+
+% Use between repeated narrative items, not after the last item in a section.
+\newcommand{\cvitemdivider}{%
+  \vspace{-0.5em}{\color{CVRule}\rule{\linewidth}{0.35pt}}\par
+  \vspace{0.18em}%
+}
+
+% Skill tags remain real PDF text. Keep labels short enough to wrap compactly.
+\newcommand{\skillchip}[1]{%
+  \begingroup
+  \setbox0=\hbox{\bfseries #1}%
+  \leavevmode\hbox{%
+    \rlap{\raisebox{-0.42em}[0pt][0pt]{%
+      \textcolor{CVRule}{\rule{\wd0}{0.4pt}}%
+    }}%
+    \bfseries\textcolor{CVText}{#1}%
+  }%
+  \endgroup\hspace{0.72em}%
+}
+
+\newcommand{\skillgroup}[2]{%
+  \vspace{0.24em}%
+  {\bfseries\color{CVBlue}#1}\par
+  \vspace{0.2em}%
+  {\raggedright\setlength{\baselineskip}{1.4\baselineskip}#2\par}%
+  \vspace{0.24em}{\color{CVRule}\rule{\linewidth}{0.35pt}}\par
+}
+
+\newcommand{\langfull}{{\color{CVBlue}\faCircle}}
+\newcommand{\langhalf}{{\color{CVBlue}\faAdjust}}
+\newcommand{\langempty}{{\color{CVRule}\faCircle}}
+\newcommand{\langgap}{\hspace{0.25em}}
+
+% Language ratings accept half-step scores from 0 to 5, e.g. 3.5.
+\newcommand{\langrating}[1]{%
+  \ifstrequal{#1}{5}{\langfull\langgap\langfull\langgap\langfull\langgap\langfull\langgap\langfull}{%
+  \ifstrequal{#1}{4.5}{\langfull\langgap\langfull\langgap\langfull\langgap\langfull\langgap\langhalf}{%
+  \ifstrequal{#1}{4}{\langfull\langgap\langfull\langgap\langfull\langgap\langfull\langgap\langempty}{%
+  \ifstrequal{#1}{3.5}{\langfull\langgap\langfull\langgap\langfull\langgap\langhalf\langgap\langempty}{%
+  \ifstrequal{#1}{3}{\langfull\langgap\langfull\langgap\langfull\langgap\langempty\langgap\langempty}{%
+  \ifstrequal{#1}{2.5}{\langfull\langgap\langfull\langgap\langhalf\langgap\langempty\langgap\langempty}{%
+  \ifstrequal{#1}{2}{\langfull\langgap\langfull\langgap\langempty\langgap\langempty\langgap\langempty}{%
+  \ifstrequal{#1}{1.5}{\langfull\langgap\langhalf\langgap\langempty\langgap\langempty\langgap\langempty}{%
+  \ifstrequal{#1}{1}{\langfull\langgap\langempty\langgap\langempty\langgap\langempty\langgap\langempty}{%
+  \ifstrequal{#1}{0.5}{\langhalf\langgap\langempty\langgap\langempty\langgap\langempty\langgap\langempty}{%
+  \langempty\langgap\langempty\langgap\langempty\langgap\langempty\langgap\langempty%
+  }}}}}}}}}}%
+}
+
+\newcommand{\cvlanguage}[3]{%
+  \Needspace{2\baselineskip}%
+  {\bfseries\color{CVText}#1}\par
+  {\color{CVMuted}#2}\hfill{\scriptsize\langrating{#3}}\par
+  \vspace{0.22em}{\color{CVRule}\rule{\linewidth}{0.35pt}}\par
+}
+
+\newcommand{\education}[4]{%
+  {\normalsize\bfseries\color{CVText}#1}\par
+  {\bfseries\color{CVBlue}#2}\par
+  {\footnotesize\color{CVMuted}\cvmetadata{#4}{#3}}%
+}
+
+\newcommand{\project}[3]{%
+  {\bfseries\color{CVNavy}#1}\hfill\href{https://#2}{#2}\par
+  {\itshape #3}\par
+}
+
+\begin{document}
+
+% =============================================================================
+%  HEADER — BODY TEXT WITH VISUAL CONTACT MAPPING
+% =============================================================================
+\begin{flushleft}
+  {\fontsize{23}{24}\selectfont\bfseries\color{CVText}\MakeUppercase{\PersonName}}\par
+  \vspace{0.08em}
+  {\large\bfseries\color{CVBlue}\PersonRole}\par
+  \ifShowHeaderTags
+    \vspace{0.18em}
+    {\raggedright\HeaderTags\par}
+  \fi
+  \vspace{0.22em}
+  \footnotesize
+  \contactlink{phone}{Phone}{tel:\ContactPhoneTel}{\ContactPhone}
+  \quad
+  \contactlink{envelope}{Email}{mailto:\ContactEmail}{\ContactEmail}
+  \quad
+  \ifShowLinkedIn
+    \profilelink{linkedin-in}{LinkedIn}{\ContactLinkedInUrl}{\ContactLinkedInAlias}
+    \quad
+  \fi
+  \contactitem{map-marker-alt}{Location}{\ContactLocation}
+  \par
+  \ifShowGitHub
+    \vspace{0.08em}
+    \profilelink{github}{GitHub}{\ContactGitHubUrl}{\ContactGitHubAlias}
+  \fi
+\end{flushleft}
+\vspace{-0.4em}
+
+% =============================================================================
+%  TWO-COLUMN VISUAL SURFACE
+% -----------------------------------------------------------------------------
+%  Main column: narrative evidence. Signal column: fast human scan.
+%  Renderer must inspect normal and -layout pdftotext output after export.
+% =============================================================================
+\small\color{CVText}
+\begin{paracol}{2}
+
+% BEGIN AGENT CONTENT: Main Column
+\cvsection{Experience}
+
+\job{TODO: Company}{TODO: City, Country}
+    {TODO: Role Title}
+    {TODO: Month YYYY -- Present}
+\stack{TODO: Technologies used in this role}
+\begin{itemize}
+  \item TODO: Supported action, scope, and impact bullet.
+  \item TODO: Supported action, scope, and impact bullet.
+\end{itemize}
+% Add \cvitemdivider here only when another job item follows.
+
+\cvsection{Education}
+\education{TODO: Degree}
+          {TODO: Institution}
+          {TODO: City, Country}
+          {TODO: YYYY -- YYYY}
+
+% Optional supported sections belong here when they need narrative bullets:
+%
+% \cvsection{Projects}
+% \project{TODO: Project}{github.com/candidate/project}{TODO: Role and stack}
+% \begin{itemize}
+%   \item TODO: Supported contribution and result.
+% \end{itemize}
+% END AGENT CONTENT: Main Column
+
+\switchcolumn
+
+% BEGIN AGENT CONTENT: Signal Column
+\cvsection{Summary}
+TODO: Targeted summary paragraph with years of experience, primary stack,
+relevant domain evidence, and a supportable value proposition.
+
+\cvsection{Languages}
+\cvlanguage{TODO: Language}{TODO: Level}{TODO: 0--5 half-step score}
+\cvlanguage{TODO: Language}{TODO: Level}{TODO: 0--5 half-step score}
+
+\cvsection{Skills}
+\skillgroup{Languages}{\skillchip{TODO: Python}\skillchip{Go}\skillchip{SQL}}
+\skillgroup{Data Systems}{\skillchip{TODO: PostgreSQL}\skillchip{Oracle}\skillchip{Migrations}}
+\skillgroup{Backend and APIs}{\skillchip{TODO: REST APIs}\skillchip{gRPC}\skillchip{Microservices}}
+\skillgroup{Reliability and Delivery}{\skillchip{TODO: Observability}\skillchip{CI/CD}\skillchip{Terraform}}
+% \skillgroup{Collaboration}{\skillchip{Architecture docs}\skillchip{Code review}\skillchip{Cross-team delivery}}
+
+% Optional compact supported sections belong here:
+%
+% \cvsection{Certifications}
+% TODO: Certification -- Issuer -- Year
+% END AGENT CONTENT: Signal Column
+
+\end{paracol}
+\normalsize
+
+% =============================================================================
+%  FINAL EXPORT CHECKLIST
+% -----------------------------------------------------------------------------
+%   - No TODO / PLACEHOLDER survives in the rendered final_cv.tex or PDF text.
+%   - Contact details, headings, role titles, dates, skills, and bullets are
+%     visible in normal and -layout pdftotext output.
+%   - Fonts are embedded and the PDF is text-based.
+%   - Final files in exports/ use FirstNameSurname.* delivery filenames.
+%   - Final fact and ATS validation pass after render-content edits.
+% =============================================================================
+
+\end{document}

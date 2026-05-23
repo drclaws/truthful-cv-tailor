@@ -1,0 +1,68 @@
+name: enhancv
+type: external_resume_checker
+status: enabled
+
+url: https://enhancv.com/resources/resume-checker/
+
+mode:
+  preferred: browser
+  fallback: manual_report_import
+  browser_required: true
+  reason: The checker relies on client-side JavaScript for upload and report generation.
+  run_after_local_validations: true
+
+inputs:
+  resume:
+    formats:
+      - pdf
+    preferred: pdf
+    filename_pattern: FirstNameSurname\..*
+    required: true
+    max_size_mb: 2
+  job_description:
+    required: false
+
+outputs:
+  raw_report: outputs/<job>/external_validators/enhancv_raw.md
+  normalized_report: outputs/<job>/external_validators/enhancv_report.md
+  raw_html: outputs/<job>/external_validators/enhancv_raw.html
+  screenshot: outputs/<job>/external_validators/enhancv_raw.png
+
+runner:
+  command: python3 scripts/run_enhancv_validator.py --job <job> --headed
+  requires:
+    - python-playwright
+    - chromium-browser
+  waits_for:
+    - initial_page_loading
+    - upload_ui_ready
+    - post_upload_processing_complete
+
+checks_expected:
+  - resume_score
+  - ats_parse_rate
+  - spelling_and_grammar
+  - content_strength
+  - quantifying_impact
+  - readability
+  - formatting_issues
+  - skill_evidence
+  - employment_gaps
+  - design_feedback
+
+rules:
+  can_suggest_keywords: true
+  can_suggest_rewrites: true
+  can_suggest_formatting_changes: true
+  can_add_facts: false
+  can_add_tools: false
+  can_add_metrics: false
+  can_add_certifications: false
+  can_add_domain_experience: false
+
+trust_policy:
+  score_is_advisory: true
+  recommendations_require_fact_validation: true
+  run_last_after_local_gates: true
+  unsupported_recommendations_go_to_gap_report: true
+  final_cv_changes_require_internal_validation: true

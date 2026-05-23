@@ -1,0 +1,48 @@
+name: resumly
+type: external_ats_resume_validator
+status: enabled
+
+mode:
+  preferred: browser
+  fallback: manual_report_import
+
+inputs:
+  resume:
+    formats:
+      - pdf
+      - docx
+    preferred: docx
+    filename_pattern: FirstNameSurname\..*
+  job_description:
+    required: true
+
+outputs:
+  raw_report: outputs/<job>/external_validators/resumly_raw.md
+  normalized_report: outputs/<job>/external_validators/resumly_report.md
+
+checks_expected:
+  - ats_score
+  - formatting_issues
+  - keyword_gaps
+  - content_strength
+  - readability
+  - tailoring_suggestions
+  - missing_sections
+  - job_match_feedback
+
+rules:
+  can_suggest_keywords: true
+  can_suggest_rewrites: true
+  can_suggest_formatting_changes: true
+  can_add_facts: false
+  can_add_tools: false
+  can_add_metrics: false
+  can_add_certifications: false
+  can_add_domain_experience: false
+
+trust_policy:
+  score_is_advisory: true
+  recommendations_require_fact_validation: true
+  run_last_after_local_gates: true
+  unsupported_recommendations_go_to_gap_report: true
+  final_cv_changes_require_internal_validation: true

@@ -1,0 +1,56 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Local environment
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Python cache and tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local AI-assistant and agent settings may contain machine-specific behavior.
+.codex/
+.claude/
+.cursor/
+.continue/
+.windsurf/
+.aider*
+.gemini/
+.roo/
+
+# Generated CV outputs and validator artifacts.
+outputs/*
+!outputs/.gitkeep
+
+# Private candidate evidence indexes and per-run inputs.
+data/master/*
+!data/master/.gitkeep
+data/jobs/*
+!data/jobs/example-company-role/
+!data/jobs/example-company-role/**
+
+# LaTeX/render byproducts, in case they are created outside outputs/.
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Generated exports
+*.pdf
+*.docx
