@@ -17,8 +17,11 @@ The project is designed around these guarantees:
 Start each CV run with explicit inputs in the request or in files referenced by
 the request.
 
-- Candidate evidence: original CV, LinkedIn/profile notes, portfolio/project
-  notes, GitHub/publication notes, interview notes, or other source material.
+- Candidate evidence: original Master CV, LinkedIn/profile notes,
+  portfolio/project notes, GitHub/publication notes, interview notes,
+  or other source material.
+  The most important is original Master CV which is the fullest knowledge base
+  of your experience and the main source for the agent.
 - Job targeting: job description, recruiter notes, company notes, and any
   provided team/interviewer context.
 - Output target: job slug, target page count, export formats, and whether
