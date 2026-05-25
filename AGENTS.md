@@ -207,7 +207,8 @@ Rules:
 All workflow automation runs through you. Users provide inputs, constraints,
 and environment setup; they do not run project scripts themselves.
 
-- Run helpers in `scripts/` as `python3 scripts/<script>.py ...`.
+- Use virtual environment for python-scripts.
+- Run helpers in `scripts/` as `python scripts/<script>.py ...`.
 - Run external validators through `prompts/external_validator_runner.md` and
   each config's `runner.command`.
 
