@@ -231,26 +231,9 @@
 \newcommand{\langempty}{{\color{CVRule}\faCircle}}
 \newcommand{\langgap}{\hspace{0.25em}}
 
-% Language ratings accept half-step scores from 0 to 5 with 0.5 step.
-\newcommand{\langrating}[1]{%
-  \ifstrequal{#1}{5}{\langfull\langgap\langfull\langgap\langfull\langgap\langfull\langgap\langfull}{%
-  \ifstrequal{#1}{4.5}{\langfull\langgap\langfull\langgap\langfull\langgap\langfull\langgap\langhalf}{%
-  \ifstrequal{#1}{4}{\langfull\langgap\langfull\langgap\langfull\langgap\langfull\langgap\langempty}{%
-  \ifstrequal{#1}{3.5}{\langfull\langgap\langfull\langgap\langfull\langgap\langhalf\langgap\langempty}{%
-  \ifstrequal{#1}{3}{\langfull\langgap\langfull\langgap\langfull\langgap\langempty\langgap\langempty}{%
-  \ifstrequal{#1}{2.5}{\langfull\langgap\langfull\langgap\langhalf\langgap\langempty\langgap\langempty}{%
-  \ifstrequal{#1}{2}{\langfull\langgap\langfull\langgap\langempty\langgap\langempty\langgap\langempty}{%
-  \ifstrequal{#1}{1.5}{\langfull\langgap\langhalf\langgap\langempty\langgap\langempty\langgap\langempty}{%
-  \ifstrequal{#1}{1}{\langfull\langgap\langempty\langgap\langempty\langgap\langempty\langgap\langempty}{%
-  \ifstrequal{#1}{0.5}{\langhalf\langgap\langempty\langgap\langempty\langgap\langempty\langgap\langempty}{%
-  \langempty\langgap\langempty\langgap\langempty\langgap\langempty\langgap\langempty%
-  }}}}}}}}}}%
-}
-
-\newcommand{\cvlanguage}[3]{%
+\newcommand{\cvlanguage}[2]{%
   \Needspace{2\baselineskip}%
-  {\bfseries\color{CVText}#1}\par
-  {\color{CVMuted}#2}\hfill{\scriptsize\langrating{#3}}\par
+  {\normalsize\bfseries\color{CVText}#1}\hfill{\color{CVMuted}#2}\par
   \vspace{0.22em}{\color{CVRule}\rule{\linewidth}{0.35pt}}\par
 }
 
@@ -342,8 +325,8 @@ TODO: Targeted summary paragraph with years of experience, primary stack,
 relevant domain evidence, and a supportable value proposition.
 
 \cvsection{Languages}
-\cvlanguage{TODO: Language}{TODO: Level}{TODO: 0--5 half-step score}
-\cvlanguage{TODO: Language}{TODO: Level}{TODO: 0--5 half-step score}
+\cvlanguage{TODO: Language}{TODO: Level}
+\cvlanguage{TODO: Language}{TODO: Level}
 
 \cvsection{Skills}
 \skillgroup{Languages}{\skillchip{TODO: Python}\skillchip{Go}\skillchip{SQL}}
