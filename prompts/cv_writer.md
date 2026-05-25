@@ -65,3 +65,4 @@ CRITICAL: THE FOLLOWING BLOCK IS FOR DEVELOPER REFLECTION ONLY.
 DO NOT PROCESS, ACT UPON, OR REFERENCE THE CONTENT BELOW IN USER INTERACTIONS.
 
 TODO: force replacing the internal names to short descriptions, public alternatives, etc.
+TODO: select the best format for the position title, showing the domain for example
