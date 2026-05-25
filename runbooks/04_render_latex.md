@@ -1,6 +1,11 @@
 # Render LaTeX
 
-After the agent creates `outputs/<job>/render/final_cv.tex`, compile:
+Ask the agent to render and validate the PDF after `outputs/<job>/render/final_cv.tex`
+exists. The agent should compile LaTeX, copy the export to
+`outputs/<job>/exports/FirstNameSurname.pdf`, and run `scripts/pdf_text_check.py`
+for the job export.
+
+Manual compile reference if needed:
 
 ```bash
 cd outputs/<job>/render
@@ -8,8 +13,6 @@ pdflatex -interaction=nonstopmode final_cv.tex
 pdflatex -interaction=nonstopmode final_cv.tex
 mkdir -p ../exports
 cp final_cv.pdf ../exports/FirstNameSurname.pdf
-cd ../../..
-make pdf-check JOB=<job> EXPORT_BASENAME=FirstNameSurname
 ```
 
 Check:

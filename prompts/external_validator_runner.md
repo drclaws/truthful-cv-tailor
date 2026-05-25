@@ -16,10 +16,8 @@ For each enabled validator:
 3. Check whether required resume formats exist.
 4. Confirm local validation gates have already run for the final CV.
 5. If files are missing, request or create export commands.
-6. If the config defines `runner.command`, execute it and follow
-   `runner.browser_window`, `runner.captcha_policy`, and any documented
-   `runner.troubleshooting` overrides. Use `runner.make` when present instead of
-   reconstructing the command by hand.
+6. If `runner.command` is defined, run it and follow `runner.browser_window`,
+   `runner.captcha_policy`, and any documented `runner.troubleshooting` overrides.
 7. If the validator requires manual use, prepare a clear checklist from the
    config inputs/outputs.
 8. Save the resulting external report to the expected output path.
@@ -33,6 +31,10 @@ Default requirement:
 - Prefer final delivery files from `exports/` named with the
   `FirstNameSurname\..*` pattern. Do not require `exports/final_cv.*` except as
   a temporary compatibility artifact.
+
+After raw reports exist:
+- Normalize each report with `prompts/external_report_normalizer.md`.
+- Run `prompts/external_validation_gate.md` for consolidated gating.
 
 Rules:
 - Do not modify the CV.

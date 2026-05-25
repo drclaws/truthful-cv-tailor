@@ -1,24 +1,17 @@
 # Run Pipeline
 
-```bash
-make pipeline JOB=company-role
+All steps run through the agent. Start a full run with a request like:
+
+```text
+Run the full CV tailoring pipeline for data/jobs/company-role.
+Follow AGENTS.md and prompts/00_full_pipeline.md.
 ```
 
-Or explicitly:
+After `08_final_cv.md` exists, ask the agent to run local checks and review the
+results, for example:
 
-```bash
-agent "Run the full CV tailoring pipeline for data/jobs/company-role. Follow AGENTS.md and prompts/00_full_pipeline.md."
-```
-
-After `08_final_cv.md` exists:
-
-```bash
-make ats JOB=company-role
-make keyword JOB=company-role
-```
-
-Then ask the agent:
-
-```bash
-agent "Review outputs/company-role/06_ats_static_check.md and outputs/company-role/keyword_match.md. Update ATS validation and only change the CV where facts are supported."
+```text
+Run scripts/ats_static_check.py and scripts/keyword_match.py for
+outputs/company-role, then review the reports and update ATS validation only
+where facts are supported.
 ```

@@ -62,8 +62,6 @@ External validator ordering:
 - Run external validators last, only after local validation gates and local PDF
   extraction checks are complete.
 - Execute the external-validator step with `prompts/external_validator_runner.md`.
-  Read each validator's config file from the registry; do not duplicate runner
-  commands in this pipeline prompt.
 - External recommendations may drive final edits only through
   `prompts/external_validation_gate.md`, and all previous rules still apply:
   truth, ATS readability, template style immutability for fit, moderate

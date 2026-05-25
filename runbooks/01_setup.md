@@ -1,7 +1,9 @@
 # Local Setup Runbook
 
-Use this only when the local machine is missing tools. The agent can check these
-items during a run and report what needs to be installed.
+Use this when preparing the machine or telling the agent what tooling must exist.
+All workflow steps still run through the agent; see `AGENTS.md`.
+
+The agent can check these items during a run and report what needs to be installed.
 
 ## Tool Checklist
 
@@ -33,11 +35,12 @@ Keep local assistant settings outside git.
 
 ## Input Setup
 
-Provide canonical candidate and job inputs in the request, or save them in local
-files referenced by the request. Optionally create a reusable job folder:
+Provide canonical candidate and job inputs in the agent request, or save them in
+local files referenced by the request. To create a reusable job folder, ask the
+agent:
 
-```bash
-make new-job JOB=company-role
+```text
+Create the job folder for company-role using scripts/create_job.py.
 ```
 
 If using a job folder, fill `data/jobs/company-role/job_description.md` and

@@ -204,6 +204,13 @@ Rules:
 
 ## Execution pattern
 
+All workflow automation runs through you. Users provide inputs, constraints,
+and environment setup; they do not run project scripts themselves.
+
+- Run helpers in `scripts/` as `python3 scripts/<script>.py ...`.
+- Run external validators through `prompts/external_validator_runner.md` and
+  each config's `runner.command`.
+
 When asked to run the full pipeline for `data/jobs/<job>`:
 
 1. Create `outputs/<job>`.
@@ -217,7 +224,7 @@ When asked to run the full pipeline for `data/jobs/<job>`:
 5. Update `constraints.md` when new conservative constraints are discovered.
 6. Follow prompts in `prompts/` in numeric workflow order.
 7. Write each required output file.
-8. Run local scripts if available.
+8. Run helper scripts from `scripts/` when a workflow step requires them.
 9. Render PDF only after internal validation gates pass.
 10. Run enabled registered external validators last with
     `prompts/external_validator_runner.md` unless the user explicitly disables

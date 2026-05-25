@@ -56,13 +56,14 @@ report missing dependencies. For a complete local run, the machine should have:
 
 ## Run The Pipeline
 
-Run the workflow from the project root with your preferred local automation
-setup. Include the candidate evidence, job targeting inputs, and desired output
-target in the request, or reference local files that contain those inputs.
+Run the workflow through your agent from the project root. Include the candidate
+evidence, job targeting inputs, and desired output target in the request, or
+reference local files that contain those inputs.
 
-The project policy lives in `AGENTS.md`, and the stage templates live in
-`prompts/`. Local assistant settings such as `.codex/`, `.claude/`, `.cursor/`,
-`.continue/`, and `.windsurf/` are intentionally ignored by git.
+The project policy lives in `AGENTS.md`, stage templates live in `prompts/`,
+and helper automation lives in `scripts/*.py`. Local assistant settings such as
+`.codex/`, `.claude/`, `.cursor/`, `.continue/`, and `.windsurf/` are
+intentionally ignored by git.
 
 ## Main workflow
 
@@ -100,8 +101,8 @@ data/master/constraints.md                 Persistent truth and safety constrain
 data/jobs/<job>/*.md                       Per-job inputs
 outputs/<job>/*                            Generated artifacts and reports
 validators/external/registry.yaml          External validator plugin registry
-scripts/*.py                               Local ATS and keyword checks
-Makefile                                   Convenience commands
+scripts/*.py                               Local checks and browser runners for the agent
+runbooks/*.md                              Setup notes and example agent requests
 ```
 
 ## Safety rule

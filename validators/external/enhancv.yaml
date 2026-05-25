@@ -30,7 +30,6 @@ outputs:
 
 runner:
   command: python3 scripts/run_enhancv_validator.py --job <job>
-  make: make external-enhancv JOB=<job>
   browser_window: visible_by_default
   captcha_policy: user_completes_in_open_browser
   headless_flag: --headless

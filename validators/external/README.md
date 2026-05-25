@@ -11,14 +11,15 @@ Final resume inputs should come from `outputs/<job>/exports/` and use the
 
 ## Config as source of truth
 
-Each validator config owns its runner command, input/output paths, browser
-policy, and troubleshooting flags. Prompts and runbooks should reference the
+Each validator config owns its `runner.command`, input/output paths, browser
+policy, and troubleshooting flags. Agents read the config from
+`validators/external/registry.yaml`; prompts and runbooks should reference the
 config instead of duplicating commands.
 
 ## Adding a new validator
 
-1. Add a config file, e.g. `validators/external/mytool.yaml`, including any
-   `runner.command`, `runner.make`, and policy fields agents need.
+1. Add a config file, e.g. `validators/external/mytool.yaml`, including
+   `runner.command` and policy fields agents need.
 2. Register it in `validators/external/registry.yaml`.
 3. Save raw reports to `outputs/<job>/external_validators/<tool>_raw.md`.
 4. Normalize with `prompts/external_report_normalizer.md`.
