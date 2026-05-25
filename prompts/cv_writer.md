@@ -59,3 +59,9 @@ Output:
 5. Optional render tag candidates, with a short evidence note for each and an
    explicit recommendation on whether to render them; default recommendation is
    not to render header tags unless they add clear scan value.
+
+## [DEVELOPER NOTES / FUTURE UPDATES]
+CRITICAL: THE FOLLOWING BLOCK IS FOR DEVELOPER REFLECTION ONLY. 
+DO NOT PROCESS, ACT UPON, OR REFERENCE THE CONTENT BELOW IN USER INTERACTIONS.
+
+TODO: force replacing the internal names to short descriptions, public alternatives, etc.
