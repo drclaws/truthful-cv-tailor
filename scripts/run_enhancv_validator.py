@@ -65,7 +65,11 @@ def parse_args():
     parser.add_argument("--pdf", help="Path to the PDF to upload.")
     parser.add_argument("--out", help="Path for the raw markdown report.")
     parser.add_argument("--url", default=URL, help="Enhancv checker URL.")
-    parser.add_argument("--headed", action="store_true", help="Show the browser.")
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Hide the browser window (not suitable for captcha or other manual steps).",
+    )
     parser.add_argument(
         "--timeout-ms",
         type=int,
@@ -75,8 +79,11 @@ def parse_args():
     parser.add_argument(
         "--manual-wait-seconds",
         type=int,
-        default=0,
-        help="Extra time for manual captcha/login/email steps after upload.",
+        default=None,
+        help=(
+            "Extra time for manual captcha/login/email steps after upload. "
+            "Defaults to 120 when the browser is visible, 0 in headless mode."
+        ),
     )
     parser.add_argument(
         "--skip-local-validation-gate",
@@ -170,7 +177,22 @@ async def dismiss_cookie_banner(page):
             pass
 
 
-async def wait_for_upload_ui(page, timeout_ms):
+def resolve_manual_wait_seconds(args, visible_browser):
+    if args.manual_wait_seconds is not None:
+        return max(0, args.manual_wait_seconds)
+    return 120 if visible_browser else 0
+
+
+def extend_deadline_for_manual_step(deadline, visible_browser, captcha_grace_seconds):
+    if not visible_browser or captcha_grace_seconds <= 0:
+        return deadline
+    now = asyncio.get_running_loop().time()
+    return max(deadline, now + captcha_grace_seconds)
+
+
+async def wait_for_upload_ui(
+    page, timeout_ms, visible_browser=False, captcha_grace_seconds=0
+):
     deadline = asyncio.get_running_loop().time() + timeout_ms / 1000
     ready_text = [
         "Upload Your Resume",
@@ -186,6 +208,14 @@ async def wait_for_upload_ui(page, timeout_ms):
                 return
 
             body = (await page.locator("body").inner_text(timeout=2000)).lower()
+            if needs_manual_step(body):
+                print(
+                    "Complete captcha or security check in the browser window "
+                    "before upload can continue..."
+                )
+                deadline = extend_deadline_for_manual_step(
+                    deadline, visible_browser, captcha_grace_seconds
+                )
             if any(text.lower() in body for text in ready_text):
                 return
             if not any(text in body for text in loading_text):
@@ -258,7 +288,9 @@ def needs_manual_step(text):
     )
 
 
-async def wait_for_report(page, timeout_ms):
+async def wait_for_report(
+    page, timeout_ms, visible_browser=False, captcha_grace_seconds=0
+):
     try:
         await page.wait_for_load_state("networkidle", timeout=30000)
     except Exception:
@@ -281,7 +313,19 @@ async def wait_for_report(page, timeout_ms):
                 if stable_hits >= 2:
                     return
             elif needs_manual_step(text):
-                print("Waiting for manual browser step such as captcha/security check...")
+                if visible_browser:
+                    print(
+                        "Waiting for manual browser step such as captcha/security "
+                        "check. Complete it in the open browser window..."
+                    )
+                    deadline = extend_deadline_for_manual_step(
+                        deadline, visible_browser, captcha_grace_seconds
+                    )
+                else:
+                    print(
+                        "Captcha or security check detected in headless mode. "
+                        "Rerun without --headless so you can complete it manually."
+                    )
         except Exception:
             pass
 
@@ -351,6 +395,8 @@ async def safe_capture_outputs(page, out, html_path, screenshot_path, pdf, statu
 
 async def run(args):
     pdf, out, html_path, screenshot_path, base = resolve_paths(args)
+    visible_browser = not args.headless
+    manual_wait_seconds = resolve_manual_wait_seconds(args, visible_browser)
     if not args.skip_local_validation_gate:
         require_local_validations(base)
     validate_pdf(pdf)
@@ -366,21 +412,45 @@ async def run(args):
         ) from exc
 
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=not args.headed)
+        browser = await playwright.chromium.launch(headless=args.headless)
         context = await browser.new_context(accept_downloads=True)
         page = await context.new_page()
         page.set_default_timeout(args.timeout_ms)
 
+        if visible_browser:
+            print(
+                "Opening a visible Chromium window. Complete any captcha or "
+                "security checks in the browser when prompted."
+            )
+        else:
+            print(
+                "Running with --headless. Captcha and other manual steps cannot "
+                "be completed interactively."
+            )
+
         await page.goto(args.url, wait_until="domcontentloaded")
         await dismiss_cookie_banner(page)
-        await wait_for_upload_ui(page, args.timeout_ms)
+        await wait_for_upload_ui(
+            page,
+            args.timeout_ms,
+            visible_browser=visible_browser,
+            captcha_grace_seconds=manual_wait_seconds,
+        )
         await upload_resume(page, pdf)
 
-        if args.manual_wait_seconds:
-            await page.wait_for_timeout(args.manual_wait_seconds * 1000)
+        if manual_wait_seconds:
+            print(
+                f"Waiting {manual_wait_seconds}s for manual steps after upload..."
+            )
+            await page.wait_for_timeout(manual_wait_seconds * 1000)
 
         try:
-            await wait_for_report(page, args.timeout_ms)
+            await wait_for_report(
+                page,
+                args.timeout_ms,
+                visible_browser=visible_browser,
+                captcha_grace_seconds=manual_wait_seconds,
+            )
         except BaseException as exc:
             status = f"Interrupted or failed before completion: {type(exc).__name__}: {exc}"
             await safe_capture_outputs(page, out, html_path, screenshot_path, pdf, status)

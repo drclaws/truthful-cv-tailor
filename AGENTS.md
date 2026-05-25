@@ -219,6 +219,7 @@ When asked to run the full pipeline for `data/jobs/<job>`:
 7. Write each required output file.
 8. Run local scripts if available.
 9. Render PDF only after internal validation gates pass.
-10. Run enabled registered external validators last unless the user explicitly
-    disables them.
+10. Run enabled registered external validators last with
+    `prompts/external_validator_runner.md` unless the user explicitly disables
+    them.
 11. Do not silently skip missing data; mark gaps explicitly.

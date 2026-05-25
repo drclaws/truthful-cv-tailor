@@ -61,12 +61,9 @@ External validator ordering:
   validator registered in `validators/external/registry.yaml`.
 - Run external validators last, only after local validation gates and local PDF
   extraction checks are complete.
-- For Enhancv, upload the rendered PDF after `05_fact_validation.md`,
-  `06_ats_validation.md`, `07_position_match.md`, `08_final_cv.md`, and
-  `pdf_text_check.md` exist for the job output.
-- Enhancv must use a browser-driven runner because the upload and processing
-  flow performs client-side JavaScript work after each page open and each
-  resume upload.
+- Execute the external-validator step with `prompts/external_validator_runner.md`.
+  Read each validator's config file from the registry; do not duplicate runner
+  commands in this pipeline prompt.
 - External recommendations may drive final edits only through
   `prompts/external_validation_gate.md`, and all previous rules still apply:
   truth, ATS readability, template style immutability for fit, moderate

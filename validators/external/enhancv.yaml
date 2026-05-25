@@ -29,7 +29,16 @@ outputs:
   screenshot: outputs/<job>/external_validators/enhancv_raw.png
 
 runner:
-  command: python3 scripts/run_enhancv_validator.py --job <job> --headed
+  command: python3 scripts/run_enhancv_validator.py --job <job>
+  make: make external-enhancv JOB=<job>
+  browser_window: visible_by_default
+  captcha_policy: user_completes_in_open_browser
+  headless_flag: --headless
+  headless_policy: use only when the user explicitly requests unattended automation
+  manual_wait_seconds_default: 120
+  troubleshooting:
+    longer_manual_wait: --manual-wait-seconds 180
+    unattended_only: --headless --manual-wait-seconds 0
   requires:
     - python-playwright
     - chromium-browser

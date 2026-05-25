@@ -38,7 +38,7 @@ external-prepare:
 	@echo "Run Enhancv with: make external-enhancv JOB=$(JOB)"
 
 external-enhancv: pdf-check
-	$(PYTHON) scripts/run_enhancv_validator.py --job $(JOB) --pdf $(EXPORT_PDF) --headed
+	$(PYTHON) scripts/run_enhancv_validator.py --job $(JOB) --pdf $(EXPORT_PDF)
 
 external-normalize:
 	$(AI_CMD) "Normalize $(OUT)/external_validators/resumly_raw.md using prompts/external_report_normalizer.md. Save normalized report to $(OUT)/external_validators/resumly_report.md."
