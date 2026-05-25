@@ -66,6 +66,16 @@ def parse_args():
     parser.add_argument("--out", help="Path for the raw markdown report.")
     parser.add_argument("--url", default=URL, help="Enhancv checker URL.")
     parser.add_argument(
+        "--browser",
+        choices=("chromium", "firefox", "webkit"),
+        default="chromium",
+        help=(
+            "Playwright browser engine to use. Default chromium; pick firefox or "
+            "webkit when local policy forbids Chromium-based browsers, including "
+            "Google Chrome for Testing."
+        ),
+    )
+    parser.add_argument(
         "--headless",
         action="store_true",
         help="Hide the browser window (not suitable for captcha or other manual steps).",
@@ -334,17 +344,29 @@ async def wait_for_report(
     raise RuntimeError("Enhancv report did not finish processing before timeout.")
 
 
-async def capture_outputs(page, out, html_path, screenshot_path, pdf, status=None):
+async def capture_outputs(
+    page, out, html_path, screenshot_path, pdf, browser_name, status=None
+):
     html_path.write_text(await page.content(), encoding="utf-8")
     await page.screenshot(path=str(screenshot_path), full_page=True)
     visible_text = await page.locator("body").inner_text(timeout=10000)
     out.write_text(
-        markdown_report(page.url, pdf, html_path, screenshot_path, visible_text, status),
+        markdown_report(
+            page.url,
+            pdf,
+            html_path,
+            screenshot_path,
+            visible_text,
+            browser_name,
+            status,
+        ),
         encoding="utf-8",
     )
 
 
-def markdown_report(url, pdf, html_path, screenshot_path, visible_text, status=None):
+def markdown_report(
+    url, pdf, html_path, screenshot_path, visible_text, browser_name, status=None
+):
     timestamp = datetime.now(timezone.utc).isoformat()
     status_section = ""
     if status:
@@ -360,7 +382,7 @@ def markdown_report(url, pdf, html_path, screenshot_path, visible_text, status=N
 - Validator: Enhancv Resume Checker
 - URL: {url}
 - Uploaded PDF: `{pdf}`
-- Browser automation: Playwright
+- Browser automation: Playwright ({browser_name})
 - Captured at: {timestamp}
 - Saved HTML: `{html_path}`
 - Saved screenshot: `{screenshot_path}`
@@ -374,9 +396,13 @@ def markdown_report(url, pdf, html_path, screenshot_path, visible_text, status=N
 """
 
 
-async def safe_capture_outputs(page, out, html_path, screenshot_path, pdf, status):
+async def safe_capture_outputs(
+    page, out, html_path, screenshot_path, pdf, browser_name, status
+):
     try:
-        await capture_outputs(page, out, html_path, screenshot_path, pdf, status=status)
+        await capture_outputs(
+            page, out, html_path, screenshot_path, pdf, browser_name, status=status
+        )
         print(f"Wrote diagnostic state to {out}")
         print(f"Wrote diagnostic HTML to {html_path}")
         print(f"Wrote diagnostic screenshot to {screenshot_path}")
@@ -387,6 +413,7 @@ async def safe_capture_outputs(page, out, html_path, screenshot_path, pdf, statu
             html_path,
             screenshot_path,
             "",
+            browser_name,
             status=f"Capture failed: {type(exc).__name__}: {exc}",
         )
         out.write_text(fallback, encoding="utf-8")
@@ -412,20 +439,21 @@ async def run(args):
         ) from exc
 
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=args.headless)
+        browser_type = getattr(playwright, args.browser)
+        browser = await browser_type.launch(headless=args.headless)
         context = await browser.new_context(accept_downloads=True)
         page = await context.new_page()
         page.set_default_timeout(args.timeout_ms)
 
         if visible_browser:
             print(
-                "Opening a visible Chromium window. Complete any captcha or "
-                "security checks in the browser when prompted."
+                f"Opening a visible {args.browser} window. Complete any captcha "
+                "or security checks in the browser when prompted."
             )
         else:
             print(
-                "Running with --headless. Captcha and other manual steps cannot "
-                "be completed interactively."
+                f"Running {args.browser} with --headless. Captcha and other "
+                "manual steps cannot be completed interactively."
             )
 
         await page.goto(args.url, wait_until="domcontentloaded")
@@ -453,7 +481,9 @@ async def run(args):
             )
         except BaseException as exc:
             status = f"Interrupted or failed before completion: {type(exc).__name__}: {exc}"
-            await safe_capture_outputs(page, out, html_path, screenshot_path, pdf, status)
+            await safe_capture_outputs(
+                page, out, html_path, screenshot_path, pdf, args.browser, status
+            )
             raise
         else:
             await capture_outputs(
@@ -462,6 +492,7 @@ async def run(args):
                 html_path,
                 screenshot_path,
                 pdf,
+                args.browser,
                 status="Report appeared complete according to runner readiness checks.",
             )
 
