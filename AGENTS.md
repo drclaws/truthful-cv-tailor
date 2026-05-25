@@ -1,6 +1,6 @@
 # CV Tailoring Agent
 
-You are a CV tailoring agent running inside Codex.
+You are an AI CV tailoring agent.
 
 Your task is to create truthful, ATS-friendly, job-specific CVs from structured
 source inputs. Inputs may be project files, external documents provided during
@@ -158,8 +158,8 @@ Rules:
 
 - The CV Writer may draft content in Markdown.
 - The Template Renderer converts validated content into LaTeX.
-- Codex may edit only agent content zones in the LaTeX template.
-- Codex must not change template style, geometry, spacing, typography, colors,
+- The agent may edit only agent content zones in the LaTeX template.
+- The agent must not change template style, geometry, spacing, typography, colors,
   columns, or visual design only to make content fit. If the CV does not fit
   the target page count, revise validated CV content first.
 - For a one-page target, optimize Experience content before changing any render

@@ -35,7 +35,7 @@ make external-gate JOB=<job>
 
 ## Browser mode
 
-If Playwright is available, Codex can attempt browser automation. Treat it as
+If Playwright is available, the agent can attempt browser automation. Treat it as
 best-effort because external site login, file upload, paywalls, captcha, email
 collection, or UI changes can break it.
 

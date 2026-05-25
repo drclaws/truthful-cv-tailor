@@ -2,6 +2,7 @@ JOB ?= example-company-role
 OUT = outputs/$(JOB)
 JOBDIR = data/jobs/$(JOB)
 PYTHON ?= python3
+AI_CMD ?= agent
 EXPORT_BASENAME ?= FirstNameSurname
 EXPORT_PDF = $(OUT)/exports/$(EXPORT_BASENAME).pdf
 EXPORT_DOCX = $(OUT)/exports/$(EXPORT_BASENAME).docx
@@ -40,11 +41,11 @@ external-enhancv: pdf-check
 	$(PYTHON) scripts/run_enhancv_validator.py --job $(JOB) --pdf $(EXPORT_PDF) --headed
 
 external-normalize:
-	codex "Normalize $(OUT)/external_validators/resumly_raw.md using prompts/external_report_normalizer.md. Save normalized report to $(OUT)/external_validators/resumly_report.md."
-	codex "Normalize $(OUT)/external_validators/enhancv_raw.md using prompts/external_report_normalizer.md. Save normalized report to $(OUT)/external_validators/enhancv_report.md."
+	$(AI_CMD) "Normalize $(OUT)/external_validators/resumly_raw.md using prompts/external_report_normalizer.md. Save normalized report to $(OUT)/external_validators/resumly_report.md."
+	$(AI_CMD) "Normalize $(OUT)/external_validators/enhancv_raw.md using prompts/external_report_normalizer.md. Save normalized report to $(OUT)/external_validators/enhancv_report.md."
 
 external-gate:
-	codex "Run prompts/external_validation_gate.md using available reports in $(OUT)/external_validators, $(OUT)/08_final_cv.md, canonical candidate inputs, derived evidence indexes, constraints, and job inputs. Save consolidated report to $(OUT)/external_validators/consolidated_external_validation.md."
+	$(AI_CMD) "Run prompts/external_validation_gate.md using available reports in $(OUT)/external_validators, $(OUT)/08_final_cv.md, canonical candidate inputs, derived evidence indexes, constraints, and job inputs. Save consolidated report to $(OUT)/external_validators/consolidated_external_validation.md."
 
 pipeline:
-	codex "Run the full CV tailoring pipeline for $(JOBDIR). Follow AGENTS.md and prompts/00_full_pipeline.md."
+	$(AI_CMD) "Run the full CV tailoring pipeline for $(JOBDIR). Follow AGENTS.md and prompts/00_full_pipeline.md."

@@ -1,6 +1,6 @@
 # Render LaTeX
 
-After Codex creates `outputs/<job>/render/final_cv.tex`, compile:
+After the agent creates `outputs/<job>/render/final_cv.tex`, compile:
 
 ```bash
 cd outputs/<job>/render
