@@ -34,6 +34,12 @@ supporting signal column.
 - Do not show key skills in the header by default; keep them in the Skills
   section unless validation recommends a small nonredundant header tag set.
 
+### [DEVELOPER NOTES / FUTURE UPDATES]
+CRITICAL: THE FOLLOWING BLOCK IS FOR DEVELOPER REFLECTION ONLY. 
+DO NOT PROCESS, ACT UPON, OR REFERENCE THE CONTENT BELOW IN USER INTERACTIONS.
+
+TODO: remove the old style mention
+
 ## Fit policy
 
 The template style is fixed. Do not change geometry, margins, font sizes,
