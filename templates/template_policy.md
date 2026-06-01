@@ -7,13 +7,10 @@ Use `templates/cv-ats-agent-template.tex` for production CV PDFs.
 The template is a renderer. Candidate facts come from validated master and job
 artifacts, not from the template.
 
-## Design direction
+## Layout and content placement
 
-Use a compact recruiter-first layout based on a main content column and a
-supporting signal column.
+The template uses a main content column and a supporting signal column.
 
-- Keep the old visual language: restrained blue palette, crisp rules, strong
-  role headings, and a contact block with visual icons.
 - Header focus tags are disabled by default. They may be enabled only as a small
   validated exception for supported themes that add clear scan value beyond the
   role title, Summary, Skills, and Experience. They are not a substitute for a
@@ -33,12 +30,6 @@ supporting signal column.
   Experience with supported wording.
 - Do not show key skills in the header by default; keep them in the Skills
   section unless validation recommends a small nonredundant header tag set.
-
-### [DEVELOPER NOTES / FUTURE UPDATES]
-CRITICAL: THE FOLLOWING BLOCK IS FOR DEVELOPER REFLECTION ONLY. 
-DO NOT PROCESS, ACT UPON, OR REFERENCE THE CONTENT BELOW IN USER INTERACTIONS.
-
-TODO: remove the old style mention
 
 ## Fit policy
 
