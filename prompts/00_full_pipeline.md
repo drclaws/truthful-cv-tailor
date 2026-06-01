@@ -46,7 +46,8 @@ Outputs:
 7. `07_position_match.md`
 8. `08_final_cv.md`
 9. `09_gap_report.md`
-10. rendered LaTeX and exports when validations pass.
+10. `10_master_cv_review.md`
+11. rendered LaTeX and exports when validations pass.
 
 Export naming:
 - Keep the rendered LaTeX source as `render/final_cv.tex`.
@@ -87,5 +88,14 @@ Header-title handoff:
   domain claims and that Experience titles stay source-backed.
 - The Template Renderer must use the validated CV header title instead of
   mechanically copying the vacancy title into `\PersonRole`.
+
+Master CV review ordering:
+- Run `prompts/master_cv_review.md` last, after all validators, render checks,
+  and external validation steps are complete.
+- The master CV review reads all outputs from the current run (`01` through `09`
+  plus any external validator reports) and the current master data files.
+- Write the result to `outputs/<job>/10_master_cv_review.md`.
+- The master CV review does not modify master data files directly; it produces
+  questions and conditional update suggestions for the candidate to act on.
 
 Do not produce final CV until Fact Validation, ATS Validation, and Position Match are complete.

@@ -87,9 +87,10 @@ For each job folder, produce:
 7. `outputs/<job>/07_position_match.md`
 8. `outputs/<job>/08_final_cv.md`
 9. `outputs/<job>/09_gap_report.md`
-10. `outputs/<job>/render/final_cv.tex`
-11. `outputs/<job>/exports/FirstNameSurname.pdf`
-12. `outputs/<job>/exports/FirstNameSurname.docx`, when Pandoc is available
+10. `outputs/<job>/10_master_cv_review.md`
+11. `outputs/<job>/render/final_cv.tex`
+12. `outputs/<job>/exports/FirstNameSurname.pdf`
+13. `outputs/<job>/exports/FirstNameSurname.docx`, when Pandoc is available
 
 Final export filenames must use the candidate-name pattern
 `FirstNameSurname\..*`: concatenate first name and surname without spaces or
@@ -230,4 +231,6 @@ When asked to run the full pipeline for `data/jobs/<job>`:
 10. Run enabled registered external validators last with
     `prompts/external_validator_runner.md` unless the user explicitly disables
     them.
-11. Do not silently skip missing data; mark gaps explicitly.
+11. After all validators and render checks are complete, run
+    `prompts/master_cv_review.md` and write `outputs/<job>/10_master_cv_review.md`.
+12. Do not silently skip missing data; mark gaps explicitly.
