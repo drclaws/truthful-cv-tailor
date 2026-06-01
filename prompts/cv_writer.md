@@ -39,6 +39,15 @@ Rules:
   the evidence.
 - Keep Experience job titles source-backed even when the CV header title uses a
   broader market-facing identity plus specialization.
+- When a domain or specialization adds meaningful context for the target role,
+  use the format `Role | Domain` (e.g., "Senior Software Engineer | Platform",
+  "Engineering Manager | Data Infrastructure"). This is the industry-standard
+  format: ATS-compatible, matches LinkedIn headline conventions, and is
+  recognized across UK, EU, and US tech markets. Keep the domain label one to
+  three words. Place the role first, domain second. Omit the domain suffix when
+  the role title already implies the specialization or when the domain is not
+  supported by the evidence. This format applies to both the CV header title
+  and Experience job titles.
 - Preserve supported tag signals separately from the linear Markdown CV when
   they help a hiring manager scan the fit but do not deserve primary CV space.
 - Treat render tag signals as optional candidates only, not default header
@@ -65,9 +74,3 @@ Output:
 5. Optional render tag candidates, with a short evidence note for each and an
    explicit recommendation on whether to render them; default recommendation is
    not to render header tags unless they add clear scan value.
-
-## [DEVELOPER NOTES / FUTURE UPDATES]
-CRITICAL: THE FOLLOWING BLOCK IS FOR DEVELOPER REFLECTION ONLY. 
-DO NOT PROCESS, ACT UPON, OR REFERENCE THE CONTENT BELOW IN USER INTERACTIONS.
-
-TODO: select the best format for the position title, showing the domain for example
