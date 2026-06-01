@@ -50,6 +50,12 @@ Rules:
   Summary, or Experience as well.
 - Do not put unsupported job keywords, vague soft-skill labels, or facts absent
   from candidate evidence into tag signals.
+- Replace company-internal system and product names with short public-facing
+  descriptions that convey the system's type and purpose to an external reader
+  (e.g. "internal CI/CD platform", "in-house inventory service", "proprietary
+  ETL pipeline"). Keep descriptions concise — four words or fewer when possible.
+  Publicly known products, tools, and platforms (e.g. Kubernetes, GitHub, AWS
+  services) may be named directly.
 
 Output:
 1. Targeted CV
@@ -64,5 +70,4 @@ Output:
 CRITICAL: THE FOLLOWING BLOCK IS FOR DEVELOPER REFLECTION ONLY. 
 DO NOT PROCESS, ACT UPON, OR REFERENCE THE CONTENT BELOW IN USER INTERACTIONS.
 
-TODO: force replacing the internal names to short descriptions, public alternatives, etc.
 TODO: select the best format for the position title, showing the domain for example
