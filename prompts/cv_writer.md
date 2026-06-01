@@ -39,15 +39,22 @@ Rules:
   the evidence.
 - Keep Experience job titles source-backed even when the CV header title uses a
   broader market-facing identity plus specialization.
-- When a domain or specialization adds meaningful context for the target role,
-  use the format `Role | Domain` (e.g., "Senior Software Engineer | Platform",
-  "Engineering Manager | Data Infrastructure"). This is the industry-standard
-  format: ATS-compatible, matches LinkedIn headline conventions, and is
-  recognized across UK, EU, and US tech markets. Keep the domain label one to
-  three words. Place the role first, domain second. Omit the domain suffix when
-  the role title already implies the specialization or when the domain is not
-  supported by the evidence. This format applies to both the CV header title
-  and Experience job titles.
+- CV header title: when a domain or specialization adds meaningful context for
+  the target role, use the format `Role | Domain` (e.g., "Senior Software
+  Engineer | Platform", "Engineering Manager | Data Infrastructure"). Keep the
+  domain label one to three words. Place the role first, domain second. Omit
+  the domain suffix when the role title already implies the specialization or
+  when the domain is not supported by the evidence.
+- Experience position headers: use the format `Job Title, Company` or, when
+  team or domain adds meaningful context for the target role,
+  `Job Title (Team/Domain), Company`. Parentheses keep all context on one line
+  while preserving ATS-safe parsing: the last comma element is the company
+  name. Do not add team or domain as a third bare comma element
+  (e.g. `Title, Domain, Company`) — ATS parsers misidentify the company.
+  Examples: `Backend Software Engineer (Billing & Identity), Yandex`;
+  `Software Engineer (Core Platform), Polator`. Omit the parenthetical when
+  the job title already implies the domain or when no meaningful team context
+  exists.
 - Preserve supported tag signals separately from the linear Markdown CV when
   they help a hiring manager scan the fit but do not deserve primary CV space.
 - Treat render tag signals as optional candidates only, not default header
