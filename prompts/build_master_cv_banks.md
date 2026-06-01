@@ -17,6 +17,38 @@ indexes must not override canonical inputs unless `constraints.md` or the user
 explicitly documents a correction. Do not invent facts, metrics, or experience
 absent from canonical inputs.
 
+### Completeness mandate
+
+The banks are a cache of canonical data, not a curated selection. Downstream
+agents — evidence mapper and CV writer — rely on the banks to know what evidence
+exists. If something is in canonical but absent from the banks, those agents
+will not know it exists and will not use it.
+
+Do not exclude evidence because it seems minor, unlikely to be used, or not
+relevant to the current job. Relevance is determined by the evidence mapper
+during a pipeline run, not during bank building. The bank's job is to preserve
+everything; the pipeline's job is to select.
+
+After building each file, perform a coverage pass: read through each canonical
+source section by section and verify that every substantial piece of evidence
+has a corresponding entry. Flag anything missed and add it before finishing.
+
+### Self-check
+
+After building each file, verify accuracy against canonical inputs before
+saving. For every entry that contains a specific claim — a metric, a date, a
+scale number, a role description, an ownership level, or a before/after
+improvement — locate the exact passage in canonical that supports it.
+
+If the passage cannot be found or the entry overstates what the passage says:
+- Correct the entry to match the canonical passage, or
+- Add an `(inferred from <source section>)` note if the claim is reasonable
+  but implicit, or
+- Remove the entry if it has no canonical basis.
+
+Do not skip this check because the build was done carefully. The self-check is
+a mandatory gate, not an optional quality step.
+
 ### Source metadata block
 
 Write a source metadata block at the top of each file on every refresh:
@@ -161,6 +193,48 @@ explicit claim, capture it with a note: `(inferred from <source section or
 project name>)`. This is especially important for architectural patterns and
 engineering practices, which candidates rarely label as skills in their own CVs.
 
+### Second pass: pattern and practice scan
+
+After the initial build, perform a dedicated second pass over canonical inputs
+with a single question per section: _what architectural patterns, engineering
+practices, and working behaviours does this description demonstrate, even if
+they are never named as such?_
+
+Read project narratives and engineering practice descriptions looking for:
+- Structural decisions (how a system was decomposed, how migration was phased,
+  how failure was isolated) → architectural patterns
+- Repeating delivery behaviours across projects → engineering practices
+- How observability, testing, documentation, and rollout were handled →
+  working style evidence
+
+Add any patterns or practices found in this pass that are absent from the
+initial build.
+
+### External validation of inferred capabilities
+
+Bank generation is treated as a heavy operation where additional resources are
+justified. For every capability captured as inferred — especially architectural
+patterns and named engineering practices — validate it against external sources
+before finalising the entry:
+
+1. Confirm the pattern or practice name is an industry-recognised concept with
+   an established definition (e.g. Strangler Fig, Outbox pattern, Cursor-based
+   migration, Sliding-window SLO).
+2. Verify that the work described in canonical genuinely exemplifies this
+   pattern — not just uses similar vocabulary. Check the definition against
+   what the candidate actually built.
+3. For internal tool names mapped to public equivalents (e.g. "Y.Deploy →
+   Kubernetes-class PaaS"), validate that the mapping is accurate and note any
+   important differences that should constrain how the equivalence is used in
+   a CV.
+4. If an external source shows the pattern name is commonly confused with a
+   different concept, note the distinction in the entry's constraints field.
+
+External validation may use web search, documentation, or industry references.
+It does not require finding the candidate's specific work in external sources —
+only that the pattern or concept itself is real and that the described work
+matches its definition.
+
 ### Conservative gap notes
 
 Close the file with a section listing capabilities that are clearly absent or
@@ -186,8 +260,9 @@ Create a separate entry for any body of work that:
 - Is likely to be discussed as a unit in a CV, interview, or evidence map
 
 Freelance work, self-education periods, and part-time contributions qualify if
-there is concrete evidence worth recalling. Do not create entries for minor
-tasks or one-off fixes; those belong in the experience bank as bullets.
+there is concrete evidence worth recalling. Minor tasks and one-off fixes that
+do not constitute a standalone project belong in `experience_bank.md` as
+bullets, not here — but they must not be omitted from the bank system entirely.
 
 ### Entry structure
 
