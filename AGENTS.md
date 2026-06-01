@@ -41,20 +41,18 @@ override more original canonical inputs unless `constraints.md` or the user
 explicitly documents a correction.
 
 `data/master/experience_bank.md`, `data/master/projects.md`, and
-`data/master/skills_matrix.md` are derived evidence indexes. Use them to improve
-coverage, consistency, and recall, but keep canonical candidate inputs as the
-truth source. Do not keep or recreate `data/master/master_cv.md`.
+`data/master/skills_matrix.md` are derived evidence indexes. Do not keep or
+recreate `data/master/master_cv.md`. Content rules for all three indexes are
+defined in `prompts/build_master_cv_banks.md`.
 
-Each derived evidence index must include source metadata near the top:
+Refresh an index when:
+- a canonical source file has been modified since the index was last built, or
+- new canonical inputs were provided that the index has not seen.
 
-- last updated timestamp
-- source inputs used to prepare it
-- source file modification timestamps when the source is file-based
-- refresh status, including whether the index may be stale
-
-When preparing or updating a CV, compare source metadata with the current
-provided inputs and available file modification times. If a source changed,
-refresh the affected derived index before using it for evidence mapping.
+All three indexes share the same canonical sources, so check all three together
+whenever any canonical input changes. Use `scripts/source_freshness_check.py`
+or mtime inspection to detect staleness. Refresh all affected indexes before
+evidence mapping.
 
 `data/master/constraints.md` may be updated by the agent when a new persistent
 truth or safety constraint appears. This includes recurring external-validator
@@ -220,9 +218,10 @@ When asked to run the full pipeline for `data/jobs/<job>`:
 3. Write `outputs/<job>/00_source_audit.md` when external, pasted, connector, or
    otherwise non-project inputs are used.
 4. Check whether `experience_bank.md`, `projects.md`, or `skills_matrix.md`
-   need refresh because canonical inputs changed. For file-based inputs, use
-   `scripts/source_freshness_check.py` or equivalent mtime inspection when
-   possible.
+   need refresh because canonical inputs changed. Use
+   `scripts/source_freshness_check.py` or mtime inspection to detect staleness.
+   If stale, refresh using `prompts/build_master_cv_banks.md` before evidence
+   mapping.
 5. Update `constraints.md` when new conservative constraints are discovered.
 6. Follow prompts in `prompts/` in numeric workflow order.
 7. Write each required output file.
