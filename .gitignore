@@ -30,6 +30,7 @@ htmlcov/
 .aider*
 .gemini/
 .roo/
+.mcp.json
 
 # Generated CV outputs and validator artifacts.
 outputs/*
