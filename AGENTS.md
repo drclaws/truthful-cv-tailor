@@ -61,6 +61,31 @@ wording risks, or newly discovered evidence conflicts. Do not ask the user
 before updating constraints when the update only records a conservative safety
 rule or factual limitation.
 
+## Run isolation (no cross-run contamination)
+
+A run must not inherit knowledge, wording, formatting habits, or "rules" from any
+other job's generated artifacts.
+
+- The only authoritative sources for a run are: this job's `data/jobs/<job>/`
+  inputs; the shared canonical evidence in `data/master/` (`experience_bank.md`,
+  `projects.md`, `skills_matrix.md`, `constraints.md`); and the shared pipeline
+  definitions (`AGENTS.md`, `prompts/`, `templates/`, `validators/`). Plus any
+  canonical inputs the user provides for this run.
+- Do NOT read, cite, imitate, or carry content over from another job's outputs
+  under `outputs/<other-job>/`. Previous runs' CVs, analyses, LaTeX renders,
+  gap reports, and notes are not evidence, not house-style authority, and not
+  precedent.
+- Work only within your own job's directory `outputs/<job>/` for generated
+  knowledge. For layout, section order, and house style, use `templates/` and
+  `prompts/` — never a previous job's render as a "reference example".
+- A rule, note, wording pattern, or decision that appears only in a previous
+  job's output (and not in `AGENTS.md`, `prompts/`, `templates/`, or
+  `constraints.md`) has no authority and must not be applied. If such a pattern
+  seems worth keeping, promote it into an authoritative file first, then use it.
+- If you need to reuse the candidate's factual history, take it from
+  `data/master/`, not from a prior tailored CV (which is job-specific and may
+  have trimmed, reordered, or reframed facts for a different target).
+
 When external or non-project inputs are used, create an audit trail before
 drafting:
 
