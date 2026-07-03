@@ -54,6 +54,28 @@ template's standard section order and ATS checks expect them.
   record the absence in the Conservative Gap Notes so downstream agents know it
   was checked, not overlooked.
 
+### Employment history and position metadata
+
+Each employment/role also has header metadata — exact job title, company,
+location (city and country), and start/end dates — that the CV writer and
+renderer need for the Experience section. Like education, this metadata is not a
+thematic bullet and not a project deliverable, so it is easily lost: it survives
+only accidentally when a city or date happens to appear inside a bullet or
+project narrative. Capture it as a first-class record.
+
+- Maintain a `## Positions (employment history)` section in `experience_bank.md`
+  with one entry per role, each stating — exactly as canonical does — the job
+  title, company, location (city, country), and start/end dates (month-level when
+  canonical provides months; do not invent months).
+- Include every role from canonical, including freelance/self-education periods,
+  even when the derived thematic bullets already reference the same employer.
+- During the coverage pass, verify that every role's location and dates in this
+  section match canonical. Missing or coarser-than-canonical location/date data
+  (e.g. "Russia" when canonical says "Moscow, Russia", or a year when canonical
+  gives a month) is a completeness defect to fix before finishing.
+- Do not rely on thematic bullets or project narratives to carry title, company,
+  location, or dates; those are for evidence, not position metadata.
+
 ### Self-check
 
 After building each file, verify accuracy against canonical inputs before
