@@ -33,6 +33,27 @@ After building each file, perform a coverage pass: read through each canonical
 source section by section and verify that every substantial piece of evidence
 has a corresponding entry. Flag anything missed and add it before finishing.
 
+### Education, certifications, and standalone credentials
+
+Education, academic degrees, certifications, licenses, awards, and similar
+standalone credentials are NOT thematic experience bullets and are NOT projects,
+so they do not fit the `experience_bank.md` themes or the `projects.md` project
+schema and are easy to drop. They must still be captured, because the CV
+template's standard section order and ATS checks expect them.
+
+- Capture every education entry and credential that appears in any canonical
+  source. For each: the exact title/degree, institution, location, and dates as
+  stated in canonical (do not invent or infer a degree that is not stated).
+- Store them in `experience_bank.md` under dedicated `## Education` and, when
+  present, `## Certifications` sections (not scattered inside thematic bullets).
+- During the coverage pass, explicitly confirm that any `## Education` /
+  `## Certifications` / awards section in a canonical source has a matching
+  section in `experience_bank.md`. Treat a missing education/credential the same
+  as a missing project: a completeness defect to fix before finishing.
+- If a canonical source has NO education/certification section, add none — but
+  record the absence in the Conservative Gap Notes so downstream agents know it
+  was checked, not overlooked.
+
 ### Self-check
 
 After building each file, verify accuracy against canonical inputs before
@@ -98,6 +119,12 @@ projects or that describe how work was done rather than what was built. Look for
   workflow, benchmark practice, before/after measurement, staged rollout)
 - Security and compliance practices (RBAC design decisions, auth patterns,
   sensitive-data filtering, audit trail design)
+
+**Education and credentials** — degrees, certifications, licenses, and awards
+stated in canonical inputs, captured in dedicated `## Education` and
+`## Certifications` sections (see "Education, certifications, and standalone
+credentials" in Shared rules). Do not fold them into thematic bullets and do not
+omit them.
 
 ### Bullet quality rules
 
