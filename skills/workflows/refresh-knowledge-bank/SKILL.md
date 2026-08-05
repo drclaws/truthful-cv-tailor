@@ -257,6 +257,44 @@ needed) or `fail`, with the reason.
 
 A `complete` manifest with a red gate or an unresolved open question is a defect.
 
+## Unreadable sources
+
+A canonical source can be present and still yield nothing. Two causes, both ordinary:
+
+- **a permissions boundary the shell cannot cross** — the harness's shell is sandboxed, or the
+  operating system gates the folder behind a privacy permission the shell does not hold;
+- **a cloud-synced placeholder** — the file is listed with a plausible name, size and modification
+  time, but its content has been evicted to the provider and has to be fetched before it can be read.
+
+Both look identical to a timestamp comparison, and both are dangerous in exactly the same way: a
+source dropped from the comparison makes a stale bank look fresh, and a bank built from a partial
+source set looks complete while silently missing evidence.
+
+The freshness script therefore reports `unreadable` **per source** — it probes for readable bytes,
+not just for a modification time — and it neither crashes nor guesses. Resolving it is this flow's
+job, in this order:
+
+1. **Retry through the harness's own file tools.** They frequently reach what the shell cannot: a
+   different permission context, and a reader that triggers the cloud provider's fetch. If the
+   content comes back, treat the source as `ok`, use the timestamp the script reported, and note in
+   `run.md` that the fallback reader was used for that source. Content fetched this way may be kept
+   in `<run>/work/` for the duration of the build; it is a byproduct, never a canonical source.
+2. **Ask the user.** Name the source, quote the reason the script gave, and ask for exactly one of:
+   make the content available (fetch it, grant the access), point at a reachable copy, or remove the
+   entry from their context. Record the answer in `run.md`.
+3. **Never a fourth option.** Do not skip the source quietly, do not treat "the other sources were
+   fine" as good enough, and do not let the flow crash on it. An unresolved `unreadable` source stops
+   the flow with `status: blocked` and the question recorded — the bank stays as it was, which is a
+   recoverable state; a bank rebuilt from a partial source set is not.
+
+The same ladder applies to a source that reads as empty or visibly truncated: treat it exactly as
+unreadable. It also applies at build time, not only at the freshness check — a source that was
+readable in step 3 and unreadable in step 6 gets the same treatment.
+
+Sources that are not files — URLs, descriptions, dictated content — are never `unreadable`; they are
+`not-time-checkable`, judged by their record in the bank's source-metadata block. A source absent
+from that block has never been seen by the bank, and that alone makes the verdict `stale`.
+
 ## Gates
 
 | Gate | Requires | Evidenced by |
@@ -295,3 +333,46 @@ Stop and ask the user — recording the question in `run.md` `## Open questions`
 - the constraints ledger is unreadable or malformed — the run stops rather than starting a new
   ledger: losing accumulated guardrails is worse than a failed closing step;
 - the coverage pass cannot be closed and the missing evidence cannot be recovered from any source.
+
+## Usage
+
+No harness auto-discovers this repository's `skills/` directory yet, so the flow is invoked by path:
+
+> execute `skills/workflows/refresh-knowledge-bank/SKILL.md`
+
+The executing agent loads this file, plus `roles/knowledge-bank-curator/ROLE.md` and the capability
+file of the step it is on — and nothing else. On a harness with subagents the steps still run in
+order: this flow declares no parallel groups, and the result must not differ between harnesses.
+
+Before the first run the user's context must exist. If it does not, the correct outcome of preflight
+is a question, and the supported answer is `setup-master.bootstrap` (capability file:
+`roles/setup-master/capabilities/bootstrap.md`), which creates the harness-native local rules file
+from the template in `contracts/user-context.md`.
+
+## User-context settings
+
+**This skill recognizes no per-skill settings keys.** A `## Skill settings` subsection named after
+this skill in the user's local rules file has no meaning; report it as unrecognized rather than
+interpreting it.
+
+What the flow does read from user context:
+
+| Item | Contract section | Use |
+|---|---|---|
+| Canonical experience sources | `## Experience sources (canonical)` | Required. The only input to the rebuild. Resolved at preflight through the declared order; never defaulted, never hardcoded here. |
+| Additional rules | `## Additional rules` | Optional free text the flow honours, so long as it does not weaken truthfulness, the sole-writer rule, or run isolation. |
+
+The active validation set is **not** used by this flow: no validator runs during a bank refresh.
+
+## Dependencies
+
+| Name | Kind | Needed for | Required / optional | When unbound |
+|---|---|---|---|---|
+| Read access to the canonical experience sources | capability | Reading every source at the freshness check and again at build time. | required | Follow the fallback ladder in *Unreadable sources*: retry with the harness's file tools, then ask the user. A source that stays unreadable blocks the rebuild — the flow records `status: blocked` and leaves the existing bank untouched. It never builds from a partial source set. |
+| Harness-native file read tool (a reader independent of the shell) | capability | The first rung of that ladder: reaching a source the sandboxed shell cannot open, and forcing a cloud-synced placeholder to be fetched. | optional | Skip straight to asking the user, and note in `run.md` that no fallback reader was available. |
+| `python3` ≥ 3.10 | tool | Running `roles/knowledge-bank-curator/scripts/check_sources_freshness.py`, the bundled freshness check (steps 3 and 8). | optional | The curator compares timestamps and content presence with the harness's own file tools, following the same rules, and notes in `run.md` that the check was done manually. A missing script runtime never fails this flow. |
+| A question channel to the user | capability | Every escalation in this flow is a question, not a decision: empty context, unreadable sources, conflicting sources, undeliverable identity, a non-conservative constraint proposal. | required | The flow records the question in `run.md` `## Open questions`, sets `status: blocked`, and stops. It never answers its own question. |
+| Web search | capability | The curator's external validation of inferred capability and pattern names while building the skills matrix. | optional | Those entries stay marked `unverified name`; the build continues and reports the skipped sub-step. Evidence is never dropped for lack of a search tool. |
+
+Concrete bindings for these live in the user's harness configuration, not here. Unbound entries are
+aggregated and reported by `setup-master.check-environment`.
