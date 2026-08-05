@@ -139,4 +139,7 @@ Per-run contracts:
 
 Report-type contracts — those that carry `## Constraint proposals`: `source-audit`,
 `requirements-profile`, `recruiter-signals`, `evidence-map`, `validation-report`,
-`external-gate-decision`, `fit-report`, `gap-report`, `render-manifest`, `bank-update-brief`.
+`external-gate-decision`, `fit-report`, `gap-report`, `render-manifest`, `bank-update-brief`, and
+`cv-document` — the last one inside its writer annex. The document is a deliverable rather than a
+report, but it is the writing role's only artifact, and the sole-writer rule gives every role exactly
+one route to the constraints ledger.

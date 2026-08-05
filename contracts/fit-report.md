@@ -21,14 +21,20 @@ and sources is a different job, done by a different role, under a different cont
 
 ## Input-format agnosticism
 
-This contract does not prescribe where the candidate data came from. The scoring works from:
+This contract does not prescribe where the candidate data came from. The scoring works from any of
+four formats, declared by the label:
 
-- the knowledge bank directly, or
-- an evidence map for this vacancy, or
-- an arbitrary existing CV supplied by the user.
+| Label | What it means |
+|---|---|
+| `knowledge-bank` | The bank itself — the candidate's full evidence. |
+| `evidence-map` | An evidence map produced for this vacancy. |
+| `cv-document` | A document written under the `cv-document` contract. |
+| `external-cv` | A CV supplied by the user that obeys no contract. A **format label**, not a contract name. |
+
+A combination is allowed and is declared as such, naming what each contributed.
 
 **The header declares which was used**, because it changes how much the scores can be trusted: a
-score derived from an arbitrary CV reflects that document, not the candidate's full evidence.
+score derived from a supplied CV reflects that document, not the candidate's full evidence.
 
 Keeping the report input-agnostic is deliberate — the same scoring serves flows that have no CV and
 no evidence map at all, such as evaluating a vacancy before deciding to pursue it.
@@ -44,7 +50,7 @@ candidate-data source actually used (with revision, where it has one).
 
 | Field | Meaning |
 |---|---|
-| candidate data format | `knowledge bank` · `evidence map` · `supplied CV` · a combination, named. |
+| candidate data format | `knowledge-bank` · `evidence-map` · `cv-document` · `external-cv` · a combination, named. |
 | subject | The vacancy, and the document assessed when there is one (with revision). |
 | limitations | What this basis cannot see — for example, that a supplied CV omits evidence the bank holds. |
 
@@ -64,6 +70,16 @@ Fixed weights, summing to 100:
 Each dimension is scored with a one-or-two-sentence justification citing the requirement identifiers
 that drove it. The overall score is the sum, stated with the dimension breakdown — never as a bare
 number.
+
+**The denominator is explicit and is part of the score.** A dimension whose input the run does not
+have is scored `n/a`, its weight is removed from the denominator, and the total is stated against the
+reduced denominator — for example `71 / 95 (recruiter-signal alignment n/a: no recruiter input in
+this run)`. It is never scored `0`, which would misreport an absence as a mismatch, and it is never
+rescaled silently to 100, which would hide that a dimension was not assessed at all. Unknown is a
+value; the denominator is where it is recorded.
+
+Scores from runs with different denominators are not comparable as bare numbers, and this section is
+what lets a reader see that.
 
 Scoring rules:
 

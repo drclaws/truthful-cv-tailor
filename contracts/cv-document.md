@@ -71,9 +71,10 @@ Format: **`Role | Domain`**.
 - The domain label is **one to three words**.
 - The domain suffix is **omitted** when the role title already implies the specialization, or when
   the evidence does not support the domain.
-- **The vacancy title is never copied mechanically.** Vacancy wording is acceptable only when the
-  resulting title stays truthful and implies no unsupported domain experience, tooling, ownership,
-  management scope or seniority.
+- **The vacancy title is never copied mechanically** — neither when it would imply unsupported domain
+  experience, nor when it would narrow the candidate away from the evidence they actually have.
+  Vacancy wording is acceptable only when the resulting title stays truthful and implies no
+  unsupported domain experience, tooling, ownership, management scope or seniority.
 - The header title may be broader than the candidate's official job titles. **Experience titles stay
   source-backed regardless** — they are never rewritten to match the header.
 
@@ -126,6 +127,56 @@ Drawn from the corresponding knowledge-bank sections, at the granularity the can
 Education and certification entries are never inferred, upgraded, or reworded into something the
 sources do not state. Language entries carry the level the sources state.
 
+## Evidence placement
+
+The evidence map says what the evidence is and how strong it is; it deliberately carries no placement
+column. **Deciding where a supported fact goes is part of the document's form, and it is governed
+here.**
+
+For each piece of supported evidence, exactly one destination:
+
+| Destination | When |
+|---|---|
+| Summary | It is one of the few things that should be read first for this target. |
+| Skills | It is a capability rather than an episode. |
+| An Experience bullet | It is a concrete thing done, with scope or outcome. |
+| Projects | It is a body of work that reads better as a unit than as a bullet. |
+| A tag candidate (annex) | It is a useful scan signal that does not deserve primary space — and it is **also** represented in Skills, Summary or Experience whenever it names a key capability. |
+| Omitted | It does not serve this target, or a constraint forbids it. Recorded in the annex's omissions. |
+
+When a fact belongs in Skills, its category is one of: **technical** · **systems or problem domain** ·
+**reliability or delivery practice** · **collaboration or working mode** · **language**. A fact that
+fits none of these, or that only fits as a vague label, is not placed in Skills.
+
+Placement rules:
+
+- **Strength survives placement.** Weak evidence placed in a prominent position is still worded as
+  what it is. Moving a fact never upgrades it, and the safer wording proposed by the evidence map is
+  used where the honest phrasing is narrower than the target asks.
+- **Vague capabilities are not placed at all** unless a source supports concrete wording or a concrete
+  behaviour behind the label.
+- **A key capability is never carried only as a tag.** If it matters enough to be a scan signal, it
+  appears in the body.
+- **A constraint-flagged fact is not placed**, in any section, in any wording.
+
+## Length and compression
+
+The document's **length target is declared by the caller** — the flow or the render operation that
+knows what the deliverable must fit. This contract does not fix a page or word count; it fixes what
+happens when the content exceeds the target.
+
+When the document must shrink:
+
+1. **Experience content is compressed first.** Merge overlapping bullets, shorten wording, and remove
+   lower-value detail, keeping the strongest supported evidence for this target.
+2. **Compress gradually.** The goal is a complete, readable document that fits — not the shortest
+   possible document. Nothing is cut more aggressively than the target requires.
+3. **Freed space is refilled.** When later edits open room, it goes to the highest-value supported
+   material that improves target fit, within the same target.
+4. **A presentational change is never the answer.** Restyling the rendered result — geometry,
+   margins, type sizes, spacing, colors, column widths, section styling — to make content fit is out
+   of bounds, and this document never proposes one. A fit problem is a content problem.
+
 ## Format rules
 
 The markdown document stays **plain, linear and machine-readable**:
@@ -173,6 +224,11 @@ must read correctly without them.
 - Tags are enabled only when a validation step explicitly recommends a small, evidence-backed set for
   this application and confirms the set does not merely duplicate Skills.
 
+**On revision.** A revised instance keeps its validated tag candidates in the annex, still separate
+from the body. Any candidate that the truthfulness check or the fit assessment rejected is removed,
+or softened to the wording those artifacts found supportable. A rejected tag is never carried forward
+unchanged in the hope that a later step reads it differently.
+
 ## `## Annex: writer notes`
 
 Every instance ends with an annex. It is part of the artifact but not part of the CV: a renderer
@@ -189,6 +245,15 @@ takes the document above it, a reviewer reads both.
    Skills, Summary and Experience.
 5. **Open issues** — anything the writer could not resolve: a requirement with no honest angle, a
    conflict between sources, a claim awaiting a decision.
+6. **`## Constraint proposals`** — the guardrails the writing surfaced, in the form every report-type
+   contract uses (see `contracts/README.md`): a claim the evidence kept inviting but could not
+   support, a phrasing that repeatedly drifted past what the sources say. `None.` when there is
+   nothing to propose.
+
+   The document itself is a deliverable, not a report — but the writer is a role like any other, and
+   §3's sole-writer rule gives every role exactly one way to reach the constraints ledger. The
+   proposals therefore live in the annex, and `curator.maintain-constraints` ingests them at flow
+   close together with every other report's.
 
 ## Producer and consumers
 

@@ -16,9 +16,23 @@ The status **is** the verdict:
 - `pass` — no required edit;
 - `pass-after-edits` — the document is sound once the listed required edits are applied;
 - `fail` — the document must not proceed in its current state;
+- `advisory` — the report states what an outside opinion said; it decides nothing (contract-defined
+  value);
 - `skipped` — the check could not run (a capability is not bound, an input is missing). A skipped
   check is a recorded outcome with instructions, never a silent absence and never a failure of the
   flow.
+
+**Which producer may use which value:**
+
+| Producer | Allowed statuses |
+|---|---|
+| the truthfulness check (`reviewer.fact-check`) | `pass` · `pass-after-edits` · `fail` · `skipped` |
+| a registered internal check (`reviewer.run-check`) | `pass` · `pass-after-edits` · `fail` · `skipped` |
+| a normalized external report (`reviewer.normalize-external-report`) | `advisory` · `skipped` — **never** `pass`, `pass-after-edits` or `fail` |
+
+A normalized external report never carries a blocking verdict, however emphatic the service was, and
+however low the score. External output is never truth; what happens to its recommendations is decided
+in the `external-gate-decision`, which is the only artifact that turns outside advice into action.
 
 ## Envelope
 
@@ -40,8 +54,9 @@ after an edit, the report is overwritten and `revision:` increments.
 
 ### `## Verdict`
 
-`Pass` / `Pass-after-edits` / `Fail`, matching the envelope status, with one or two sentences saying
-what decided it.
+`Pass` / `Pass-after-edits` / `Fail` for a check that decides something, `Advisory` for a normalized
+external report. It matches the envelope status, and carries one or two sentences saying what decided
+it.
 
 ### `## Findings`
 
@@ -50,13 +65,28 @@ One entry per finding:
 | Field | Rule |
 |---|---|
 | id | A short identifier the edit pass and any re-check can cite. |
-| severity | `critical` (must be fixed; blocks) · `major` (should be fixed) · `minor` · `advisory`. |
+| severity | One of the four declared below. |
 | location | Where in the document — section, position header, bullet. |
 | finding | What is wrong, stated concretely. |
 | basis | The evidence or rule that makes it wrong. A finding without a basis is an opinion. |
 | required edit | The concrete change. |
 
-`critical` findings and `fail` go together: a report with a critical finding is not a pass.
+**Severity vocabulary.** These four levels, and no others:
+
+| Severity | Meaning | Blocking? |
+|---|---|---|
+| `critical` | An untruthful, unsupported or misleading claim, or a defect that makes the document unusable for its purpose. | **Yes** — the only blocking level. |
+| `major` | A real problem that should be fixed: an overstatement, a missed supported capability, a structural weakness. | No. |
+| `minor` | A small improvement: wording, ordering, consistency. | No. |
+| `observation` | Something worth knowing that requires no edit. | No. |
+
+**At least one `critical` finding forces the verdict `Fail`.** The converse also holds: a report with
+no `critical` finding is not a `Fail`. `pass-after-edits` is the verdict when the required edits are
+all `major` or below and the document is sound once they are applied.
+
+In a report with status `advisory`, severities describe what the external service considered serious.
+They classify; they do not block. Only the `external-gate-decision` decides what an external finding
+causes.
 
 ### `## Scores` (optional)
 
@@ -114,7 +144,8 @@ check, never here.
 
 ### Normalized-external profile
 
-An external service's report, restated in this envelope. Additional sections:
+An external service's report, restated in this envelope. Its status is always `advisory` (or
+`skipped`); it never carries `pass`, `pass-after-edits` or `fail`. Additional sections:
 
 - **`## Validator`** — service name, the input files submitted, the raw capture the normalization was
   made from;

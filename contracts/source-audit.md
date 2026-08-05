@@ -66,9 +66,19 @@ original canonical input unless the constraints ledger or the user documents the
 
 ### `## Bank stanza`
 
-Contributed by the curator: which knowledge-bank files the run uses, when each was last built, the
-freshness verdict against the canonical sources, and whether a refresh was performed before the run
-proceeded. Bank files also appear as entries in the inventory; this stanza is the version statement.
+The version statement for the candidate-evidence side: which knowledge-bank files the run uses, when
+each was last built, the freshness verdict against the canonical sources, and whether a refresh was
+performed before the run proceeded. Bank files also appear as entries in the inventory; this stanza
+says what state they were in.
+
+**One file, one writer.** The analyst writes the whole artifact, this stanza included. The freshness
+verdict is *produced* by the curator's freshness capability and returned to its caller; the flow
+records it, and the analyst transcribes it here, attributed to that check. The curator does not write
+into this file — two roles editing one artifact is exactly the ambiguity contracts exist to remove.
+
+If the bank state changes after the audit was written — a refresh triggered mid-run — the audit is
+rewritten with `revision:` incremented rather than appended to. The audit always describes the state
+the run actually used.
 
 ### `## Conflicts`
 
@@ -93,5 +103,5 @@ source whose standing must not be over-read, a mapping that must not be treated 
 
 | Direction | Roles |
 |---|---|
-| Producer | `vacancy-analyst.audit-sources`, with a bank stanza from `knowledge-bank-curator` |
+| Producer | `vacancy-analyst.audit-sources` — sole writer; the bank stanza is filled from the freshness verdict returned by `knowledge-bank-curator.check-freshness` |
 | Consumers | `reviewer` (fact-check traceability), `experience-writer`, `vacancy-analyst`, `knowledge-bank-curator` |
