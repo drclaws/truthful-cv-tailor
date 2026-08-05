@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Run Enhancv Resume Checker through a real browser and save a raw report."""
+"""Run the Enhancv Resume Checker through a real browser and save a raw capture.
+
+The rules of this check live in the SKILL.md next to this script; the script only
+executes them. Every path is an explicit command-line argument resolved by the
+caller: nothing is derived from repository layout, and no rules, context or
+configuration file is ever read here.
+
+Precheck: the gate statuses are read from the run manifest (`run.md`, contract
+`run-manifest`) whose path the caller passes, and the artifacts that must exist
+are named by the caller as explicit paths.
+"""
 
 import argparse
 import asyncio
@@ -11,13 +21,35 @@ from pathlib import Path
 URL = "https://enhancv.com/resources/resume-checker/"
 MAX_SIZE_BYTES = 2 * 1024 * 1024
 EXPORT_BASENAME_RE = re.compile(r"^[A-Z][A-Za-z]+[A-Z][A-Za-z]+$")
-LOCAL_VALIDATION_FILES = [
-    "05_fact_validation.md",
-    "06_ats_validation.md",
-    "07_position_match.md",
-    "08_final_cv.md",
-    "pdf_text_check.md",
-]
+
+# Status vocabulary recognized in a run manifest. The manifest is free-form
+# markdown, so a gate line is located by name and then read for one of these
+# words. Anything else is "unclear" — and unclear is never green.
+GREEN_STATUS = ("green", "pass", "passed", "ok", "complete", "completed", "done")
+RED_STATUS = ("red", "fail", "failed", "failing", "blocked", "error")
+NEUTRAL_STATUS = (
+    "skipped",
+    "skip",
+    "pending",
+    "in progress",
+    "not run",
+    "not started",
+    "todo",
+    "unknown",
+    "n a",
+)
+
+# Markers that make an artifact unfit to be the basis of an external submission.
+# Applied to the artifacts the caller declared as required; replaceable with
+# --forbid-marker, disableable with --no-marker-scan.
+DEFAULT_FORBIDDEN_MARKERS = (
+    "todo",
+    "placeholder",
+    "do not send",
+    "returned empty text",
+)
+
+BINARY_SUFFIXES = frozenset({".pdf", ".png", ".jpg", ".jpeg", ".docx", ".zip"})
 
 
 def has_candidate_export_name(path):
@@ -34,36 +66,75 @@ def require_candidate_export_name(pdf):
     )
 
 
-def default_pdf_for_job(base):
-    exports = base / "exports"
-    candidates = sorted(
-        path for path in exports.glob("*.pdf") if has_candidate_export_name(path)
-    )
-    if len(candidates) == 1:
-        return candidates[0]
-    if len(candidates) > 1:
-        formatted = "\n".join(f"- {path}" for path in candidates)
-        raise SystemExit(
-            "Multiple candidate-named PDF exports found. Pass the intended file "
-            f"with --pdf:\n{formatted}"
-        )
-    invalid = sorted(exports.glob("*.pdf"))
-    if invalid:
-        formatted = "\n".join(f"- {path}" for path in invalid)
-        raise SystemExit(
-            "No PDF export matches FirstNameSurname.pdf. Rename or create the "
-            f"candidate-named export before running Enhancv:\n{formatted}"
-        )
-    return exports / "FirstNameSurname.pdf"
-
-
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Upload a final CV PDF to Enhancv Resume Checker via Playwright."
+        description=(
+            "Upload a final CV PDF to the Enhancv Resume Checker through a real "
+            "browser and save the raw capture. All paths are explicit arguments."
+        )
     )
-    parser.add_argument("--job", help="Job output folder name under outputs/.")
-    parser.add_argument("--pdf", help="Path to the PDF to upload.")
-    parser.add_argument("--out", help="Path for the raw markdown report.")
+    parser.add_argument("--pdf", required=True, help="Path to the PDF to submit.")
+    parser.add_argument(
+        "--raw-out", required=True, help="Path for the raw markdown capture."
+    )
+    parser.add_argument(
+        "--html-out",
+        help="Path for the raw page HTML. Default: --raw-out with an .html suffix.",
+    )
+    parser.add_argument(
+        "--screenshot-out",
+        help="Path for the full-page screenshot. Default: --raw-out with a .png suffix.",
+    )
+    parser.add_argument(
+        "--run-manifest",
+        help=(
+            "Path to the run manifest (run.md, contract run-manifest) whose gate "
+            "statuses open this step. Required unless --skip-gate-check is passed."
+        ),
+    )
+    parser.add_argument(
+        "--require-gate",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help=(
+            "Name of a gate that must be recorded green in the run manifest. "
+            "Repeatable; the caller decides which gates matter."
+        ),
+    )
+    parser.add_argument(
+        "--require-artifact",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help=(
+            "Path to an artifact that must exist and be non-empty before "
+            "submitting. Repeatable."
+        ),
+    )
+    parser.add_argument(
+        "--forbid-marker",
+        action="append",
+        default=[],
+        metavar="TEXT",
+        help=(
+            "Text whose presence in a required artifact blocks the submission. "
+            "Repeatable; replaces the built-in default marker list."
+        ),
+    )
+    parser.add_argument(
+        "--no-marker-scan",
+        action="store_true",
+        help="Check that required artifacts exist, without scanning their text.",
+    )
+    parser.add_argument(
+        "--skip-gate-check",
+        action="store_true",
+        help=(
+            "Submit without reading the run manifest. Deliberate override only: "
+            "external checks are gated behind the internal and render gates."
+        ),
+    )
     parser.add_argument("--url", default=URL, help="Enhancv checker URL.")
     parser.add_argument(
         "--browser",
@@ -95,31 +166,17 @@ def parse_args():
             "Defaults to 120 when the browser is visible, 0 in headless mode."
         ),
     )
-    parser.add_argument(
-        "--skip-local-validation-gate",
-        action="store_true",
-        help="Allow upload without checking local validation artifacts first.",
-    )
     return parser.parse_args()
 
 
 def resolve_paths(args):
-    base = None
-    if args.job:
-        base = Path("outputs") / args.job
-        pdf = Path(args.pdf) if args.pdf else default_pdf_for_job(base)
-        out = (
-            Path(args.out)
-            if args.out
-            else base / "external_validators" / "enhancv_raw.md"
-        )
-    else:
-        if not args.pdf or not args.out:
-            raise SystemExit("Use either --job or both --pdf and --out.")
-        pdf = Path(args.pdf)
-        out = Path(args.out)
-
-    return pdf, out, out.with_suffix(".html"), out.with_suffix(".png"), base
+    pdf = Path(args.pdf)
+    out = Path(args.raw_out)
+    html_path = Path(args.html_out) if args.html_out else out.with_suffix(".html")
+    screenshot_path = (
+        Path(args.screenshot_out) if args.screenshot_out else out.with_suffix(".png")
+    )
+    return pdf, out, html_path, screenshot_path
 
 
 def validate_pdf(pdf):
@@ -135,37 +192,118 @@ def validate_pdf(pdf):
         )
 
 
-def require_local_validations(base):
-    if base is None:
-        return
+def normalize_text(text):
+    """Lowercase, and collapse everything that is not a letter or a digit."""
+    return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 
-    missing = [name for name in LOCAL_VALIDATION_FILES if not (base / name).exists()]
-    if missing:
-        formatted = "\n".join(f"- {base / name}" for name in missing)
+
+def contains_phrase(normalized, phrase):
+    return f" {phrase} " in f" {normalized} "
+
+
+def classify_line(line):
+    """Return green/red/neutral for a manifest line, or None when it says nothing."""
+    normalized = normalize_text(line)
+    if any(contains_phrase(normalized, word) for word in RED_STATUS):
+        return "red"
+    if any(contains_phrase(normalized, word) for word in NEUTRAL_STATUS):
+        return "neutral"
+    if any(contains_phrase(normalized, word) for word in GREEN_STATUS):
+        return "green"
+    return None
+
+
+def gate_status(manifest_lines, gate):
+    """Read one gate's status out of the run manifest.
+
+    A gate is green only when at least one line naming it says so and no line
+    naming it says anything worse. A gate no line names is `missing`, and missing
+    counts as unknown — never as green.
+    """
+    wanted = normalize_text(gate)
+    matches = [
+        line for line in manifest_lines if wanted and wanted in normalize_text(line)
+    ]
+    if not matches:
+        return "missing", []
+
+    verdicts = {}
+    for line in matches:
+        verdict = classify_line(line)
+        if verdict:
+            verdicts.setdefault(verdict, line.strip())
+
+    for verdict in ("red", "neutral", "green"):
+        if verdict in verdicts:
+            return verdict, [verdicts[verdict]]
+    return "unclear", [line.strip() for line in matches[:3]]
+
+
+def require_green_gates(manifest_path, gates):
+    """Block unless every requested gate is recorded green in the run manifest."""
+    if manifest_path is None:
         raise SystemExit(
-            "Enhancv must run after local validations and PDF extraction checks. "
-            f"Missing:\n{formatted}"
+            "Pass --run-manifest so the gate statuses can be read, or pass "
+            "--skip-gate-check deliberately."
         )
 
-    risky_markers = {
-        "05_fact_validation.md": ["todo", "placeholder"],
-        "06_ats_validation.md": ["todo", "placeholder"],
-        "07_position_match.md": ["do not send", "todo", "placeholder"],
-        "pdf_text_check.md": ["fail:", "returned empty text"],
-    }
-    warnings = []
-    for name, markers in risky_markers.items():
-        text = (base / name).read_text(encoding="utf-8").lower()
-        matched = [marker for marker in markers if marker in text]
-        if matched:
-            warnings.append(f"- {base / name}: {', '.join(matched)}")
+    manifest = Path(manifest_path)
+    if not manifest.exists():
+        raise SystemExit(f"Run manifest not found: {manifest}")
+    try:
+        lines = manifest.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as exc:
+        raise SystemExit(f"Run manifest is unreadable: {manifest}: {exc}") from exc
 
-    if warnings:
-        formatted = "\n".join(warnings)
+    if not gates:
         raise SystemExit(
-            "Local validation artifacts contain blocking/risky markers. "
-            "Resolve them before sending the PDF to Enhancv, or pass "
-            f"--skip-local-validation-gate intentionally.\n{formatted}"
+            "No gate names were passed. Name the gates that must be green with "
+            "--require-gate, or pass --skip-gate-check deliberately."
+        )
+
+    problems = []
+    for gate in gates:
+        status, evidence = gate_status(lines, gate)
+        if status == "green":
+            continue
+        quoted = "; ".join(evidence) if evidence else "no line names this gate"
+        problems.append(f"- {gate}: {status} ({quoted})")
+
+    if problems:
+        formatted = "\n".join(problems)
+        raise SystemExit(
+            "External checks run only after the internal and render gates are "
+            f"green. Not green in {manifest}:\n{formatted}"
+        )
+
+
+def require_artifacts(paths, markers, scan_markers):
+    """Block unless every declared artifact exists, is non-empty and is clean."""
+    problems = []
+    for raw in paths:
+        path = Path(raw)
+        if not path.exists():
+            problems.append(f"- {path}: missing")
+            continue
+        if not path.is_file():
+            problems.append(f"- {path}: not a file")
+            continue
+        if path.stat().st_size == 0:
+            problems.append(f"- {path}: empty")
+            continue
+        if not scan_markers or path.suffix.lower() in BINARY_SUFFIXES:
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace").lower()
+        hits = [marker for marker in markers if marker.lower() in text]
+        if hits:
+            problems.append(f"- {path}: contains {', '.join(hits)}")
+
+    if problems:
+        formatted = "\n".join(problems)
+        raise SystemExit(
+            "Required artifacts are missing or carry blocking markers. Resolve "
+            "them before submitting the PDF to Enhancv, or adjust "
+            f"--require-artifact / --forbid-marker deliberately:\n{formatted}"
         )
 
 
@@ -421,11 +559,23 @@ async def safe_capture_outputs(
 
 
 async def run(args):
-    pdf, out, html_path, screenshot_path, base = resolve_paths(args)
+    pdf, out, html_path, screenshot_path = resolve_paths(args)
     visible_browser = not args.headless
     manual_wait_seconds = resolve_manual_wait_seconds(args, visible_browser)
-    if not args.skip_local_validation_gate:
-        require_local_validations(base)
+
+    if args.skip_gate_check:
+        print(
+            "Gate check skipped by explicit request. External checks are meant to "
+            "run only after the internal and render gates are green."
+        )
+    else:
+        require_green_gates(args.run_manifest, args.require_gate)
+
+    require_artifacts(
+        args.require_artifact,
+        args.forbid_marker or list(DEFAULT_FORBIDDEN_MARKERS),
+        not args.no_marker_scan,
+    )
     validate_pdf(pdf)
     out.parent.mkdir(parents=True, exist_ok=True)
 
