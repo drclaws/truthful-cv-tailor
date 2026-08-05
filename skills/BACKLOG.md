@@ -1,9 +1,9 @@
 # Skills backlog
 
-The **deferred-work ledger**: planned but NOT yet built extensions of this repository — workflows,
-tools, roles, and harness adapters. It exists so that a decision already taken ("we will need a
-scouting flow, and it will consume the requirements-profile contract") is written down once, instead
-of being rediscovered or silently reinvented later.
+The **deferred-work ledger**: planned but NOT yet done work on this repository — workflows, tools,
+roles, harness adapters, and one-off migrations. It exists so that a decision already taken ("we
+will need a scouting flow, and it will consume the requirements-profile contract") is written down
+once, instead of being rediscovered or silently reinvented later.
 
 ## Entries have NO authority
 
@@ -31,7 +31,7 @@ omitted; when a field has no content, write `None.` or `To be defined.` rather t
 ```markdown
 ### <name>
 
-- **Kind:** workflow | tool | role | adapter
+- **Kind:** workflow | tool | role | adapter | migration
 - **Intent:** one paragraph — what it does, for whom, and why it is worth building. Enough for a
   reader to judge whether it is still wanted; not enough to be mistaken for a specification.
 - **Contracts produced:** contract names this item would write, or `None.`
@@ -46,8 +46,9 @@ as shipped skills (`<verb>-<object>`, lowercase, hyphenated).
 
 ## Entries
 
-Grouped by kind — workflows, then tools, then roles, then adapters — and ordered by name within each
-group. An absent entry means the item was never planned, not that it may be improvised.
+Grouped by kind — workflows, then tools, then roles, then adapters, then migrations — and ordered by
+name within each group. An absent entry means the item was never planned, not that it may be
+improvised.
 
 ### prepare-linkedin-profile
 
@@ -177,3 +178,30 @@ group. An absent entry means the item was never planned, not that it may be impr
   adapter is generated from the tree and never the other way round, or the harness copy quietly
   becomes the real one. Per-harness settings and the local rules file stay out of scope — they are
   the user's, and `setup-master` already owns them.
+
+### split-legacy-constraints
+
+- **Kind:** migration
+- **Intent:** Separate a constraints ledger inherited from a predecessor structure into its two
+  rightful homes. The negative-evidence guardrails — "do not claim X unless a canonical source adds
+  it" — stay in the ledger, which is the only thing the `constraints-ledger` contract governs. The
+  inherited sections that are positioning and style policy rather than negative evidence — how to
+  position the candidate, which header title to use, which wording to avoid and which is allowed,
+  which sections a document should cover, how to treat external validator advice — move to
+  `## Additional rules` in the user's local rules file, which is where `user-context` puts the
+  free-text preferences the flows honour. It is worth doing because the two kinds of statement carry
+  different authority: one narrows what may be claimed and binds every consumer, the other shapes
+  how a document reads and is the user's to change at will. Mixing them lets a preference be read as
+  a factual limitation, which is exactly what the curator's ingest rules already refuse to allow for
+  new proposals.
+- **Contracts produced:** `constraints-ledger` (rewritten in the shape the contract defines) and
+  `user-context` (the local rules file gains the moved sections).
+- **Contracts consumed:** `constraints-ledger` (the imported file as it stands) and `user-context`.
+- **Dependencies / notes:** this is the **user's action, not an automatic one**. The ledger is
+  personal data in a gitignored location, and deciding which inherited section is policy and which
+  is a real guardrail needs the user's judgement rather than a heuristic — a wrong call either drops
+  a guardrail or freezes a preference into a binding rule. No agent performs the split on its own
+  initiative, and the standing rule of this file applies with full force: until the user asks for
+  it, it has not happened, and an imported ledger is read exactly as it is under the legacy-import
+  allowance in `contracts/constraints-ledger.md`. Done once per ledger; there is nothing to build
+  and nothing to schedule.
