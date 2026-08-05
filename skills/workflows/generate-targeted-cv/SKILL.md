@@ -560,3 +560,66 @@ Stop and ask the user — recording the question in `run.md` `## Open questions`
 An unbound capability is **not** an escalation: it is a SKIPPED step with instructions, recorded in
 `run.md`, and the flow continues.
 
+## Usage
+
+No harness auto-discovers this repository's `skills/` directory yet, so the flow is invoked by path:
+
+> execute `skills/workflows/generate-targeted-cv/SKILL.md` for `<run-id>`
+
+The executing agent loads this file, plus the `ROLE.md` of the role of the current step and that
+step's capability file — and nothing else. Tool skills are read when a step invokes them.
+
+Before the first run:
+
+1. the user's context must exist — if it does not, the correct outcome of preflight is a question,
+   and the supported answer is `setup-master.bootstrap`
+   (`roles/setup-master/capabilities/bootstrap.md`);
+2. the knowledge bank must exist and be fresh — `skills/workflows/refresh-knowledge-bank/SKILL.md`;
+3. the job dossier must exist at `<run>/position/` — created by `scripts/create_run.py` as stubs the
+   user fills, or copied from the previous run of the same vacancy.
+
+A typical invocation, in the user's own words:
+
+```text
+Run skills/workflows/generate-targeted-cv/SKILL.md for the vacancy in
+<path-to-job-material>. Use my registered validation set.
+```
+
+Individual pieces can also be run on their own, without this flow: a tool skill invoked standalone
+defaults to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`, and a role invoked directly
+takes explicit paths from the user. That is a different thing from resuming this flow — a run is
+resumed by reading its `run.md`, not by re-running the steps that already have artifacts.
+
+## User-context settings
+
+**This skill recognizes no per-skill settings keys.** A `### generate-targeted-cv` subsection under
+`## Skill settings` in the user's local rules file has no meaning; report it as unrecognized rather
+than interpreting it. Every setting this run needs belongs to the skill that owns it — the render
+template to `render-cv-pdf`, a service's parameters to that validator's own subsection.
+
+What the flow does read from user context, per `contracts/user-context.md`:
+
+| Item | Contract section | Use |
+|---|---|---|
+| Canonical experience sources | `## Experience sources (canonical)` | Required. Passed to `check-freshness` at step 2 and to nothing else — this flow never reads a canonical source directly; the bank is its only view of the candidate. |
+| The active validation set | `## Validation skills` | Required section, optionally empty. Entries of kind `internal` instantiate step 10 and the `checks/` pattern; entries of kind `external` instantiate steps 18–20 and the `external/` patterns. The mandatory truthfulness check is never in this list. |
+| Per-skill settings | `## Skill settings` | Resolved and **passed through** to the skill each subsection names — the render tool's template, an external entry's service parameters. This flow validates that the owning skill recognizes the keys; it never interprets a value belonging to another skill. |
+| Additional rules | `## Additional rules` | Optional free text, passed to the writer as `additional_rules` and honoured throughout, so long as it does not weaken truthfulness, run isolation, the sole-writer rule, or validation independence. |
+
+## Dependencies
+
+Direct needs of the flow itself. Everything the tools it invokes require — the typesetting
+toolchain, text extraction, browser automation, a service's own runtime — is declared by those
+skills and inherited transitively; `setup-master.check-environment` aggregates both.
+
+| Name | Kind | Needed for | Required / optional | When unbound |
+|---|---|---|---|---|
+| File reading and writing within the paths this flow computes | capability | Creating the run directory, writing and updating `run.md` throughout the run, and reading the knowledge bank and the repository definitions the steps need. | required | Nothing can run. The flow reports `blocked` naming the path it could not reach; it never writes outside the paths it computed. |
+| A question channel to the user | capability | Every escalation in this flow is a question, not a decision: unresolvable context, a missing `## Candidate` section, the fit escalation at step 13, a `MANUAL_REVIEW`, a source conflict. | required | The flow records the question in `run.md` `## Open questions`, sets `status: blocked`, and stops. It never answers its own question. |
+| `python3` ≥ 3.10 | tool | Running this skill's `scripts/create_run.py` (step 3) and the curator's bundled freshness script (step 2). | optional | Create the layout and seed `run.md` by hand from the declarations above; compare source and index timestamps with the harness's own file tools. Note in `run.md` that both were done manually. A missing script runtime never fails this flow. |
+| Concurrent step execution (subagents or an equivalent) | capability | Running the declared parallel groups A, B and C at the same time. | optional | The groups run sequentially in table order. The outcome is identical by construction — no group member reads another's output — so this only costs time. |
+| Web search | capability | The optional company and market enrichment the job-side steps (4, 5) may request. | optional | The affected entry is recorded `SKIPPED` with instructions inside the artifact that wanted it; the analysis proceeds from the provided inputs alone. Recalled knowledge is never a substitute for a lookup that did not happen. |
+| Professional-network profile lookup | capability | The optional people/team context for the recruiter-signals step (6) when the dossier names interviewers. | optional | The entry is recorded `SKIPPED` with instructions; positioning proceeds from the notes the run actually has. |
+
+Concrete bindings for these live in the user's harness configuration, not here. Unbound entries are
+aggregated and reported by `setup-master.check-environment`.
