@@ -32,6 +32,10 @@ htmlcov/
 .roo/
 .mcp.json
 
+# User's harness-native local agent rules file: real paths and personal data.
+# Covers CLAUDE.local.md and every harness equivalent.
+*.local.md
+
 # Generated CV outputs and validator artifacts.
 outputs/*
 !outputs/.gitkeep
