@@ -125,8 +125,12 @@ Nothing is sent to a third party before all of this holds:
 
 - **The gates the caller named are green in `run.md`.** The statuses are read from the run manifest,
   matched by the gate names the caller passes. A gate is green only when a line naming it says so and
-  no line naming it says anything worse. A gate the manifest does not mention, or mentions
-  ambiguously, counts as **unknown — and unknown is never green**.
+  no line naming it says anything worse. The manifest records gates in a table, so a matching row is
+  read cell by cell and only a cell that *opens* with a status word counts — the requirement column
+  says what the gate needs and must never outvote the state column. The contract's four states are
+  recognized: `green` opens the submission, `red`, `not reached` and `waived by the user` do not. A
+  gate the manifest does not mention, or mentions ambiguously, counts as **unknown — and unknown is
+  never green**.
 - **The declared artifacts exist and are non-empty** — at minimum the final document and the report
   of the mandatory truthfulness check, plus whatever else the flow declares.
 - **None of those artifacts carries a blocking marker.** Unless the caller supplies its own list, the
