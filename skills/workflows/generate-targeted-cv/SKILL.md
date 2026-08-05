@@ -175,3 +175,388 @@ gate 5 checks the produced filename against it), to any external entry whose spe
 naming-pattern parameter (so the entry enforces *this* rule rather than nothing), and into `run.md`
 so the user can find the file by name.
 
+## Steps
+
+`executor` is the `role.capability` that runs the step, `tool:<name>` for a tool skill executed by
+its owning role, or `flow` for orchestration the flow does itself. Every path a role receives is
+passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge bank directory and its
+`constraints.md`, resolved at preflight.
+
+| # | Step | Executor | Contract | Paths passed | Group | Gate |
+|---|---|---|---|---|---|---|
+| 1 | Resolve user context | `flow` | `user-context` | — | — | G1 |
+| 2 | Check bank freshness | `knowledge-bank-curator.check-freshness` | — (verdict returned) | `sources`, `bank_dir` | — | G2 |
+| 3 | Scaffold the run, seed the manifest | `flow` (`scripts/create_run.py`) | `run-manifest` | `<run>/`, `<run>/run.md`, `<run>/position/` | — | — |
+| 4 | Audit the job-side inputs | `vacancy-analyst.audit-sources` | `source-audit` | `run_id`, `job_dossier_path=<run>/position/`, `transcript_paths`, `additional_inputs`, `run_manifest_path=<run>/run.md`, `constraints_ledger_path=<ledger>`, `output_path=<run>/source_audit.md` | — | G3 |
+| 5 | Analyse the vacancy | `vacancy-analyst.analyze-job` | `requirements-profile` | `run_id`, `job_dossier_path`, `source_audit_path=<run>/source_audit.md`, `constraints_ledger_path`, `output_path=<run>/requirements_profile.md` | **A** | — |
+| 6 | Extract recruiter signals | `vacancy-analyst.extract-recruiter-signals` | `recruiter-signals` | `run_id`, `job_dossier_path`, `transcript_paths`, `people_notes`, `source_audit_path`, `constraints_ledger_path`, `output_path=<run>/recruiter_signals.md` | **A** | — |
+| 7 | Retrieve evidence (batch) | `knowledge-bank-curator.query-bank` | `evidence-map` | `bank_dir`, `requirements_profile=<run>/requirements_profile.md`, `constraints_ledger`, `recruiter_signals=<run>/recruiter_signals.md`, `in_run_proposals`, `output_path=<run>/evidence_map.md`, `run_id` | — | G4 |
+| 8 | Write the draft | `experience-writer.write-document` | `cv-document` | `document_format_contract=contracts/cv-document.md`, `evidence_source=<run>/evidence_map.md`, `requirements_source`, `signals_source`, `constraints_ledger`, `in_run_proposals`, `source_audit`, `additional_rules`, `output_path=<run>/draft_cv.md`, `run_id`, `status=draft` | — | — |
+| 9 | Truthfulness check (mandatory) | `reviewer.fact-check` | `validation-report` | `document=<run>/draft_cv.md`, `knowledge_bank`, `constraints_ledger`, `evidence_map`, `source_audit`, `requirements_profile`, `recruiter_signals`, `in_run_constraint_proposals`, `report_path=<run>/fact_check.md` | **B** | G5 |
+| 10 | Registered internal checks | `reviewer.run-check` — one invocation per entry | `validation-report` | `check_spec`, `check_name`, `check_inputs` (exactly what that spec declares), `check_settings`, `run_manifest=<run>/run.md`, `report_path=<run>/checks/<validator>.md` | **B** | G6 |
+| 11 | Score the fit | `vacancy-analyst.score-fit` | `fit-report` | `run_id`, `requirements_profile_path`, `candidate_data_path=<run>/draft_cv.md`, `candidate_data_format=cv-document`, `recruiter_signals_path`, `job_dossier_path`, `constraints_ledger_path`, `tag_candidates_source=<run>/draft_cv.md`, `output_path=<run>/fit_report.md` | **B** | — |
+| 12 | Edit loop (while any check fails) | `experience-writer.edit-document` | `cv-document` | `document_path=<run>/draft_cv.md`, `document_format_contract`, `findings` (the failing reports), `evidence_source`, `requirements_source`, `signals_source`, `constraints_ledger`, `output_path=<run>/draft_cv.md`, `status=draft` | — | G5, G6 re-run |
+| 13 | Fit escalation | `flow` | — (reads `fit-report`) | `<run>/fit_report.md` | — | G7 |
+| 14 | Promote the cleared draft | `experience-writer.edit-document` | `cv-document` | `document_path=<run>/draft_cv.md`, `caller_instruction`, `evidence_source`, `constraints_ledger`, `output_path=<run>/final_cv.md`, `status=final` | — | G8 |
+| 15 | Re-check the final instance | `reviewer.fact-check`; `reviewer.run-check` per implicated entry | `validation-report` | `document=<run>/final_cv.md`; same report paths, `revision:` incremented | — | G5, G6 |
+| 16 | Render the deliverable | `renderer.render-document` via `tool:render-cv-pdf` | `render-manifest` | `document=<run>/final_cv.md`, `template` (resolved from user context), `settings` (`page_target`), `export_name`, `source_out=<run>/render/final_cv.tex`, `export_out=<run>/exports/<export_name>`, `manifest_out=<run>/render/render_report.md`, `build_dir=<run>/render/`, `validation_reports=<run>/fact_check.md` + every `<run>/checks/<validator>.md` | — | G9 |
+| 17 | Resolve an overflow or a red gate | `experience-writer.edit-document` → step 15 → step 16 | `cv-document` | as steps 14–16, on `<run>/final_cv.md` | — | G5, G6, G9 |
+| 18 | Run the external checks | `reviewer.run-external-checks` | raw captures + `validation-report` (run record) | `external_entries`, `deliverable=<run>/exports/<export_name>`, `document=<run>/final_cv.md`, `job_inputs`, `run_manifest=<run>/run.md`, `raw_capture_paths=<run>/external/<validator>_raw.<ext>`, `report_path=<run>/external/run_record.md` | **C** | G10 |
+| 19 | Normalize each capture | `reviewer.normalize-external-report` — one invocation per capture | `validation-report` (advisory) | `raw_capture`, `entry_name`, `submitted_deliverable`, `document=<run>/final_cv.md`, `job_inputs`, `report_path=<run>/external/<validator>_report.md` | **C** | — |
+| 20 | Gate the external recommendations | `reviewer.gate-external-recommendations` | `external-gate-decision` | `normalized_reports`, `fact_check_report=<run>/fact_check.md`, `internal_reports`, `render_manifest=<run>/render/render_report.md`, `document=<run>/final_cv.md`, `knowledge_bank`, `constraints_ledger`, `evidence_map`, `requirements_profile`, `report_path=<run>/external/gate_decision.md` | — | G11 |
+| 21 | Apply accepted advice (conditional) | `experience-writer.edit-document` → step 15 → step 16 | `cv-document` | `document_path=<run>/final_cv.md`, `gate_decisions=<run>/external/gate_decision.md`, `evidence_source`, `constraints_ledger`, `output_path=<run>/final_cv.md`, `status=final` | — | G5, G6, G9 |
+| 22 | Report the gaps | `vacancy-analyst.gap-analysis` | `gap-report` | `run_id`, `requirements_profile_path`, `evidence_map_path`, `cv_document_path=<run>/final_cv.md`, `validation_report_paths`, `fit_report_path`, `external_gate_decision_path`, `recruiter_signals_path`, `constraints_ledger_path`, `output_path=<run>/gap_report.md` | — | — |
+| 23 | Brief the bank | `knowledge-bank-curator.ingest-run-feedback` | `bank-update-brief` | `run_reports` (this run's analytical artifacts), `bank_dir`, `constraints_ledger`, `output_path=<run>/bank_update_brief.md`, `run_id` | — | — |
+| 24 | Ingest constraint proposals | `knowledge-bank-curator.maintain-constraints` | `constraints-ledger` | `report_paths` (every report of this run), `direct_proposals`, `constraints_ledger=<ledger>`, `bank_dir`, `run_id` | — | G12 |
+| 25 | Close the manifest | `flow` | `run-manifest` | `<run>/run.md` | — | — |
+
+### Parallel groups
+
+| Group | Steps | Rule |
+|---|---|---|
+| **A** | 5 ∥ 6 | Both read the dossier and the source audit; neither reads the other's output. |
+| **B** | 9 ∥ (each entry of 10) ∥ 11 | All three read the same draft revision. The fit score is informational and does not wait for the checks; the checks do not wait for it. |
+| **C** | the per-entry executions inside 18, then each 19 | External entries are independent services; one entry's outcome never changes another's. |
+
+A harness with subagents runs a group concurrently; a single-context harness runs the same steps in
+table order. **The result must not differ.** Nothing inside a group may read another group member's
+output — that is what makes the two execution modes equivalent.
+
+### 1. Resolve user context
+
+Resolve, per `contracts/user-context.md`, in its order: the harness-native local agent rules file →
+any other context or memory the harness provides → **ask the user**. The local rules file wins on
+conflict. Nothing is defaulted from the repository layout and nothing is inferred.
+
+What this flow needs resolved, and what it does with each value, is in *User-context settings* below.
+Validate the result per the contract's preflight rules, and in particular:
+
+- the validation set is well-formed — every entry has a name and a kind, and resolves to a skill that
+  exists. A shipped `validate-cv-*` skill missing from the set is a **warning** to the user (adding a
+  validator without recording it leaves it inactive), never a silent addition;
+- every per-skill settings subsection names a skill that exists, and its keys are recognized by that
+  skill's own `SKILL.md`. Unrecognized keys are reported, never interpreted here;
+- the bank's `## Candidate` section exists — the export naming rule needs it. Absent ⇒ ask, or refresh.
+
+Record in `run.md` `## User context`: which resolution supplied which values, and the resolved
+snapshot. An empty registered validation set is legitimate and is recorded as such: the mandatory
+truthfulness check still runs.
+
+### 2. Check bank freshness
+
+Invoke `knowledge-bank-curator.check-freshness` with the resolved sources and the bank directory.
+Record the verdict, the per-source and per-index statuses in `run.md` `## Bank freshness`.
+
+| Verdict | What the flow does |
+|---|---|
+| `fresh` | Proceed, recording the verdict. |
+| `stale` | **Stop this flow and run `refresh-knowledge-bank` first**, then resume from step 1 with the rebuilt bank. A CV built on a stale bank is a CV built on last month's truth, and nothing downstream can detect it. |
+| `unknown` (a source could not be read) | Ask the user before proceeding. Proceeding is allowed if the user accepts the risk; the acceptance and its reason go into `run.md`, and the source audit's bank stanza carries it. |
+
+The verdict is *produced* here and *transcribed* by the analyst into the source audit's
+`## Bank stanza` at step 4 — the flow records it in `run.md`, the analyst copies it, and the curator
+never writes into that file.
+
+### 3. Scaffold the run, seed the manifest
+
+Run `scripts/create_run.py` with values this flow resolved — the run directory, the run id, the flow
+name and version, the resolved context snapshot, the step and gate names of the tables in this file,
+the bank directory, the identity and the export name the naming rule produced, and (on a rerun) the
+previous run's `position/` to copy. The script takes explicit command-line arguments and reads no
+context, rules or contract file; `--help` documents every argument.
+
+The seeded `run.md` is a `run-manifest` instance with `status: in-progress`,
+`producer: flow:generate-targeted-cv`, one `## Steps` row per step of the table above at `pending`,
+and one `## Gates` row per gate below at `not reached`. **The manifest is written as the run
+proceeds** — a manifest reconstructed at the end cannot support resuming, blocking, or the gate reads
+that step 18 depends on.
+
+If the script cannot run (no interpreter), create the same layout and seed the same manifest by hand.
+A missing script runtime never fails this flow.
+
+**Rerun and the dossier.** A rerun for the same vacancy copies the previous run's `position/` into
+the new run rather than pointing at it. The duplication is deliberate and is the price of run
+isolation: a run may read only its own directory, the shared bank and the shared repository
+definitions, so pointing at another run's dossier would make that other run an input. The script
+automates the copy; new material is added to the **new** run's copy.
+
+### 4. Audit the job-side inputs
+
+`vacancy-analyst.audit-sources` inventories and classifies everything the run was given, marks the
+conflicts, and writes the bank stanza from the freshness verdict recorded in `run.md`. **G3** is the
+audit existing and reaching `status: complete`; a `blocked` audit (no readable job description)
+stops the flow with a question.
+
+### 5–6. Group A — the vacancy and the people around it
+
+`analyze-job` produces the requirements profile; `extract-recruiter-signals` produces the signals.
+Both may run concurrently. A run with no people-side input still produces `recruiter_signals.md`,
+with `status: skipped` — a recorded absence, not a missing file, because later steps read it and
+need to see that the recruiter component is absent rather than empty.
+
+Optional enrichment (public company material, public profile context for named interviewers) that
+has no bound capability is recorded inside the artifact as `SKIPPED` with instructions. It never
+fails a step.
+
+### 7. Retrieve evidence
+
+`knowledge-bank-curator.query-bank` in **batch mode** over the requirements profile produces the
+evidence map: one entry per requirement, cited, strength-labelled, constraint-flagged, `GAP` where
+the bank has nothing.
+
+**G4** is the map covering every requirement in the profile. A map missing rows is worse than a map
+full of gaps: an absent row is indistinguishable from an oversight.
+
+The map is deliberately **neutral** — it says what evidence exists, never where it should go. The
+writer derives placement itself; see the writer's capability. Do not wait for usage hints that are
+not coming.
+
+### 8. Write the draft
+
+`experience-writer.write-document`, pointed at `contracts/cv-document.md` as its format contract.
+The evidence map is the **only** admissible source of facts.
+
+**The writer's notes have a home.** `cv-document` declares `## Annex: writer notes`, so the
+positioning choices, the intentional omissions, the header-title rationale, the tag candidates and
+the writer's open issues are written **into `draft_cv.md`'s annex** and travel with the document.
+The capability's fallback — hand the notes to the flow when the format contract declares no annex —
+does not apply in this flow and must not be used as a reason to keep notes out of the artifact.
+
+### 9–11. Group B — check the draft, and score it
+
+Three independent readings of the same draft revision:
+
+- **9, the mandatory truthfulness check.** `reviewer.fact-check` **always runs**. It is not part of
+  the registered validation set, it cannot be deselected, disabled or skipped, and if it cannot run
+  the flow is blocked rather than continued. Its report is the fixed artifact `<run>/fact_check.md`.
+- **10, the registered internal checks.** For **each entry of the registered validation set of kind
+  `internal`**, one `reviewer.run-check` invocation, executing that entry's own spec, writing to
+  `<run>/checks/<validator>.md`. The flow passes the entry's spec path, its registered name, the
+  inputs that spec declares, and the per-skill settings recorded for it. The flow neither knows nor
+  cares what any entry checks: it resolves the set, computes the paths, and reads back verdicts. An
+  entry whose required dependency is unbound is a recorded `skipped` report with instructions —
+  never a failure, never a red gate.
+- **11, the fit score.** `vacancy-analyst.score-fit` against the draft, with
+  `candidate_data_format: cv-document` declared in the report header. **Informational**: it sets no
+  status, opens no gate and blocks nothing. The escalation rule at step 13 is what reads it.
+
+### 12. The edit loop
+
+Any `validation-report` of group B with verdict `Fail`, or `Pass-after-edits` with required edits,
+goes back to `experience-writer.edit-document` with those reports as `findings`. The writer applies
+the smallest sufficient change; the reviewer never edits, and the writer never declares the result
+validated.
+
+**What re-runs, and how the flow knows.** `edit-document` returns a **disposition list**: every
+finding and verdict with what was done about it, plus an account of what changed materially. This
+flow records that list in `run.md` — in the `## Steps` notes of the edit step, alongside the bumped
+`revision:` — and uses it to compute the re-check set:
+
+| The edit changed | What re-runs |
+|---|---|
+| any content at all | `reviewer.fact-check` — in full, over the whole document, not only the changed lines |
+| content an internal entry inspects | that entry's `run-check`, re-executing the **whole** spec |
+| nothing (every item was `GAP_ONLY`, `REJECT` or not-for-the-writer) | nothing; the items are routed to the gap report at step 22 |
+
+The disposition list is **routing state, not a result**: what changed and why is recorded in the
+document's own annex, and the findings stay in the reviewer's reports. The manifest holds only which
+checks the flow must re-open. Every re-check overwrites its report in place with `revision:`
+incremented.
+
+A finding that survives repeated edit cycles is reported to the user, not looped over silently.
+
+### 13. Fit escalation
+
+The fit report gates nothing — but a run that is not worth sending should not consume a render and
+three external submissions before anyone notices. So this flow, and not the report, declares an
+escalation rule:
+
+> **Pause and ask the user whether to proceed** when the fit report's `## Should apply?` verdict is
+> **`Maybe`** or **`Low ROI`**, or when its overall score is **below 60 % of the denominator the
+> report states** (below 60 of 100, or below 57 of 95 when the recruiter component is `n/a`).
+
+Asking means presenting the score, the verdict, the named risks and the strongest gaps, and waiting.
+The answer — proceed, stop, or proceed after changing the target — is recorded in `run.md`
+`## Open questions` with the reasoning. **G7** is the escalation being settled: either it did not
+trigger, or the user answered.
+
+The threshold is a flow convention for spending effort, not a judgement about the candidate and not
+a quality bar. It never changes a report, never changes a status, and never becomes a reason to make
+the CV claim more.
+
+### 14–15. The final instance, and its checks
+
+`edit-document` writes the cleared draft to `<run>/final_cv.md` with `status: final` and the caller
+instruction *promote; apply the outstanding required edits and change nothing else*. The draft stays
+where it is: two instances, one contract, both indexed in `run.md`.
+
+Then the checks run **against the instance that will actually be rendered**: `reviewer.fact-check`
+in full, plus the internal entries the disposition list implicates. The reports are overwritten with
+`revision:` incremented, so that every report names the document that was rendered. **G8** is
+`final_cv.md` existing at `status: final` with no unresolved required edit from any report.
+
+### 16. Render the deliverable
+
+`renderer.render-document`, executing `skills/tools/render-cv-pdf/SKILL.md` with the template
+resolved from that skill's own settings subsection in user context (its default is the shipped
+bundle). The tool owns the page target, the content-first fit policy, the gate sequence and the
+template resolution; this flow owns the paths and the export name.
+
+**The renderer may refuse, and that is correct.** It does not render a document that contradicts an
+accompanying validation report, and it does not quietly prefer one over the other — it stops and
+reports the conflict. This flow therefore never expects a silent preference, and never passes a
+document whose reports it has not cleared:
+
+- steps 14–15 must have closed G5 and G6 on **this** revision before step 16 starts;
+- the `validation_reports` the flow passes are exactly the reports that cleared this revision —
+  `fact_check.md` plus every `checks/<validator>.md`, at their current revisions;
+- a refusal is **not** a render failure to retry. It means an artifact pair disagrees. Route it back:
+  the writer resolves the document side, the reviewer re-checks, and only then does step 16 run
+  again. Overriding the renderer, or re-passing the same pair, is a defect.
+
+**Overflow is a content problem** (step 17). The tool reports what overflowed and by how much; the
+writer compresses validated content gradually per its own capability; the template is never
+restyled, and no content is silently cut. After any content change: step 15, then step 16 again.
+
+**G9** is every mechanical gate in `render/render_report.md` green — compile twice, page target,
+text extraction in both modes, fonts embedded, export filename matching the naming rule. An unbound
+toolchain is a **SKIPPED** render with instructions and the gates recorded as *not run*: it does not
+fail this flow, but it does not open G10 either, because a gate that did not run was never green.
+
+### 18–20. External validation
+
+Gated, hard: **G10 opens only when G5, G6 and G9 are all green.** No submission happens earlier —
+not partially, not "just to see what it says".
+
+`reviewer.run-external-checks` runs **each entry of the registered validation set of kind
+`external`**, executing that entry's own spec: its environment preparation, its interaction policy,
+its manual fallback. Entries run concurrently where the harness allows. The flow supplies the
+deliverable at its export path and name, the final document, the job-side inputs the entry declares,
+the run manifest, the raw-capture paths from the pattern above, and the gate names to assert —
+**exactly as `run.md` records them** in the `## Gates` table, so an entry that reads gate statuses
+from the manifest matches on the same strings this file declares.
+
+An entry whose required dependency is unbound is **SKIPPED with instructions**. It never fails the
+flow, never turns a gate red, and never produces a verdict about the document.
+
+**Where the per-entry external outcomes go.** `run-external-checks` produces one run record for the
+whole step, and this flow places it at **`<run>/external/run_record.md`** — its own artifact, a
+`validation-report` instance, listing every external entry with its outcome (`executed` with the
+capture paths, `SKIPPED` with the unblocking instructions and the manual procedure from its spec, or
+`not completed` with what was attempted). It is not folded into `run.md`: the manifest points at
+artifacts rather than replacing them, and a SKIPPED entry's instructions are a procedure a person
+follows later — too much to live in a table cell, and too important to lose when the manifest is
+rewritten. `run.md` carries the one-line outcome per entry and the pointer.
+
+Then, per capture, `reviewer.normalize-external-report` writes the advisory report at
+`<run>/external/<validator>_report.md` — form changed, meaning untouched, never a blocking verdict.
+Finally `reviewer.gate-external-recommendations` judges every recommendation once, across services,
+into `<run>/external/gate_decision.md`.
+
+**G11** is the gate decision existing with a final recommendation and **no unresolved
+`MANUAL_REVIEW`**. A `MANUAL_REVIEW` item is a question for the user, recorded in `run.md`
+`## Open questions`; the run cannot be `complete` while one is open.
+
+### 21. Applying accepted advice
+
+Every `APPLY` / `APPLY_WITH_REWRITE` goes to `edit-document`, within the evidence and never beyond
+it. `GAP_ONLY` and `REJECT` change no document and go to the gap report. `MANUAL_REVIEW` waits for
+the user.
+
+Any applied item re-opens the same loop as any other content change: `reviewer.fact-check`, the
+internal entries the disposition list implicates, and a re-render. External advice never shortens
+this path, however safe it looked.
+
+### 22–24. Closing the run
+
+- **22, the gap report.** `vacancy-analyst.gap-analysis` over the requirements, the evidence map, the
+  final document and every finding of the run: genuine gaps, how the document handles them, honest
+  interview follow-ups, the external `GAP_ONLY` items, and every rejected recommendation with its
+  reason.
+- **23, the bank update brief.** `knowledge-bank-curator.ingest-run-feedback` — a report only. It
+  asks what would change the **bank**, never what to say in this application, and it writes nothing
+  but the brief. It runs **last among the analytical steps**, after every validator and render check,
+  because it reads their outcomes.
+- **24, the ledger.** `knowledge-bank-curator.maintain-constraints` — the only writer of the ledger —
+  ingests the `## Constraint proposals` of **every report this run produced**: source audit,
+  requirements profile, recruiter signals, evidence map, every validation report (internal,
+  the mandatory truthfulness check, and the normalized external ones), the external run record, the
+  gate decision, the fit report, the render manifest, the gap report, the bank update brief, and the
+  writer's annex in `final_cv.md`. `direct_proposals` carries what lives in no artifact: anything the
+  user stated during the run, and proposals returned by a capability whose report was never written
+  (a step that ended `blocked`).
+
+  Conservative proposals are applied without asking; everything else becomes a recorded question.
+  **G12** is the ingestion having run and its summary recorded — pending questions included. Nothing
+  to ingest is a success.
+
+Earlier steps of the same run honour proposals raised by earlier steps **before** this ingestion:
+the flow carries them forward as `in_run_proposals` / `in_run_constraint_proposals`, and step 24
+makes them durable.
+
+### 25. Close the manifest
+
+Fill `run.md`: final step statuses and revisions, gate states, the artifact index (every artifact
+with its contract, status and revision, plus `<run>/render/`, `<run>/exports/` and `<run>/work/`
+marked as intermediates and byproducts, and the ledger by its path outside the run), and the open
+questions. Set `status: complete` only when the definition of done is met; otherwise `blocked` (a
+decision is needed) or `fail`, with the reason.
+
+A `complete` manifest with a red gate or an unresolved question is a defect.
+
+## Gates
+
+| Gate | Requires | Evidenced by |
+|---|---|---|
+| G1 context resolved | User context resolved through the declared order; the validation set well-formed; the bank's `## Candidate` section available for the naming rule. | `run.md` `## User context` |
+| G2 bank freshness decided | A verdict with per-source and per-index status. `stale` ⇒ refresh first. `unknown` ⇒ settled with the user. An undecided verdict is a red gate. | `run.md` `## Bank freshness` |
+| G3 sources audited | Every run input inventoried and classified; conflicts marked; the bank stanza written. | `<run>/source_audit.md` |
+| G4 evidence retrieved | One evidence-map entry per requirement in the profile, cited and strength-labelled, gaps marked `GAP`. | `<run>/evidence_map.md` |
+| G5 truthfulness | The mandatory `reviewer.fact-check` on the current revision of the document in play: `pass`, or `pass-after-edits` with every required edit applied and the check re-run. Never skipped, never waived. | `<run>/fact_check.md` |
+| G6 registered internal checks | Every entry of the registered set of kind `internal`: `pass`, or `pass-after-edits` with its edits applied and the entry re-run, or a recorded `skipped` with instructions. An empty set closes this gate trivially. | `<run>/checks/<validator>.md` |
+| G7 fit escalation settled | The rule did not trigger, or the user answered and the answer is recorded. | `<run>/fit_report.md`, `run.md` `## Open questions` |
+| G8 final document | `<run>/final_cv.md` exists at `status: final`, with no unresolved required edit from any report. | `<run>/final_cv.md` |
+| G9 render gates | Every mechanical gate green in the render manifest: compile ×2, page target, extraction in both modes, fonts embedded, export filename matching the naming rule. Gates recorded *not run* are not green. | `<run>/render/render_report.md` |
+| G10 external submission opened | G5, G6 and G9 all green at the time of submission. Missing or ambiguous statuses count as unknown, and unknown is never green. | `run.md` `## Gates`, `<run>/external/run_record.md` |
+| G11 external advice judged | A gate decision with a final recommendation and no unresolved `MANUAL_REVIEW`; every applied item re-checked and re-rendered. | `<run>/external/gate_decision.md` |
+| G12 ledger closed | `maintain-constraints` ran over every report of the run; its summary and any pending questions recorded. | `run.md`, `<bank-dir>/constraints.md` |
+
+Gate names are recorded in `run.md` `## Gates` **exactly as this table names them**. Steps that read
+gate statuses out of the manifest — an external entry's precheck, a resuming agent — match on those
+strings.
+
+## Definition of done
+
+- Every gate green in `run.md`, or explicitly waived by the user with the reason recorded. G5 is
+  never waivable.
+- The deliverable exists at `<run>/exports/`, named per *The export naming rule*, and the render
+  manifest's naming check says `match`.
+- No unresolved `MANUAL_REVIEW` item and no unanswered escalation.
+- The gap report and the bank update brief exist; the ledger ingestion ran and its questions are in
+  `## Open questions`.
+- `run.md` has `status: complete`, a full artifact index, and no unresolved question.
+
+## Escalation
+
+Stop and ask the user — recording the question in `run.md` `## Open questions` and setting
+`status: blocked` — when:
+
+- user context cannot be resolved, the validation set is malformed, or a per-skill setting is
+  unrecognized by the skill it names;
+- the bank's `## Candidate` section is missing or records conflicting spellings, so the export name
+  cannot be derived;
+- the freshness verdict is `unknown` and the affected source matters to this vacancy;
+- no readable job description was provided, or the job-side inputs contradict each other on something
+  load-bearing and neither source is more canonical;
+- the fit escalation rule triggers (step 13);
+- the same finding survives repeated edit cycles, or two required edits contradict each other;
+- the renderer reports that the document contradicts an accompanying validation report, and the
+  contradiction is not resolvable by an edit the findings already require;
+- content cannot meet the page target without cutting something a finding requires to stay;
+- an external gate decision carries a `MANUAL_REVIEW`, or its final recommendation is
+  `Do not send`;
+- the constraints ledger is unreadable or malformed — the run stops rather than starting a new one.
+
+An unbound capability is **not** an escalation: it is a SKIPPED step with instructions, recorded in
+`run.md`, and the flow continues.
+
