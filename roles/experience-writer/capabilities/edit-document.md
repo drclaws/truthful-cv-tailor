@@ -80,6 +80,9 @@ account of what changed materially — the flow uses that to decide which checks
 - The writer never declares the result validated. Re-validation is `reviewer.fact-check` and the
   registered checks, ordered by the flow. A revision is finished when the edits are made and reported.
 - The writer never edits a validation report, a gate decision, or any other reviewer artifact.
+- **Readability survives the edit.** Wording stays concise and plainly readable by a non-specialist
+  reader. An edit that satisfies a finding by producing dense, clotted or jargon-heavy text has not
+  satisfied it; find a shorter true sentence instead.
 - Findings are not negotiable, and neither are gate verdicts. A finding the writer believes to be
   wrong is escalated with its reason — never silently ignored, never quietly downgraded.
 
