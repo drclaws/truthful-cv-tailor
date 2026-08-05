@@ -17,7 +17,7 @@ applied without asking; anything else becomes a question to the user.
 | `report_paths` | The run's report artifacts carrying `## Constraint proposals` sections — source audit, requirements profile, recruiter signals, evidence map, validation reports, gate decision, fit report, gap report, render manifest, bank update brief. | required |
 | `constraints_ledger` | The ledger to write. Created if it does not exist. | required |
 | `run_id` | The run whose proposals are being ingested; recorded as the origin of each entry. | required |
-| `direct_proposals` | Proposals given directly by the user or by a role invoked outside a flow. | optional |
+| `direct_proposals` | Proposals that live in no artifact: given directly by the user, given by a role invoked outside a flow, or returned inline by a capability whose report was never written as an artifact — a build summary, a step that ended `blocked`. | optional |
 | `bank_dir` | The knowledge bank, read-only — used to check a proposal against what the bank actually contains. | optional |
 
 ## Outputs

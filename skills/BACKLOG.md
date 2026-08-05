@@ -46,7 +46,134 @@ as shipped skills (`<verb>-<object>`, lowercase, hyphenated).
 
 ## Entries
 
-<!-- Populated when the deferred work items are recorded. Until then, this section is intentionally
-     empty: an absent entry means the item was never planned, not that it may be improvised. -->
+Grouped by kind — workflows, then tools, then roles, then adapters — and ordered by name within each
+group. An absent entry means the item was never planned, not that it may be improvised.
 
-_None recorded yet._
+### prepare-linkedin-profile
+
+- **Kind:** workflow
+- **Intent:** Produce a truthful professional-network profile — headline, about section, per-position
+  descriptions, skills — from the same knowledge bank the CV flow uses, so that the profile and the
+  CV never drift apart or contradict each other. It is worth a flow of its own rather than a variant
+  of the CV flow because the deliverable is text pasted into a web form: no render step, no page
+  target, no export, but a platform-specific shape and a much longer shelf life, which changes what
+  "truthful" has to survive. The roles it needs already exist and are already format-agnostic —
+  `experience-writer` takes its document shape from a format contract passed in, and
+  `reviewer.fact-check` explicitly checks any candidate document rather than assuming a CV.
+- **Contracts produced:** a new `profile-document` contract (the platform's shape: field lengths,
+  section set, what may carry a claim), plus `run-manifest`, `validation-report`, `gap-report`,
+  `bank-update-brief`.
+- **Contracts consumed:** `user-context`, `knowledge-bank`, `constraints-ledger`, `evidence-map`, and
+  `requirements-profile` when the profile is aimed at a class of roles.
+- **Dependencies / notes:** the `profile-document` contract has to be written first — everything
+  CV-specific in `cv-document` (the header title, position headers, one-page compression) is exactly
+  what must not be carried over. Reading or updating a live profile would need a professional-network
+  capability and is optional; a flow that only produces text to paste needs none. Open question:
+  whether the profile is written per target audience or once, which decides whether
+  `requirements-profile` is an input at all.
+
+### scout-vacancies
+
+- **Kind:** workflow
+- **Intent:** Screen a batch of vacancies against the candidate's evidence and return a ranked
+  shortlist with reasons, so that tailoring effort goes to the applications worth it. It scores each
+  vacancy before any CV exists, which is precisely why `vacancy-analyst.score-fit` was kept
+  input-format-agnostic: the bank is a legitimate candidate-data format, and the fit report declares
+  which format it used. The output is a comparison, not a document — no writer, no renderer, no
+  validators.
+- **Contracts produced:** `run-manifest`, one `requirements-profile` and one `fit-report` per
+  vacancy, and a new `shortlist` contract holding the ranked comparison with its caveats.
+- **Contracts consumed:** `user-context`, `knowledge-bank`, `constraints-ledger`, and one
+  `job-dossier` per vacancy.
+- **Dependencies / notes:** vacancy intake is the unsolved part — a batch of dossiers has to come
+  from somewhere, and web search or a job-search capability would be optional bindings rather than
+  requirements. The `shortlist` contract must carry the fit report's own rule that scores are
+  comparable only within one candidate-data format: ranking runs across vacancies scored the same
+  way, or not at all. It writes no CV and must not — a shortlist entry is promoted by running
+  `generate-targeted-cv` on it.
+
+### query-bank
+
+- **Kind:** tool
+- **Intent:** Wrap `knowledge-bank-curator.query-bank` as a standalone skill, so that "what evidence
+  do I have for X?" can be asked directly — preparing for an interview, judging whether a vacancy is
+  worth pursuing, checking whether a claim is supported — without starting a CV run. The capability
+  already has a single-query mode that answers inline and writes no artifact; what is missing is the
+  skill wrapper that gives it a documented invocation, an output location for the batch case, and a
+  `## Dependencies` section.
+- **Contracts produced:** `evidence-map` in batch mode, and a minimal `run-manifest` for a standalone
+  run. Nothing in single-query mode, by design.
+- **Contracts consumed:** `knowledge-bank`, `constraints-ledger`, and `requirements-profile` for
+  batch mode.
+- **Dependencies / notes:** no new capability — it reads files the user already has. The open
+  question is scope discipline: retrieval must not quietly become authoring, so the wrapper has to
+  carry the capability's deliberate out-of-scope boundary rather than adding usage advice on top of
+  the extracts.
+
+### validate-cv-jobscan
+
+- **Kind:** tool
+- **Intent:** An external, advisory CV check on the Jobscan service, in the same shape as the two
+  external validators this repository ships: service parameters, trust policy, a runbook covering
+  environment preparation and the manual fallback, and a `## Dependencies` section. The predecessor
+  carried it as a disabled registry entry — wanted, recognisable, not built — which is exactly the
+  state this file exists to record.
+- **Contracts produced:** a raw capture, which is not a contract instance. The `validation-report`
+  that follows is written by `reviewer.normalize-external-report`, never by the tool.
+- **Contracts consumed:** the run's final `cv-document` and its rendered deliverable, plus the job
+  description its match-based checks need.
+- **Dependencies / notes:** the service is account-gated and rate-limited, which is why it was
+  disabled in the predecessor and the first thing to settle before building it. It would need browser
+  automation or a human operator; both are capabilities, and the entry runs SKIPPED with instructions
+  when neither is bound. Activation is `setup-master.register-skill` with kind `external` — no
+  workflow change, because external placement is driven by the registered set.
+
+### validate-cv-skillsyncer
+
+- **Kind:** tool
+- **Intent:** An external, advisory keyword-and-match check on the SkillSyncer service, in the same
+  shape as the other external validators. Also inherited from the predecessor's disabled registry
+  entries.
+- **Contracts produced:** a raw capture, which is not a contract instance.
+- **Contracts consumed:** the run's rendered deliverable and the job description.
+- **Dependencies / notes:** it overlaps heavily with the keyword half of the shipped ATS check, so
+  the first question is whether its advice adds anything the internal check does not already produce
+  more cheaply and without sending the deliverable to a third party. Build it only if the answer is
+  yes. Browser automation or a human operator, as above.
+
+### transcriber
+
+- **Kind:** role
+- **Intent:** Import meeting recordings — recruiter screens, interviews, calls — as timestamped
+  transcripts the vacancy analyst can read as people-side input. The output contract already exists
+  (`contracts/transcript.md`), because the recruiter-notes format points at it; what does not exist is
+  the role that produces one. Building it turns "the recruiter said something about the team's real
+  problem" from a memory into a citable source, which is the difference between a positioning signal
+  that can be attributed and one that cannot.
+- **Contracts produced:** `transcript`.
+- **Contracts consumed:** `None.` Its input is a recording or a live conversation, not a repository
+  artifact.
+- **Dependencies / notes:** needs a speech-to-text capability and, for multi-speaker calls, speaker
+  attribution — both capabilities the user binds. Kept outside the repository so far because the
+  recordings are personal data and the transcription may run anywhere. The hard rule it must carry
+  from day one: a transcript is an emphasis-and-positioning source, never candidate evidence —
+  nothing said in a conversation creates a candidate fact.
+
+### harness-adapters
+
+- **Kind:** adapter
+- **Intent:** Make the canonical `skills/` tree discoverable by each harness that looks for skills in
+  its own location (`.claude/skills/`, `.agents/skills/`, and the equivalents), and generate agent
+  wrappers from the `name`/`description` frontmatter that every `ROLE.md` already carries for exactly
+  this purpose. Until this exists, a flow is invoked by path — "execute
+  `skills/workflows/<name>/SKILL.md`" — which works on every harness and is what the repository tells
+  the user to do, but it means no harness offers the skills by name.
+- **Contracts produced:** `None.`
+- **Contracts consumed:** `None.` It reads `SKILL.md` and `ROLE.md` frontmatter as metadata, not as
+  artifacts.
+- **Dependencies / notes:** the mapping mechanism is the open question — symlinks are cheapest but
+  break on some filesystems and in some clones, a generator produces duplicates that drift, and the
+  per-harness discovery paths keep changing. Whatever is chosen must keep `skills/` canonical: the
+  adapter is generated from the tree and never the other way round, or the harness copy quietly
+  becomes the real one. Per-harness settings and the local rules file stay out of scope — they are
+  the user's, and `setup-master` already owns them.

@@ -38,9 +38,17 @@ STATUS_NOT_COMPLETED = "not-completed"
 STATUS_BLOCKED = "blocked"
 STATUS_SKIPPED = "skipped"
 
-# Status vocabulary recognized in a run manifest. The manifest is free-form
-# markdown, so a gate line is located by name and then read for one of these
-# words. Anything else is "unclear" — and unclear is never green.
+# Status vocabulary recognized in a run manifest. A gate line is located by name
+# and then read for one of these words. Anything else is "unclear" — and unclear
+# is never green.
+#
+# The run-manifest contract records gates in a table whose state column holds
+# `green`, `red`, `not reached`, or `waived by the user, with the reason`. Those
+# four are covered below, and a table row is read CELL BY CELL: the requirement
+# column of a gate row routinely contains words like "pass" or "skipped" as part
+# of what the gate requires, and reading the whole line would let that text
+# outvote the state cell. A cell counts as a status only when it OPENS with one
+# of these words; the worst status found across a row wins.
 GREEN_STATUS = ("green", "pass", "passed", "ok", "complete", "completed", "done")
 RED_STATUS = ("red", "fail", "failed", "failing", "blocked", "error")
 NEUTRAL_STATUS = (
@@ -50,10 +58,14 @@ NEUTRAL_STATUS = (
     "in progress",
     "not run",
     "not started",
+    "not reached",
+    "waived",
     "todo",
     "unknown",
     "n a",
 )
+# Labels a state cell may carry before the status word itself.
+STATUS_LABELS = ("current state ", "state ", "status ")
 
 # Markers that make an artifact unfit to be the basis of an external submission.
 # Applied to the artifacts the caller declared as required; replaceable with
@@ -307,8 +319,39 @@ def contains_phrase(normalized, phrase):
     return f" {phrase} " in f" {normalized} "
 
 
+def opens_with_status(cell):
+    """Return the status a table cell opens with, or None when it is not one.
+
+    A state cell says the status and little else ("green", "not reached",
+    "waived by the user, with the reason …"). A requirement cell describes what
+    the gate needs and may well contain the same words further in — so only the
+    opening of the cell counts.
+    """
+    text = normalize_text(cell)
+    for label in STATUS_LABELS:
+        if text.startswith(label):
+            text = text[len(label):]
+            break
+    for verdict, words in (
+        ("red", RED_STATUS),
+        ("neutral", NEUTRAL_STATUS),
+        ("green", GREEN_STATUS),
+    ):
+        for word in words:
+            if text == word or text.startswith(f"{word} "):
+                return verdict
+    return None
+
+
 def classify_line(line):
     """Return green/red/neutral for a manifest line, or None when it says nothing."""
+    if "|" in line:
+        # A table row: read the cells, and let the worst status found decide.
+        found = {opens_with_status(cell) for cell in line.split("|")}
+        for verdict in ("red", "neutral", "green"):
+            if verdict in found:
+                return verdict
+        return None
     normalized = normalize_text(line)
     if any(contains_phrase(normalized, word) for word in RED_STATUS):
         return "red"

@@ -22,6 +22,7 @@ bank refresh flow and the only capability that writes the bank indexes.
 | Output | Contract | Status values |
 |---|---|---|
 | The bank index files in `bank_dir` (`experience_bank.md`, `projects.md`, `skills_matrix.md` — names fixed by the contract) | `knowledge-bank` | `complete`, `blocked` |
+| The refresh log at `<bank_dir>/refresh_log.md`, when the caller passes it: one appended entry per refresh, written from the build summary | `knowledge-bank` | `complete` |
 | A build summary returned to the caller: sources used with their read status, sections rebuilt, coverage-pass result, open questions | (returned inline; the flow records it in its run report) | — |
 
 The build summary carries a `## Constraint proposals` section when the build discovered a durable
