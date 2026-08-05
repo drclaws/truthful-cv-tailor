@@ -1,6 +1,6 @@
 # Contract: constraints-ledger
 
-Version: 1.0
+Version: 1.1
 
 ## Purpose
 
@@ -39,6 +39,16 @@ Each ingestion increments `revision:`.
 The common envelope applies, with `run_id: n/a` and
 `producer: knowledge-bank-curator.maintain-constraints`. `inputs:` lists the reports whose proposals
 were ingested in the latest revision.
+
+**Legacy import.** A ledger imported from a predecessor structure may lack the envelope, may hold
+only `## Hard constraints` without `## Pending questions` and `## Superseded`, and may carry
+inherited positioning or style sections this contract does not define. It stays valid and readable
+as imported: not a defect to report, and not something to auto-correct. The envelope and the missing
+sections appear when `knowledge-bank-curator.maintain-constraints` next writes the file. The
+inherited sections are removed only by a deliberate split the user decides — noted as a deferred
+item in `skills/BACKLOG.md`, which records it without licensing it — never silently, never by a
+consumer, and never by hand. Until then, a consumer honours the negative-evidence entries it finds
+and treats the rest as outside this contract.
 
 ## Sections
 
