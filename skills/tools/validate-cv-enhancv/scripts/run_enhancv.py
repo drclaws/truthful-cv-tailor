@@ -9,18 +9,34 @@ configuration file is ever read here.
 Precheck: the gate statuses are read from the run manifest (`run.md`, contract
 `run-manifest`) whose path the caller passes, and the artifacts that must exist
 are named by the caller as explicit paths.
+
+Outcome, not exit code: the script reports one of `completed`, `not-completed`,
+`blocked` or `skipped` on stdout (and, with --status-json, as a JSON file), and
+exits 0 whenever the arguments were valid. An unbound browser stack is
+`skipped` with instructions — a reported status, never a crash. Exit 2 means the
+command line itself was wrong; exit 130 means the run was interrupted.
+
+    run_enhancv.py --pdf <export.pdf> --raw-out <run>/external/enhancv_raw.md \
+        --run-manifest <run>/run.md --require-gate "fact check" \
+        --require-artifact <run>/final_cv.md
 """
 
 import argparse
 import asyncio
+import json
 import re
+import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 URL = "https://enhancv.com/resources/resume-checker/"
-MAX_SIZE_BYTES = 2 * 1024 * 1024
-EXPORT_BASENAME_RE = re.compile(r"^[A-Z][A-Za-z]+[A-Z][A-Za-z]+$")
+DEFAULT_MAX_INPUT_MB = 2.0
+
+STATUS_COMPLETED = "completed"
+STATUS_NOT_COMPLETED = "not-completed"
+STATUS_BLOCKED = "blocked"
+STATUS_SKIPPED = "skipped"
 
 # Status vocabulary recognized in a run manifest. The manifest is free-form
 # markdown, so a gate line is located by name and then read for one of these
@@ -51,19 +67,52 @@ DEFAULT_FORBIDDEN_MARKERS = (
 
 BINARY_SUFFIXES = frozenset({".pdf", ".png", ".jpg", ".jpeg", ".docx", ".zip"})
 
+# Launch failures that mean "the browser stack is not bound on this machine"
+# rather than "the service or the page misbehaved".
+UNBOUND_LAUNCH_HINTS = (
+    "executable doesn't exist",
+    "playwright install",
+    "no such file or directory",
+)
 
-def has_candidate_export_name(path):
-    return bool(EXPORT_BASENAME_RE.fullmatch(path.stem))
 
+class Outcome:
+    """What happened, in the vocabulary the calling reviewer records."""
 
-def require_candidate_export_name(pdf):
-    if has_candidate_export_name(pdf):
-        return
-    raise SystemExit(
-        "Enhancv must receive a PDF whose filename matches the final export "
-        "pattern FirstNameSurname.pdf, for example JaneDoe.pdf. "
-        f"Got: {pdf}"
-    )
+    def __init__(self, status, summary, details=None, captures=None, instructions=None):
+        self.status = status
+        self.summary = summary
+        self.details = list(details or [])
+        self.captures = list(captures or [])
+        self.instructions = list(instructions or [])
+
+    def as_dict(self):
+        return {
+            "status": self.status,
+            "summary": self.summary,
+            "details": self.details,
+            "captures": [str(path) for path in self.captures],
+            "instructions": self.instructions,
+        }
+
+    def emit(self, status_json_path=None):
+        print(f"status: {self.status}")
+        print(self.summary)
+        for line in self.details:
+            print(line)
+        for path in self.captures:
+            print(f"capture: {path}")
+        if self.instructions:
+            print("\nWhat to do:")
+            for line in self.instructions:
+                print(f"  {line}")
+        if status_json_path:
+            path = Path(status_json_path)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                json.dumps(self.as_dict(), indent=2) + "\n", encoding="utf-8"
+            )
+            print(f"status file: {path}")
 
 
 def parse_args():
@@ -84,6 +133,10 @@ def parse_args():
     parser.add_argument(
         "--screenshot-out",
         help="Path for the full-page screenshot. Default: --raw-out with a .png suffix.",
+    )
+    parser.add_argument(
+        "--status-json",
+        help="Optional path for the machine-readable outcome of this invocation.",
     )
     parser.add_argument(
         "--run-manifest",
@@ -135,6 +188,24 @@ def parse_args():
             "external checks are gated behind the internal and render gates."
         ),
     )
+    parser.add_argument(
+        "--export-name-pattern",
+        metavar="REGEX",
+        help=(
+            "Regular expression the export filename (without suffix) must match. "
+            "The naming rule belongs to the calling workflow; pass it here to have "
+            "it enforced. Omitted: the name is not checked."
+        ),
+    )
+    parser.add_argument(
+        "--max-input-mb",
+        type=float,
+        default=DEFAULT_MAX_INPUT_MB,
+        help=(
+            "Maximum accepted input size in MB. Default 2, the service limit at "
+            "the time of writing."
+        ),
+    )
     parser.add_argument("--url", default=URL, help="Enhancv checker URL.")
     parser.add_argument(
         "--browser",
@@ -144,6 +215,20 @@ def parse_args():
             "Playwright browser engine to use. Default chromium; pick firefox or "
             "webkit when local policy forbids Chromium-based browsers, including "
             "Google Chrome for Testing."
+        ),
+    )
+    parser.add_argument(
+        "--browser-channel",
+        help=(
+            "Browser channel to launch instead of the bundled build, e.g. a "
+            "locally installed stable browser. Machine-specific binding."
+        ),
+    )
+    parser.add_argument(
+        "--browser-executable",
+        help=(
+            "Name or path of the browser binary to launch. A bare name is "
+            "resolved on PATH. Machine-specific binding."
         ),
     )
     parser.add_argument(
@@ -179,17 +264,38 @@ def resolve_paths(args):
     return pdf, out, html_path, screenshot_path
 
 
-def validate_pdf(pdf):
+def check_pdf(pdf, max_input_mb, export_name_pattern):
+    """Input checks: it exists, it is a PDF, it fits the size limit, it is named
+    the way the caller says exports are named."""
+    problems = []
     if not pdf.exists():
-        raise SystemExit(f"PDF not found: {pdf}")
+        return [f"- {pdf}: not found"]
+    if not pdf.is_file():
+        return [f"- {pdf}: not a file"]
     if pdf.suffix.lower() != ".pdf":
-        raise SystemExit(f"Enhancv runner is configured for PDF input only: {pdf}")
-    require_candidate_export_name(pdf)
+        problems.append(f"- {pdf}: this check accepts PDF input only")
+
+    max_bytes = int(max_input_mb * 1024 * 1024)
     size = pdf.stat().st_size
-    if size > MAX_SIZE_BYTES:
-        raise SystemExit(
-            f"PDF is {size / 1024 / 1024:.2f}MB; Enhancv currently accepts max 2MB."
+    if size > max_bytes:
+        problems.append(
+            f"- {pdf}: {size / 1024 / 1024:.2f}MB exceeds the {max_input_mb:g}MB limit"
         )
+    if size == 0:
+        problems.append(f"- {pdf}: empty file")
+
+    if export_name_pattern:
+        try:
+            matcher = re.compile(export_name_pattern)
+        except re.error as exc:
+            problems.append(f"- --export-name-pattern is not a valid regex: {exc}")
+        else:
+            if not matcher.fullmatch(pdf.stem):
+                problems.append(
+                    f"- {pdf.name}: does not match the export naming rule "
+                    f"{export_name_pattern!r} passed by the caller"
+                )
+    return problems
 
 
 def normalize_text(text):
@@ -239,27 +345,26 @@ def gate_status(manifest_lines, gate):
     return "unclear", [line.strip() for line in matches[:3]]
 
 
-def require_green_gates(manifest_path, gates):
-    """Block unless every requested gate is recorded green in the run manifest."""
+def check_gates(manifest_path, gates):
+    """Report every requested gate that is not recorded green in the manifest."""
     if manifest_path is None:
-        raise SystemExit(
-            "Pass --run-manifest so the gate statuses can be read, or pass "
-            "--skip-gate-check deliberately."
-        )
+        return [
+            "- no --run-manifest was passed: the gate statuses cannot be read "
+            "(pass --skip-gate-check deliberately to submit anyway)"
+        ]
+    if not gates:
+        return [
+            "- no --require-gate was passed: name the gates that must be green "
+            "(or pass --skip-gate-check deliberately)"
+        ]
 
     manifest = Path(manifest_path)
     if not manifest.exists():
-        raise SystemExit(f"Run manifest not found: {manifest}")
+        return [f"- run manifest not found: {manifest}"]
     try:
         lines = manifest.read_text(encoding="utf-8", errors="replace").splitlines()
     except OSError as exc:
-        raise SystemExit(f"Run manifest is unreadable: {manifest}: {exc}") from exc
-
-    if not gates:
-        raise SystemExit(
-            "No gate names were passed. Name the gates that must be green with "
-            "--require-gate, or pass --skip-gate-check deliberately."
-        )
+        return [f"- run manifest is unreadable: {manifest}: {exc}"]
 
     problems = []
     for gate in gates:
@@ -267,18 +372,12 @@ def require_green_gates(manifest_path, gates):
         if status == "green":
             continue
         quoted = "; ".join(evidence) if evidence else "no line names this gate"
-        problems.append(f"- {gate}: {status} ({quoted})")
-
-    if problems:
-        formatted = "\n".join(problems)
-        raise SystemExit(
-            "External checks run only after the internal and render gates are "
-            f"green. Not green in {manifest}:\n{formatted}"
-        )
+        problems.append(f"- gate {gate!r}: {status} ({quoted})")
+    return problems
 
 
-def require_artifacts(paths, markers, scan_markers):
-    """Block unless every declared artifact exists, is non-empty and is clean."""
+def check_artifacts(paths, markers, scan_markers):
+    """Report every declared artifact that is missing, empty or marker-flagged."""
     problems = []
     for raw in paths:
         path = Path(raw)
@@ -293,18 +392,83 @@ def require_artifacts(paths, markers, scan_markers):
             continue
         if not scan_markers or path.suffix.lower() in BINARY_SUFFIXES:
             continue
-        text = path.read_text(encoding="utf-8", errors="replace").lower()
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace").lower()
+        except OSError as exc:
+            problems.append(f"- {path}: unreadable: {exc}")
+            continue
         hits = [marker for marker in markers if marker.lower() in text]
         if hits:
             problems.append(f"- {path}: contains {', '.join(hits)}")
+    return problems
 
-    if problems:
-        formatted = "\n".join(problems)
-        raise SystemExit(
-            "Required artifacts are missing or carry blocking markers. Resolve "
-            "them before submitting the PDF to Enhancv, or adjust "
-            f"--require-artifact / --forbid-marker deliberately:\n{formatted}"
+
+def manual_fallback_instructions(url, pdf, out):
+    """The short form of the manual procedure; the full one is in SKILL.md."""
+    return [
+        f"Open {url} in a normal browser session.",
+        f"Upload {pdf} yourself and complete any captcha or security check.",
+        f"Copy the full report text verbatim into {out} and save any screenshot "
+        f"next to it.",
+        "Hand the capture back to the reviewer for normalization; record the "
+        "entry as SKIPPED-manual, or as executed if you completed it now.",
+        "See the runbook section of this skill's SKILL.md for the full procedure.",
+    ]
+
+
+def resolve_browser_executable(name_or_path):
+    """Resolve a machine-specific browser binding, or say why it did not resolve."""
+    if not name_or_path:
+        return None, None
+    candidate = Path(name_or_path)
+    if candidate.exists():
+        return str(candidate), None
+    found = shutil.which(name_or_path)
+    if found:
+        return found, None
+    return None, (
+        f"the browser binary {name_or_path!r} recorded for this machine was not "
+        "found on PATH and does not exist as a path"
+    )
+
+
+def import_playwright():
+    """Import the browser-automation stack, or say it is not bound here."""
+    try:
+        from playwright.async_api import async_playwright
+    except ImportError as exc:
+        return None, f"the Playwright Python package is not importable ({exc})"
+    return async_playwright, None
+
+
+def binding_hint():
+    """A concrete, non-OS-specific pointer for an unbound stack."""
+    cli = shutil.which("playwright")
+    if cli:
+        return (
+            f"The playwright CLI is on PATH at {cli}, but its Python package is "
+            "not importable by this interpreter — install it into the interpreter "
+            "that runs this script."
         )
+    return (
+        "Bind the stack with `python3 -m pip install playwright` followed by "
+        "`python3 -m playwright install chromium`, then re-run."
+    )
+
+
+def skipped_outcome(reason, url, pdf, out, extra=None, include_binding_hint=True):
+    details = [f"- {reason}"]
+    if include_binding_hint:
+        details.append(f"- {binding_hint()}")
+    if extra:
+        details.append(f"- {extra}")
+    return Outcome(
+        STATUS_SKIPPED,
+        "Browser automation is not bound in this environment; nothing was "
+        "submitted to the service.",
+        details=details,
+        instructions=manual_fallback_instructions(url, pdf, out),
+    )
 
 
 async def dismiss_cookie_banner(page):
@@ -558,39 +722,62 @@ async def safe_capture_outputs(
         print(f"Wrote fallback diagnostic report to {out}")
 
 
-async def run(args):
-    pdf, out, html_path, screenshot_path = resolve_paths(args)
-    visible_browser = not args.headless
-    manual_wait_seconds = resolve_manual_wait_seconds(args, visible_browser)
-
+def precheck(args, pdf):
+    """Everything that must hold before anything is sent to a third party."""
+    problems = []
     if args.skip_gate_check:
         print(
             "Gate check skipped by explicit request. External checks are meant to "
             "run only after the internal and render gates are green."
         )
     else:
-        require_green_gates(args.run_manifest, args.require_gate)
+        problems += check_gates(args.run_manifest, args.require_gate)
 
-    require_artifacts(
+    problems += check_artifacts(
         args.require_artifact,
         args.forbid_marker or list(DEFAULT_FORBIDDEN_MARKERS),
         not args.no_marker_scan,
     )
-    validate_pdf(pdf)
-    out.parent.mkdir(parents=True, exist_ok=True)
+    problems += check_pdf(pdf, args.max_input_mb, args.export_name_pattern)
+    return problems
 
-    try:
-        from playwright.async_api import async_playwright
-    except ImportError as exc:
-        raise SystemExit(
-            "Playwright is not installed. Install it with "
-            "`python3 -m pip install playwright` and "
-            "`python3 -m playwright install chromium`."
-        ) from exc
+
+async def submit(args, pdf, out, html_path, screenshot_path, async_playwright):
+    visible_browser = not args.headless
+    manual_wait_seconds = resolve_manual_wait_seconds(args, visible_browser)
+    executable, binding_problem = resolve_browser_executable(args.browser_executable)
+    if binding_problem:
+        return skipped_outcome(
+            binding_problem, args.url, pdf, out, include_binding_hint=False
+        )
+
+    launch_kwargs = {"headless": args.headless}
+    if args.browser_channel:
+        launch_kwargs["channel"] = args.browser_channel
+    if executable:
+        launch_kwargs["executable_path"] = executable
 
     async with async_playwright() as playwright:
         browser_type = getattr(playwright, args.browser)
-        browser = await browser_type.launch(headless=args.headless)
+        try:
+            browser = await browser_type.launch(**launch_kwargs)
+        except Exception as exc:
+            message = str(exc)
+            if any(hint in message.lower() for hint in UNBOUND_LAUNCH_HINTS):
+                return skipped_outcome(
+                    f"the {args.browser} build could not be launched ({type(exc).__name__})",
+                    args.url,
+                    pdf,
+                    out,
+                    extra=message.splitlines()[0] if message else None,
+                )
+            return Outcome(
+                STATUS_NOT_COMPLETED,
+                "The browser stack is bound but the browser did not start.",
+                details=[f"- {type(exc).__name__}: {message.splitlines()[0]}"],
+                instructions=manual_fallback_instructions(args.url, pdf, out),
+            )
+
         context = await browser.new_context(accept_downloads=True)
         page = await context.new_page()
         page.set_default_timeout(args.timeout_ms)
@@ -606,58 +793,108 @@ async def run(args):
                 "manual steps cannot be completed interactively."
             )
 
-        await page.goto(args.url, wait_until="domcontentloaded")
-        await dismiss_cookie_banner(page)
-        await wait_for_upload_ui(
-            page,
-            args.timeout_ms,
-            visible_browser=visible_browser,
-            captcha_grace_seconds=manual_wait_seconds,
-        )
-        await upload_resume(page, pdf)
-
-        if manual_wait_seconds:
-            print(
-                f"Waiting {manual_wait_seconds}s for manual steps after upload..."
-            )
-            await page.wait_for_timeout(manual_wait_seconds * 1000)
-
         try:
+            await page.goto(args.url, wait_until="domcontentloaded")
+            await dismiss_cookie_banner(page)
+            await wait_for_upload_ui(
+                page,
+                args.timeout_ms,
+                visible_browser=visible_browser,
+                captcha_grace_seconds=manual_wait_seconds,
+            )
+            await upload_resume(page, pdf)
+
+            if manual_wait_seconds:
+                print(
+                    f"Waiting {manual_wait_seconds}s for manual steps after upload..."
+                )
+                await page.wait_for_timeout(manual_wait_seconds * 1000)
+
             await wait_for_report(
                 page,
                 args.timeout_ms,
                 visible_browser=visible_browser,
                 captcha_grace_seconds=manual_wait_seconds,
             )
-        except BaseException as exc:
-            status = f"Interrupted or failed before completion: {type(exc).__name__}: {exc}"
+        except KeyboardInterrupt:
             await safe_capture_outputs(
-                page, out, html_path, screenshot_path, pdf, args.browser, status
-            )
-            raise
-        else:
-            await capture_outputs(
                 page,
                 out,
                 html_path,
                 screenshot_path,
                 pdf,
                 args.browser,
-                status="Report appeared complete according to runner readiness checks.",
+                "Interrupted by the user before completion.",
+            )
+            await browser.close()
+            raise
+        except Exception as exc:
+            status = (
+                f"Interrupted or failed before completion: {type(exc).__name__}: {exc}"
+            )
+            await safe_capture_outputs(
+                page, out, html_path, screenshot_path, pdf, args.browser, status
+            )
+            await browser.close()
+            return Outcome(
+                STATUS_NOT_COMPLETED,
+                "The service was reachable but the procedure did not finish; the "
+                "partial capture is diagnostic material, not a report.",
+                details=[f"- {type(exc).__name__}: {exc}"],
+                captures=[out, html_path, screenshot_path],
+                instructions=manual_fallback_instructions(args.url, pdf, out),
             )
 
+        await capture_outputs(
+            page,
+            out,
+            html_path,
+            screenshot_path,
+            pdf,
+            args.browser,
+            status="Report appeared complete according to runner readiness checks.",
+        )
         await browser.close()
-        print(f"Wrote {out}")
-        print(f"Wrote {html_path}")
-        print(f"Wrote {screenshot_path}")
+
+    return Outcome(
+        STATUS_COMPLETED,
+        "The service returned a report and the raw capture was saved verbatim.",
+        captures=[out, html_path, screenshot_path],
+    )
+
+
+async def run(args):
+    pdf, out, html_path, screenshot_path = resolve_paths(args)
+
+    problems = precheck(args, pdf)
+    if problems:
+        return Outcome(
+            STATUS_BLOCKED,
+            "Nothing was submitted: the preconditions of this check are not met.",
+            details=problems,
+        )
+
+    async_playwright, missing = import_playwright()
+    if missing:
+        return skipped_outcome(missing, args.url, pdf, out)
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    html_path.parent.mkdir(parents=True, exist_ok=True)
+    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+    return await submit(args, pdf, out, html_path, screenshot_path, async_playwright)
 
 
 def main():
     args = parse_args()
     try:
-        asyncio.run(run(args))
+        outcome = asyncio.run(run(args))
     except KeyboardInterrupt:
+        Outcome(
+            STATUS_NOT_COMPLETED,
+            "Interrupted by the user; any partial capture was saved.",
+        ).emit(args.status_json)
         sys.exit(130)
+    outcome.emit(args.status_json)
 
 
 if __name__ == "__main__":
