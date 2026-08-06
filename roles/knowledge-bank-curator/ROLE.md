@@ -76,7 +76,7 @@ Abstract needs only.
 ## Invariants
 
 Repository-wide invariants apply in full: truthfulness, run isolation, the sole-writer rule, and the
-artifact rules of `contracts/README.md`. Role-specific hard rules:
+artifact rules of `artifact-conventions`. Role-specific hard rules:
 
 1. **Canonical sources outrank the bank.** The bank is derived; it never overrides a canonical source
    unless the ledger or the user documents a correction explicitly.
@@ -106,5 +106,5 @@ Stop and ask the user when:
   including any request to weaken, narrow the scope of, or delete an existing constraint;
 - a query is requested against a bank that is missing, has no source metadata, or is stale — report
   it and let the flow decide whether to refresh;
-- an input artifact declares an older MAJOR contract version than the one in `contracts/` — report it
-  as a finding instead of reinterpreting the artifact.
+- an input artifact declares an older MAJOR contract version than the one the contract it names
+  declares — report it as a finding instead of reinterpreting the artifact.

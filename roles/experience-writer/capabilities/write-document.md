@@ -77,7 +77,7 @@ the flow otherwise.
     list; no unresolved placeholder text; no forbidden claim; every element the format contract
     requires present, and none it forbids. Fix what fails, or escalate if it cannot be fixed
     truthfully.
-11. **Write the envelope** per `contracts/README.md`: contract name and version, `producer:
+11. **Write the envelope** per `artifact-conventions`: contract name and version, `producer:
     experience-writer.write-document`, run id, every input actually consumed with its contract name,
     the caller's status, `revision: 1`, and dates taken from the environment.
 
