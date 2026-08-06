@@ -235,46 +235,11 @@ as not run with the commands to run them by hand, and the report says the render
 
 ## Dependencies
 
-- **name:** typesetting toolchain named by the resolved template bundle's `runbook.md`
-  - **kind:** capability
-  - **needed for:** building a PDF from the filled template source when a bundle other than the
-    shipped default is registered
-  - **required | optional:** required
-  - **when unbound:** the filled typeset source is still written; the render step is reported SKIPPED
-    with the bundle's manual build instructions, and every gate is recorded as not run
-
-- **name:** `pdflatex` (pdfTeX), with the LaTeX packages `paracol`, `fontawesome5`, `geometry`,
-  `enumitem`, `microtype`, `needspace`, `etoolbox`, `hyperref`, `lmodern`, `babel`, `xcolor`
-  - **kind:** tool
-  - **needed for:** compiling the shipped `ats-onepage-latex` template; it uses pdfTeX primitives
-    (`\pdfgentounicode`, `\pdfliteral`) and is not portable to XeTeX or LuaTeX unchanged
-  - **required | optional:** required for the shipped template (and any bundle whose runbook names it)
-  - **when unbound:** as above — filled source written, render reported SKIPPED with the commands
-    from `templates/ats-onepage-latex/runbook.md`
-
-- **name:** `pdftotext` (Poppler- or Xpdf-compatible)
-  - **kind:** tool
-  - **needed for:** gate 3 — text extraction in plain reading order and in layout-preserving mode
-  - **required | optional:** required
-  - **when unbound:** the export is still produced; gate 3 is recorded as **not run** with the manual
-    commands, and the render is reported not done rather than passed
-
-- **name:** `pdffonts` (Poppler- or Xpdf-compatible)
-  - **kind:** tool
-  - **needed for:** gate 4 — confirming every font in the export is embedded
-  - **required | optional:** required
-  - **when unbound:** gate 4 recorded as not run with the manual command; never assumed to pass
-
-- **name:** `pdfinfo` (Poppler- or Xpdf-compatible)
-  - **kind:** tool
-  - **needed for:** gate 2 — reading the export's page count against the page target
-  - **required | optional:** required
-  - **when unbound:** gate 2 recorded as not run; the report states that the page target could not be
-    verified instead of claiming it was met
-
-- **name:** `python3` ≥ 3.10
-  - **kind:** tool
-  - **needed for:** running the bundled `scripts/pdf_text_check.py`
-  - **required | optional:** optional
-  - **when unbound:** run the two extraction commands from the bundle's runbook by hand and read the
-    extracts; gate 3 is still evaluable, just manually
+| Name | Kind | Needed for | Required / optional | When unbound |
+|---|---|---|---|---|
+| Typesetting toolchain named by the resolved template bundle's `runbook.md` | capability | Building a PDF from the filled template source when a bundle other than the shipped default is registered. | required | The filled typeset source is still written; the render step is reported SKIPPED with the bundle's manual build instructions, and every gate is recorded as not run. |
+| `pdflatex` (pdfTeX), with the LaTeX packages `paracol`, `fontawesome5`, `geometry`, `enumitem`, `microtype`, `needspace`, `etoolbox`, `hyperref`, `lmodern`, `babel`, `xcolor` | tool | Compiling the shipped `ats-onepage-latex` template; it uses pdfTeX primitives (`\pdfgentounicode`, `\pdfliteral`) and is not portable to XeTeX or LuaTeX unchanged. | required for the shipped template (and any bundle whose runbook names it) | As above — filled source written, render reported SKIPPED with the commands from `templates/ats-onepage-latex/runbook.md`. |
+| `pdftotext` (Poppler- or Xpdf-compatible) | tool | Gate 3 — text extraction in plain reading order and in layout-preserving mode. | required | The export is still produced; gate 3 is recorded as **not run** with the manual commands, and the render is reported not done rather than passed. |
+| `pdffonts` (Poppler- or Xpdf-compatible) | tool | Gate 4 — confirming every font in the export is embedded. | required | Gate 4 recorded as not run with the manual command; never assumed to pass. |
+| `pdfinfo` (Poppler- or Xpdf-compatible) | tool | Gate 2 — reading the export's page count against the page target. | required | Gate 2 recorded as not run; the report states that the page target could not be verified instead of claiming it was met. |
+| `python3` ≥ 3.10 | tool | Running the bundled `scripts/pdf_text_check.py`. | optional | Run the two extraction commands from the bundle's runbook by hand and read the extracts; gate 3 is still evaluable, just manually. |

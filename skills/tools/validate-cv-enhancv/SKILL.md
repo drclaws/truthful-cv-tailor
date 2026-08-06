@@ -271,45 +271,11 @@ never silently ignored.
 
 ## Dependencies
 
-- **name:** `python3`
-  **kind:** tool
-  **needed for:** running the bundled runner script
-  **required | optional:** required
-  **when unbound:** the check runs manual — the reviewer follows the manual fallback and records the
-  entry as SKIPPED-manual with those instructions.
-
-- **name:** browser automation
-  **kind:** capability
-  **needed for:** driving a real browser session through the service's client-side upload and report
-  **required | optional:** required
-  **when unbound:** the entry runs SKIPPED with instructions; the manual fallback in the runbook is
-  the documented substitute, and the flow continues.
-
-- **name:** `playwright` (Python package, `playwright.async_api`)
-  **kind:** tool
-  **needed for:** the concrete binding of browser automation used by the bundled script
-  **required | optional:** required
-  **when unbound:** the script reports outcome `skipped` with the binding instructions and the manual
-  fallback; nothing is submitted and nothing crashes.
-
-- **name:** a Playwright browser build — `chromium` (default), or `firefox` / `webkit`
-  **kind:** tool
-  **needed for:** rendering the service page and letting the user complete challenges
-  **required | optional:** required
-  **when unbound:** the script reports outcome `skipped` naming the engine that could not be
-  launched; install the engine build or record a `browser_channel` / `browser_executable` binding.
-
-- **name:** network access to the service host
-  **kind:** capability
-  **needed for:** reaching the checker at all
-  **required | optional:** required
-  **when unbound:** the run ends `not-completed` with the diagnostic capture; the manual fallback
-  applies from a machine that can reach the service.
-
-- **name:** an interactive desktop session (a visible browser window)
-  **kind:** capability
-  **needed for:** completing the service's human-verification challenges, which is the default mode
-  **required | optional:** required
-  **when unbound:** the run may be attempted headless (`headless: true`), but a challenge then cannot
-  be completed and the run ends `not-completed`; the manual fallback on a machine with a display is
-  the documented path.
+| Name | Kind | Needed for | Required / optional | When unbound |
+|---|---|---|---|---|
+| `python3` | tool | Running the bundled runner script. | required | The check runs manual — the reviewer follows the manual fallback and records the entry as SKIPPED-manual with those instructions. |
+| Browser automation | capability | Driving a real browser session through the service's client-side upload and report. | required | The entry runs SKIPPED with instructions; the manual fallback in the runbook is the documented substitute, and the flow continues. |
+| `playwright` (Python package, `playwright.async_api`) | tool | The concrete binding of browser automation used by the bundled script. | required | The script reports outcome `skipped` with the binding instructions and the manual fallback; nothing is submitted and nothing crashes. |
+| A Playwright browser build — `chromium` (default), or `firefox` / `webkit` | tool | Rendering the service page and letting the user complete challenges. | required | The script reports outcome `skipped` naming the engine that could not be launched; install the engine build or record a `browser_channel` / `browser_executable` binding. |
+| Network access to the service host | capability | Reaching the checker at all. | required | The run ends `not-completed` with the diagnostic capture; the manual fallback applies from a machine that can reach the service. |
+| An interactive desktop session (a visible browser window) | capability | Completing the service's human-verification challenges, which is the default mode. | required | The run may be attempted headless (`headless: true`), but a challenge then cannot be completed and the run ends `not-completed`; the manual fallback on a machine with a display is the documented path. |

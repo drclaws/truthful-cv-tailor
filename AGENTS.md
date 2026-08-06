@@ -47,9 +47,11 @@ Two rules govern this catalog:
   that set is inactive, and the flow warns rather than adding it. The mandatory truthfulness check is
   **not** in the set: it is `reviewer.fact-check`, invoked by the workflow directly, always.
 - **Dependencies are not duplicated here.** Each skill declares its own `## Dependencies` section —
-  name, kind (`capability` or `tool`), what it is needed for, required/optional, and the behaviour
-  when unbound. `setup-master.check-environment` aggregates them transitively, including the
-  registered validation set, and reports the dependency matrix.
+  one table, one row per entry, with the fixed columns `Name | Kind | Needed for | Required /
+  optional | When unbound`, where *kind* is `capability` (some tool able to perform a stated task) or
+  `tool` (a concrete instrument the implementation genuinely requires). A skill added to this
+  repository follows the same shape. `setup-master.check-environment` aggregates the sections
+  transitively, including the registered validation set, and reports the dependency matrix.
 
 Planned but **not built** work is listed in `skills/BACKLOG.md`. Entries there have no authority:
 never execute one as if it existed.
