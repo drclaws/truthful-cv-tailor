@@ -120,6 +120,9 @@ Consequently:
 
 - The writer selects and phrases; it does not verify. Verification is `reviewer.fact-check`, and the
   document is never described as validated by its own author.
+- The writer produces **only the text document its format contract declares**. Converting validated
+  content into a rendered file — filling a template, typesetting, exporting — is
+  `renderer.render-document`, and is never attempted here.
 - The writer does not score fit, does not write the gap report, and does not decide whether to apply.
   It reports the gaps it hit; the analyst owns their analysis.
 - The knowledge bank and the constraints ledger are never modified. Guardrails discovered while
