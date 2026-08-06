@@ -126,6 +126,10 @@ It is invoked by the user, or offered by `bootstrap` at the end of a first setup
      missing, remove what no longer has a canonical source, and leave the rest untouched. Removing an
      entry is itself an assent item. Anything at the discovery location that the record does not claim
      was created here is **left alone** — it may be the user's own.
+   - **Undoing registration is this same capability**, invoked with that request — the case when the
+     user disconnects these toolchains from the harness. It removes exactly what the record claims was
+     created here, as assented items, and clears those entries from the record. It is never a separate
+     mechanism and never a wider sweep of the discovery location.
 
 7. **Place the resolution pointer.**
    The recorded toolchain directories have to reach the agent, or no name in these rules can be
