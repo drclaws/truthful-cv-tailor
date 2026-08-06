@@ -95,6 +95,22 @@ CV flows; no validator runs here.
 |---|---|---|
 | `<run>/work/` | Build byproducts: the raw output of the freshness script, the coverage-pass worksheet, and any source content fetched through the fallback reader because the shell could not read it. | Byproducts, not artifacts: nothing here is a contract instance, nothing here is a canonical source, and no later run may read it. Listed in the run's artifact index as byproducts. |
 
+## Inputs
+
+What one run of this flow is given. An index, not a second home for rules: each row points at the
+section that owns it. This flow hardcodes no path and infers nothing from repository layout.
+
+| Input | Contract / description | Required |
+|---|---|---|
+| `run_id` | the refresh date, built as *Run identifier and output layout* above defines it | required |
+| user context | contract `user-context`, resolved at step 1 through the declared order. *User-context settings* below states what this flow reads from it. | required |
+| canonical experience sources | the resolved source set — files, directories, URLs, descriptions, dictated content. The **only** input to the rebuild; an empty list stops the flow with a question at step 1. | required |
+| `bank_dir` | the knowledge bank directory (contract `knowledge-bank`), passed to the curator as an explicit parameter and created at step 2 if it does not exist | required |
+| `report_paths` | reports carrying `## Constraint proposals` that were never ingested — a CV run whose closing step was interrupted, say. Passed through to step 9. | optional |
+
+The rebuild scope is **not** an input: it is decided at step 5 from the freshness verdict and the
+curator's recommended next action, never from a default and never from convenience.
+
 ## Steps
 
 `executor` is the `role.capability` that runs the step, or `flow` for orchestration the flow does
@@ -353,11 +369,13 @@ from the template in `contracts/user-context.md`.
 
 ## User-context settings
 
-**This skill recognizes no per-skill settings keys.** A `## Skill settings` subsection named after
-this skill in the user's local rules file has no meaning; report it as unrecognized rather than
-interpreting it.
+**This skill recognizes no per-skill settings keys**, so this section carries no key table — the
+shape `skill-conventions` prescribes for a skill with nothing to declare. A `## Skill settings`
+subsection named after this skill in the user's local rules file has no meaning; report it as
+unrecognized rather than interpreting it.
 
-What the flow does read from user context:
+The table below is **not** a key declaration. It indexes the sections of contract `user-context` this
+flow reads, and what it does with each:
 
 | Item | Contract section | Use |
 |---|---|---|

@@ -175,6 +175,24 @@ gate 5 checks the produced filename against it), to any external entry whose spe
 naming-pattern parameter (so the entry enforces *this* rule rather than nothing), and into `run.md`
 so the user can find the file by name.
 
+## Inputs
+
+What one run of this flow is given. An index, not a second home for rules: each row points at the
+section that owns it. Every value here is resolved or computed before step 3 and passed onward
+explicitly — this flow derives nothing from repository layout.
+
+| Input | Contract / description | Required |
+|---|---|---|
+| `run_id` | the vacancy slug, built as *Run identifier and output layout* above defines it | required |
+| job material | the vacancy's own material: at minimum a readable job description, plus any screening transcripts (contract `transcript`), people notes and company notes. It becomes the run's `job-dossier` instance at `<run>/position/`. | required |
+| user context | contract `user-context`, resolved at step 1 through the declared order. Supplies the canonical experience sources, the active validation set, the per-skill settings and the additional rules; *User-context settings* below states what this flow does with each. | required |
+| `bank_dir`, `<ledger>` | the knowledge bank directory (contract `knowledge-bank`) and its `constraints.md` (contract `constraints-ledger`), resolved at preflight. Read-only to this flow, except the ledger at step 24. | required |
+| the previous run's `position/` | on a rerun for the same vacancy: the earlier run's job dossier, **copied** into the new run rather than pointed at — see *Rerun and the dossier* at step 3. | optional |
+
+Nothing is defaulted. An input that did not resolve is a question to the user, recorded in `run.md`
+`## Open questions`; the flow never fills one in from a previous run, from a canonical source it is
+not allowed to read, or from its own recollection.
+
 ## Steps
 
 `executor` is the `role.capability` that runs the step, `tool:<name>` for a tool skill executed by
@@ -632,12 +650,15 @@ resumed by reading its `run.md`, not by re-running the steps that already have a
 
 ## User-context settings
 
-**This skill recognizes no per-skill settings keys.** A `### generate-targeted-cv` subsection under
-`## Skill settings` in the user's local rules file has no meaning; report it as unrecognized rather
-than interpreting it. Every setting this run needs belongs to the skill that owns it — the render
-template to `render-cv-pdf`, a service's parameters to that validator's own subsection.
+**This skill recognizes no per-skill settings keys**, so this section carries no key table — the
+shape `skill-conventions` prescribes for a skill with nothing to declare. A `### generate-targeted-cv`
+subsection under `## Skill settings` in the user's local rules file has no meaning; report it as
+unrecognized rather than interpreting it. Every setting this run needs belongs to the skill that owns
+it — the render template to `render-cv-pdf`, a service's parameters to that validator's own
+subsection.
 
-What the flow does read from user context, per `contracts/user-context.md`:
+The table below is **not** a key declaration. It indexes the sections of contract `user-context` this
+flow reads, and what it does with each:
 
 | Item | Contract section | Use |
 |---|---|---|
