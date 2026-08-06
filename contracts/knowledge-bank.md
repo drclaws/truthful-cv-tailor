@@ -37,7 +37,7 @@ state: a partially built bank file is never saved over a good one.
 
 ## Envelope
 
-The common envelope of `contracts/README.md` applies, with:
+The common envelope of `artifact-conventions.md` applies, with:
 
 - `run_id: n/a` — the bank outlives runs;
 - `producer: knowledge-bank-curator.build-banks`;

@@ -92,8 +92,8 @@ support is verified later; nothing here reaches a rendered document unverified.
 ### `## Constraint proposals`
 
 Guardrails discovered in the conversation — a self-report that must not be mistaken for canonical
-evidence, a topic the notes say to avoid. See `contracts/README.md`. `None.` when there is nothing to
-propose.
+evidence, a topic the notes say to avoid. See `artifact-conventions.md`. `None.` when there is
+nothing to propose.
 
 ## Producer and consumers
 

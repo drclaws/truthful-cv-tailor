@@ -246,7 +246,7 @@ takes the document above it, a reviewer reads both.
 5. **Open issues** — anything the writer could not resolve: a requirement with no honest angle, a
    conflict between sources, a claim awaiting a decision.
 6. **`## Constraint proposals`** — the guardrails the writing surfaced, in the form every report-type
-   contract uses (see `contracts/README.md`): a claim the evidence kept inviting but could not
+   contract uses (see `artifact-conventions.md`): a claim the evidence kept inviting but could not
    support, a phrasing that repeatedly drifted past what the sources say. `None.` when there is
    nothing to propose.
 

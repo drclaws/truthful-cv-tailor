@@ -97,7 +97,7 @@ missing from the analysis, what was asked of the user. Recorded so that a thin r
 
 Guardrails discovered while auditing sources — a conflict that should constrain future claims, a
 source whose standing must not be over-read, a mapping that must not be treated as equivalence. See
-`contracts/README.md`. `None.` when there is nothing to propose.
+`artifact-conventions.md`. `None.` when there is nothing to propose.
 
 ## Producer and consumers
 

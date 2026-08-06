@@ -105,7 +105,7 @@ without reconstructing the context.
 ### `## Constraint proposals`
 
 Guardrails that follow directly from this run and need no further input — typically an absence the
-run confirmed. See `contracts/README.md`. `None.` when there is nothing to propose. Anything that
+run confirmed. See `artifact-conventions.md`. `None.` when there is nothing to propose. Anything that
 needs a decision belongs in the question sections above, not here.
 
 ## Rules

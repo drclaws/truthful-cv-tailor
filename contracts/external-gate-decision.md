@@ -75,7 +75,8 @@ One of:
 ### `## Constraint proposals`
 
 Guardrails discovered while gating — in particular recurring advice from external services that would
-push toward unsupported claims and should be pre-empted in future runs. See `contracts/README.md`.
+push toward unsupported claims and should be pre-empted in future runs. See
+`artifact-conventions.md`.
 `None.` when there is nothing to propose.
 
 ## Rules

@@ -85,7 +85,7 @@ capability that was unavailable and how the step compensated.
 ### `## Constraint proposals`
 
 Guardrails discovered while rendering — for example a content pattern that reliably breaks
-extraction and should be avoided in the document itself. See `contracts/README.md`. `None.` when
+extraction and should be avoided in the document itself. See `artifact-conventions.md`. `None.` when
 there is nothing to propose.
 
 ## Rules
