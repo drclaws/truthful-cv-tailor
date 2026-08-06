@@ -33,8 +33,8 @@ not use; a rerun is a **new run directory**, never an edit of the old one.
 Do not run it to evaluate whether a vacancy is worth pursuing at all: `vacancy-analyst.score-fit`
 answers that on its own, against the bank, without producing a CV.
 
-Do not run it while the bank is stale. Step 2 checks; a stale verdict routes to
-`skills/workflows/refresh-knowledge-bank/SKILL.md` first, and this flow resumes afterwards.
+Do not run it while the bank is stale. Step 2 checks; a stale verdict routes to the
+`refresh-knowledge-bank` workflow first, and this flow resumes afterwards.
 
 ## Run identifier and output layout
 
@@ -209,7 +209,7 @@ passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge ban
 | 5 | Analyse the vacancy | `vacancy-analyst.analyze-job` | `requirements-profile` | `run_id`, `job_dossier_path`, `source_audit_path=<run>/source_audit.md`, `constraints_ledger_path`, `output_path=<run>/requirements_profile.md` | **A** | — |
 | 6 | Extract recruiter signals | `vacancy-analyst.extract-recruiter-signals` | `recruiter-signals` | `run_id`, `job_dossier_path`, `transcript_paths`, `people_notes`, `source_audit_path`, `constraints_ledger_path`, `output_path=<run>/recruiter_signals.md` | **A** | — |
 | 7 | Retrieve evidence (batch) | `knowledge-bank-curator.query-bank` | `evidence-map` | `bank_dir`, `requirements_profile=<run>/requirements_profile.md`, `constraints_ledger`, `recruiter_signals=<run>/recruiter_signals.md`, `in_run_proposals`, `output_path=<run>/evidence_map.md`, `run_id` | — | G4 |
-| 8 | Write the draft | `experience-writer.write-document` | `cv-document` | `document_format_contract=contracts/cv-document.md`, `evidence_source=<run>/evidence_map.md`, `requirements_source`, `signals_source`, `constraints_ledger`, `in_run_proposals`, `source_audit`, `additional_rules`, `output_path=<run>/draft_cv.md`, `run_id`, `status=draft` | — | — |
+| 8 | Write the draft | `experience-writer.write-document` | `cv-document` | `document_format_contract=cv-document`, `evidence_source=<run>/evidence_map.md`, `requirements_source`, `signals_source`, `constraints_ledger`, `in_run_proposals`, `source_audit`, `additional_rules`, `output_path=<run>/draft_cv.md`, `run_id`, `status=draft` | — | — |
 | 9 | Truthfulness check (mandatory) | `reviewer.fact-check` | `validation-report` | `document=<run>/draft_cv.md`, `knowledge_bank`, `constraints_ledger`, `evidence_map`, `source_audit`, `requirements_profile`, `recruiter_signals`, `in_run_constraint_proposals`, `report_path=<run>/fact_check.md` | **B** | G5 |
 | 10 | Registered internal checks | `reviewer.run-check` — one invocation per entry | `validation-report` | `check_spec`, `check_name`, `check_inputs` (exactly what that spec declares), `check_settings`, `run_manifest=<run>/run.md`, `report_path=<run>/checks/<validator>.md` | **B** | G6 |
 | 11 | Score the fit | `vacancy-analyst.score-fit` | `fit-report` | `run_id`, `requirements_profile_path`, `candidate_data_path=<run>/draft_cv.md`, `candidate_data_format=cv-document`, `recruiter_signals_path`, `job_dossier_path`, `constraints_ledger_path`, `tag_candidates_source=<run>/draft_cv.md`, `output_path=<run>/fit_report.md` | **B** | — |
@@ -243,7 +243,7 @@ output — that is what makes the two execution modes equivalent.
 
 ### 1. Resolve user context
 
-Resolve, per `contracts/user-context.md`, in its order: the harness-native local agent rules file →
+Resolve, per contract `user-context`, in its order: the harness-native local agent rules file →
 any other context or memory the harness provides → **ask the user**. The local rules file wins on
 conflict. Nothing is defaulted from the repository layout and nothing is inferred.
 
@@ -345,7 +345,7 @@ not coming.
 
 ### 8. Write the draft
 
-`experience-writer.write-document`, pointed at `contracts/cv-document.md` as its format contract.
+`experience-writer.write-document`, pointed at contract `cv-document` as its format contract.
 The evidence map is the **only** admissible source of facts.
 
 **The writer's notes have a home.** `cv-document` declares `## Annex: writer notes`, so the
@@ -429,7 +429,7 @@ in full, plus the internal entries the disposition list implicates. The reports 
 
 ### 16. Render the deliverable
 
-`renderer.render-document`, executing `skills/tools/render-cv-pdf/SKILL.md` with the template
+`renderer.render-document`, executing the `render-cv-pdf` tool skill with the template
 resolved from that skill's own settings subsection in user context (its default is the shipped
 bundle). The tool owns the page target, the content-first fit policy, the gate sequence and the
 template resolution; this flow owns the paths and the export name.

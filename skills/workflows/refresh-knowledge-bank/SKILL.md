@@ -134,7 +134,7 @@ over the whole source set, and every later step depends on its outcome.
 
 ### 1. Resolve user context
 
-Resolve the canonical experience sources per `contracts/user-context.md`, in its order:
+Resolve the canonical experience sources per contract `user-context`, in its order:
 
 1. the harness-native local agent rules file;
 2. any other context or memory the harness provides;
@@ -158,7 +158,7 @@ itself. That snapshot is what makes the refresh reviewable later.
 
 ### 2. Scaffold the run and seed the manifest
 
-Create `<run>/` and `<run>/work/`, and write `run.md` per `contracts/run-manifest.md` with
+Create `<run>/` and `<run>/work/`, and write `run.md` per contract `run-manifest` with
 `status: in-progress`, `producer: flow:refresh-knowledge-bank`, the flow version, the resolved
 context snapshot, the step checklist of this table, and the gate list below. The manifest is written
 as the run proceeds — a manifest reconstructed at the end cannot support resuming or blocking.
@@ -240,7 +240,7 @@ to the wrong place or left an index behind:
 
 1. re-run `check-freshness` over the same sources and the rebuilt indexes; the expected verdict is
    `fresh` (or `unknown` when a non-time-checkable source is in play — never `stale`);
-2. confirm each rebuilt file against `contracts/knowledge-bank.md`: the envelope, the
+2. confirm each rebuilt file against contract `knowledge-bank`: the envelope, the
    `## Source Metadata` block, the mandatory sections of that file kind, and the closing
    `## Conservative Gap Notes`;
 3. confirm the scope: every index in scope was rewritten, and every index out of scope is unchanged.
@@ -390,7 +390,7 @@ The active validation set is **not** used by this flow: no validator runs during
 |---|---|---|---|---|
 | Read access to the canonical experience sources | capability | Reading every source at the freshness check and again at build time. | required | Follow the fallback ladder in *Unreadable sources*: retry with the harness's file tools, then ask the user. A source that stays unreadable blocks the rebuild — the flow records `status: blocked` and leaves the existing bank untouched. It never builds from a partial source set. |
 | Harness-native file read tool (a reader independent of the shell) | capability | The first rung of that ladder: reaching a source the sandboxed shell cannot open, and forcing a cloud-synced placeholder to be fetched. | optional | Skip straight to asking the user, and note in `run.md` that no fallback reader was available. |
-| `python3` ≥ 3.10 | tool | Running `roles/knowledge-bank-curator/scripts/check_sources_freshness.py`, the bundled freshness check (steps 3 and 8). | optional | The curator compares timestamps and content presence with the harness's own file tools, following the same rules, and notes in `run.md` that the check was done manually. A missing script runtime never fails this flow. |
+| `python3` ≥ 3.10 | tool | Running the bundled freshness script that `knowledge-bank-curator.check-freshness` invokes, at steps 3 and 8. | optional | The curator compares timestamps and content presence with the harness's own file tools, following the same rules, and notes in `run.md` that the check was done manually. A missing script runtime never fails this flow. |
 | A question channel to the user | capability | Every escalation in this flow is a question, not a decision: empty context, unreadable sources, conflicting sources, undeliverable identity, a non-conservative constraint proposal. | required | The flow records the question in `run.md` `## Open questions`, sets `status: blocked`, and stops. It never answers its own question. |
 | Web search | capability | The curator's external validation of inferred capability and pattern names while building the skills matrix. | optional | Those entries stay marked `unverified name`; the build continues and reports the skipped sub-step. Evidence is never dropped for lack of a search tool. |
 
