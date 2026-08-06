@@ -1,6 +1,6 @@
 # Contract: user-context
 
-Version: 1.0
+Version: 1.1
 
 Defines **what** the flows in this repository need from the user, and **nothing about where the user
 keeps it**. The repository ships zero user context: it is a set of toolchains that are connected to
@@ -11,6 +11,9 @@ Unlike every other contract, `user-context` does not describe a produced artifac
 owns. What follows is the required information, how flows resolve it, and a copyable template.
 
 ## What flows need
+
+Sections 1–5 are what a flow resolves at preflight. Sections 6 and 7 are setup's own records, kept in
+the same file because it is the user's file: a flow neither reads them nor acts on them.
 
 ### 1. Canonical experience sources (required)
 
@@ -53,6 +56,43 @@ Free text the flows must honour: personal preferences, wording rules, things to 
 and apply it; it never overrides the hard invariants (truthfulness, run isolation, sole-writer,
 validation independence).
 
+### 5. Toolchain directories (recorded at setup; needed wherever a name must be resolved)
+
+The rules and cards of these toolchains refer to contracts, roles and skills **by name**. This
+section records, for this machine, the directory that holds each of those three kinds, so that a name
+can be turned into a file. It is a *location for names* and nothing more: each directory carries its
+own index of what it holds, and a name absent from that index is an unresolved reference — reported,
+never guessed into a path.
+
+It is written by `setup-master.bootstrap` and revisited by `setup-master.update-settings`. It confers
+no authority: nothing runs, and nothing becomes active, because it appears here.
+
+### 6. Environment record (optional; written by setup-master)
+
+A dated record of what setup prepared or bound on this machine and how that was verified — for each
+entry: what it is, where it resolved to, which capability prepared it and when, and the verification
+that was run with its result and date. Written by `setup-master.prepare-environment` and
+`setup-master.register-with-harness`; those are the only writers.
+
+It is a **record, not configuration**. Nothing is executed because it appears here, and it never
+becomes a second home for bindings: a machine-specific value a skill declares stays under that
+skill's subsection in section 3, and this section adds only provenance and verification. Its one
+reader is `setup-master.check-environment`, which treats it as *dated evidence* — never stronger than
+a fresh probe, and good only while the thing it names still resolves at the recorded location. Free
+text elsewhere in the file is not a record and is not read as one.
+
+### 7. Harness registration (optional; written by setup-master)
+
+What was established about how the harness in use presents this repository's content to an agent, and
+what registration created as a result: each location created, the canonical name it was created from,
+the mechanism used, and the date. Written by `setup-master.register-with-harness` only.
+
+It exists so that a later pass can reconcile — add what is missing, remove what no longer has a
+canonical source — instead of silently repeating itself, and so that a kind of thing which **could
+not** be registered is recorded as such, with the manual steps, rather than being retried every run.
+Anything recorded here is a generated pointer to the canonical definition; it is never authority, and
+a flow reached through it still reads the canonical file.
+
 ## Resolution
 
 Flows resolve user context at **preflight**, in this order:
@@ -69,11 +109,10 @@ explicit command-line arguments.
 
 ## Default mechanism: the harness-native local rules file
 
-Each agent harness auto-loads a local rules file into every session. Its **name and format differ
-per harness** and are determined by `setup-master.bootstrap` from the harness in use — for example
-`CLAUDE.local.md` at the repository root for Claude Code. Using that file makes the context simply
-present, with zero resolution steps, and lets the same file carry any personal rules the user wants
-honoured.
+An agent harness normally auto-loads a local rules file into every session. Its **name, location and
+format differ per harness** and are determined by `setup-master.bootstrap` from the harness in use —
+never assumed here. Using that file makes the context simply present, with zero resolution steps, and
+lets the same file carry any personal rules the user wants honoured.
 
 The repository does **not** ship this file. `setup-master.bootstrap` creates or updates it from the
 template below, merging sections and never overwriting existing content without confirmation.
@@ -98,7 +137,13 @@ Free-form input needs checking, not guessing. At preflight a flow validates the 
   section; if it does not, the flow asks the user or triggers a bank refresh;
 - if a `validate-cv-*` skill shipped in this repository is absent from the recorded set, the flow
   **warns** — adding a validation skill without recording it leaves it inactive. The supported way
-  to change the set is `setup-master.register-skill` / `setup-master.update-settings`.
+  to change the set is `setup-master.register-skill` / `setup-master.update-settings`;
+- the toolchain directories are recorded and each one exists, whenever a name in the rules has to be
+  resolved to a file. A missing directory, or one that no longer exists, is reported and asked about
+  — a flow never guesses a path in its place, and an unresolved name is reported as unresolved.
+
+The environment record and the harness-registration record are **never** preflight requirements: a
+flow neither needs them nor acts on them. They are read by `setup-master` alone.
 
 ## Section template
 
@@ -128,4 +173,17 @@ them (identity included — no separate "candidate" entry is needed):
 
 ## Additional rules (optional)
 (free text the flows must honor)
+
+## Toolchain directories (recorded at setup; how a name in the rules resolves to a file)
+- contracts: <path to the directory holding the artifact contracts>
+- roles: <path to the directory holding the role packages>
+- skills: <path to the directory holding the skill packages>
+
+## Environment record (written by setup-master; a record of this machine, not configuration)
+- <what was prepared or bound>: <resolved location>
+  — prepared by <capability> on <date>; verified by <the probe that was run> → <result> on <date>
+
+## Harness registration (written by setup-master.register-with-harness)
+- probe: <what was established about how this harness presents content> — determined <how>, <date>
+- <what was registered>: <location created> ← <canonical name> (<mechanism>), created <date>
 ```
