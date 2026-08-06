@@ -154,6 +154,11 @@ Three things it is not: it is not a summary of the rules (the homes hold those),
 work done (a designated home may not exist yet), and it is not authority (the designated file is
 authoritative once written; this table only says where to look).
 
+**The predecessor paths in the left column no longer exist in this repository.** `prompts/`,
+`runbooks/`, `templates/`, `validators/`, the old top-level `scripts/` and `data/` were deleted once
+every rule had landed; they are named here only to identify which old rule a row is about, and they
+are recoverable from git history. Nothing in the left column is a live path.
+
 **Status column:** `T2` — landed by this task, in `contracts/`. `→ T3x` / `→ T5x` / `→ T6` / `→ T8` —
 designated, landed by the task that owns that file. Actual landing is verified by those tasks and by
 the final sweep.

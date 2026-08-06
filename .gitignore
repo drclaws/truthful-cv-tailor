@@ -40,12 +40,11 @@ htmlcov/
 outputs/*
 !outputs/.gitkeep
 
-# Private candidate evidence indexes and per-run inputs.
-data/master/*
-!data/master/.gitkeep
-data/jobs/*
-!data/jobs/example-company-role/
-!data/jobs/example-company-role/**
+# The predecessor structure's data/ directory is gone from this repository: the
+# knowledge bank lives in outputs/knowledge-bank/ and job material inside its run.
+# The rule stays as a guard — a working tree upgraded from the old layout still
+# holds the real bank and real job dossiers there, and they must never be committed.
+data/
 
 # LaTeX/render byproducts, in case they are created outside outputs/.
 *.aux
