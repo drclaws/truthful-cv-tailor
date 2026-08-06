@@ -4,8 +4,13 @@
 
 First-run setup. Determines which local rules file the harness in use auto-loads, then creates or
 merges that file from the section template kept in the `user-context` contract, so that every flow
-finds the user's context simply present at preflight. It closes by triggering `check-environment` and
-by **recommending** the next steps — it never runs them.
+finds the user's context simply present at preflight. It closes by triggering `check-environment`, by
+**offering** the two capabilities that can act on what the matrix showed, and by **recommending** the
+flows to run next — which it never runs itself.
+
+One setup pass should be able to close setup. Bootstrap therefore offers, but bootstrap itself
+changes nothing on the machine beyond the file below: what it offers is carried out by the capability
+that owns it, and only on what the user agreed to.
 
 This is the only capability that may create the local rules file. It is invoked directly by the user,
 typically once per environment.
@@ -27,8 +32,9 @@ typically once per environment.
 - `local_rules_file` — an instance of the `user-context` contract, created or merged. This contract
   carries no envelope: the file is the user's own free-form, harness-native rules file.
 - An **interactive report** — what was written per section, what is `planned`, the dependency matrix
-  obtained from `check-environment`, and the recommended next steps. Nothing is written to disk
-  besides the local rules file.
+  obtained from `check-environment`, what was offered and what the user decided about it, and the
+  recommended next steps. Bootstrap writes nothing to disk besides the local rules file; anything an
+  accepted offer creates is written by the capability that owns it and recorded by that capability.
 
 ## Procedure
 
@@ -36,10 +42,11 @@ typically once per environment.
    Detect if the environment allows it (the harness names itself; a harness configuration directory
    or an existing `*.local.md` file is present in `repo_root`); otherwise **ask** which agent
    application will run these toolchains. From the harness, determine the name, location and format
-   of the local rules file it auto-loads — for example `CLAUDE.local.md` at the repository root for
-   Claude Code; other harnesses have their own native equivalent. State the resolved file to the
-   user and get confirmation before touching it. If the harness cannot be identified, or has no
-   auto-loaded local rules file, stop and ask (see *Failure and skip conditions*).
+   of the local rules file it auto-loads — from the harness's own documentation where the session can
+   read it, otherwise by asking the user. Every harness has its own; this repository names none of
+   them and assumes none. State the resolved file to the user and get confirmation before touching
+   it. If the harness cannot be identified, or has no auto-loaded local rules file, stop and ask
+   (see *Failure and skip conditions*).
 
 2. **Verify the file is ignored by version control.**
    Check the ignore rules that apply in `repo_root` to the resolved file name. If it is not ignored,
@@ -84,6 +91,12 @@ typically once per environment.
      belong in that skill's subsection, never in a shared lump.
    - **Additional rules.** Offer the optional free-text section. If the user has nothing to add,
      leave it with an explicit empty marker rather than a template placeholder.
+   - **Toolchain directories.** Record where the contracts, the roles and the skills of the
+     repository being connected live, so that a name used in the rules can later be resolved to a
+     file. `skills_root` is one of the three; **propose** the other two from what stands beside it in
+     `repo_root`, show the exact locations, and record only what the user confirms — a proposal the
+     user does not confirm is not recorded. Do not list what those directories hold: each carries its
+     own index, and this section records locations, not a catalogue.
 
 6. **Mark what is not built yet as `planned`.**
    When the user wants a section entry for something this repository does not ship yet — a flow, a
@@ -92,18 +105,33 @@ typically once per environment.
 
 7. **Write the file** — create it, or apply the agreed merge. Leave no literal template placeholder
    behind: every `<…>` is either replaced by a real value or the whole line is removed and the
-   section carries an explicit "none recorded yet" line. Write nothing else, anywhere.
+   section carries an explicit "none recorded yet" line. Write nothing else, anywhere — bootstrap's
+   own writing ends here.
 
 8. **Trigger `check-environment`** and include its dependency matrix in the report. It is invoked as
    the next step of this same role; its rules live in its own capability file and are not restated
    here. If it cannot run, continue: report the environment as unknown and say how to obtain the
    matrix later.
 
-9. **Report and recommend — do not act.** The report states: the file that was written and where;
-   each section with what it now holds; anything marked `planned`; the dependency matrix summary with
-   the steps that would run SKIPPED/manual; and the recommended next steps — typically "run the
-   knowledge-bank refresh flow before the first CV run". Name the flow and how to invoke it. **Do
-   not run it**, even if the user's original request sounded like it included it; ask instead.
+9. **Offer what can act on the matrix — and change nothing until the user agrees.** Two offers, both
+   optional, both refusable, each carried out by the capability that owns it:
+   - `prepare-environment`, for the gaps the matrix reported. The user chooses which gaps, if any;
+     the goal of each comes from the skill that declared it and the means from this environment.
+   - `register-with-harness`, to make the shipped skills and roles discoverable in the harness
+     identified in step 1.
+
+   Present each offer as the plan its own capability writes, hand over to that capability, and let it
+   act only on the items the user agreed to. Bootstrap performs neither itself. Declining one or both
+   is a **normal outcome**, not a broken setup: record what was declined, and report what runs
+   SKIPPED/manual and what still works meanwhile — invoking a flow by path is valid regardless of
+   registration.
+
+10. **Report and recommend the rest — do not run it.** The report states: the file that was written
+    and where; each section with what it now holds; anything marked `planned`; the dependency matrix
+    summary with the steps that would run SKIPPED/manual; what was offered and what the user decided;
+    and the recommended next steps — typically "run the knowledge-bank refresh flow before the first
+    CV run". Name the flow and how to invoke it. **Do not run it**, even if the user's original
+    request sounded like it included it; ask instead.
 
 ## Rules
 
@@ -113,10 +141,13 @@ typically once per environment.
   keep the *semantics* and the section names, and express them in the harness's native format.
 - **Merge is additive by default.** Adding a missing section needs no confirmation beyond the plan of
   step 4. Changing or removing existing content always needs a specific confirmation of that change.
-- **One file, one write.** Repository files, harness configuration and outputs are read-only here.
-- **No installation, no binding.** Bootstrap records what the user has; it never installs a tool,
-  creates an environment, or changes a machine. Missing dependencies are reported, and the
-  instructions come from the declaring skill's own runbook — never invented, never OS-specific.
+- **One file, one write.** `local_rules_file` is the only file bootstrap writes. Repository files,
+  harness configuration and outputs are read-only here.
+- **Nothing changes unasked.** Bootstrap records what the user has and changes nothing on the machine
+  on its own initiative. What it offers in step 9 runs as an item of the assented plan defined in
+  `ROLE.md`'s `## Authority`, carried out by the capability that owns it. A gap nobody closes is
+  reported, with instructions from the declaring skill's own runbook — never invented, never
+  OS-specific.
 - **Ask rather than infer.** A plausible default is not an answer. Unknown values stay unrecorded and
   are reported as still needed.
 - **Idempotent.** Running bootstrap again on a prepared environment must converge on the same file:
@@ -133,3 +164,7 @@ typically once per environment.
 | `skills_root` holds no `validate-cv-*` skill yet | Write the section with an explicit empty set and note that validators can be added later via `register-skill`. Not an error. |
 | `check-environment` cannot run | Write the file, report the environment as unknown, and say how to obtain the matrix later. Bootstrap still succeeds. |
 | The user declines to record anything | Write nothing, report the no-op, and state which flows cannot run until the context exists. |
+| The user declines an offered item, or both offers entirely | Record it as declined, report which steps run SKIPPED/manual and that invocation by path still works. Do not offer it again in the same pass, and do not reach the same end by another route. Setup succeeded. |
+| A gap cannot be closed in this environment — no network, a shell that may not reach out, a policy | The owning capability records the gap with its reason; bootstrap reports it with the declaring skill's manual instructions. Not an error. |
+| Registration cannot complete for a kind the harness holds only inside a configuration file the user owns | Nothing is written. Report which kind, why, the manual steps the user would take, and that invocation by path works meanwhile. Never edit that file. |
+| The contracts or roles directory cannot be resolved beside `skills_root` | Record what was confirmed and ask for the rest. An unconfirmed directory is left unrecorded and reported as still needed — never guessed. |
