@@ -354,18 +354,24 @@ Stop and ask the user — recording the question in `run.md` `## Open questions`
 
 ## Usage
 
-No harness auto-discovers this repository's `skills/` directory yet, so the flow is invoked by path:
+`setup-master.register-with-harness` makes this repository's skills discoverable by the harness in
+use. **Where registration succeeded, the flow is invoked by name:**
 
-> execute `skills/workflows/refresh-knowledge-bank/SKILL.md`
+> run `refresh-knowledge-bank`
 
-The executing agent loads this file, plus `roles/knowledge-bank-curator/ROLE.md` and the capability
-file of the step it is on — and nothing else. On a harness with subagents the steps still run in
-order: this flow declares no parallel groups, and the result must not differ between harnesses.
+**Invocation by path is valid everywhere and is the fallback.** Registration may never have been run,
+the user may have declined it, and the harness in use may have no discovery location for skills at
+all — all ordinary outcomes, and then by-path is the whole of it. Point the agent at this file, whose
+location the skills index gives for the name `refresh-knowledge-bank`.
+
+An adapter is never authority. However the flow was reached, the executing agent loads this file,
+plus the role card of `knowledge-bank-curator` and the capability file of the step it is on — and
+nothing else. On a harness with subagents the steps still run in order: this flow declares no
+parallel groups, and the result must not differ between harnesses.
 
 Before the first run the user's context must exist. If it does not, the correct outcome of preflight
-is a question, and the supported answer is `setup-master.bootstrap` (capability file:
-`roles/setup-master/capabilities/bootstrap.md`), which creates the harness-native local rules file
-from the template in `contracts/user-context.md`.
+is a question, and the supported answer is `setup-master.bootstrap`, which creates the harness-native
+local rules file from the section template in contract `user-context`.
 
 ## User-context settings
 

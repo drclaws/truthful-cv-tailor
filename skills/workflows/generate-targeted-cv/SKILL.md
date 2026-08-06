@@ -620,27 +620,33 @@ An unbound capability is **not** an escalation: it is a SKIPPED step with instru
 
 ## Usage
 
-No harness auto-discovers this repository's `skills/` directory yet, so the flow is invoked by path:
+`setup-master.register-with-harness` makes this repository's skills discoverable by the harness in
+use. **Where registration succeeded, the flow is invoked by name:**
 
-> execute `skills/workflows/generate-targeted-cv/SKILL.md` for `<run-id>`
+> run `generate-targeted-cv` for `<run-id>`
 
-The executing agent loads this file, plus the `ROLE.md` of the role of the current step and that
-step's capability file — and nothing else. Tool skills are read when a step invokes them.
+**Invocation by path is valid everywhere and is the fallback.** Registration may never have been run,
+the user may have declined it, and the harness in use may have no discovery location for skills at
+all — all ordinary outcomes, and then by-path is the whole of it. Point the agent at this file, whose
+location the skills index gives for the name `generate-targeted-cv`, and pass it the same `<run-id>`.
+
+An adapter is never authority. However the flow was reached, the executing agent loads this file,
+plus the `ROLE.md` of the role of the current step and that step's capability file — and nothing
+else. Tool skills are read when a step invokes them.
 
 Before the first run:
 
 1. the user's context must exist — if it does not, the correct outcome of preflight is a question,
-   and the supported answer is `setup-master.bootstrap`
-   (`roles/setup-master/capabilities/bootstrap.md`);
-2. the knowledge bank must exist and be fresh — `skills/workflows/refresh-knowledge-bank/SKILL.md`;
+   and the supported answer is `setup-master.bootstrap`;
+2. the knowledge bank must exist and be usable — `refresh-knowledge-bank`;
 3. the job dossier must exist at `<run>/position/` — created by `scripts/create_run.py` as stubs the
    user fills, or copied from the previous run of the same vacancy.
 
 A typical invocation, in the user's own words:
 
 ```text
-Run skills/workflows/generate-targeted-cv/SKILL.md for the vacancy in
-<path-to-job-material>. Use my registered validation set.
+Run generate-targeted-cv for the vacancy in <path-to-job-material>.
+Use my registered validation set.
 ```
 
 Individual pieces can also be run on their own, without this flow: a tool skill invoked standalone
