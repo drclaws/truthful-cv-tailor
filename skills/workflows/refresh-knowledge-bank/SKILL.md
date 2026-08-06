@@ -29,8 +29,9 @@ Run this flow when:
 - the bank does not exist yet (first run after `setup-master.bootstrap`);
 - a canonical experience source changed since the bank was last built;
 - new canonical sources were added to the user's context that the bank has never seen;
-- another flow's preflight got a `stale` freshness verdict — every CV flow checks freshness before
-  evidence retrieval and routes here when the bank is behind;
+- another flow's preflight found the bank unusable — every CV flow settles the bank before evidence
+  retrieval and routes here both when the verdict is `stale` and when the bank carries no
+  `## Candidate` section, which the build derives;
 - the user changed a fact at the source and wants the bank to catch up.
 
 All bank indexes are built from the same source set, so **they are always checked together**, and
@@ -169,6 +170,7 @@ source.
 |---|---|
 | bank missing, or any index missing | `full` |
 | an index lacks its `## Source Metadata` block | `full` |
+| the bank carries no `## Candidate` section — a legacy import, or another flow routed here because the section it needs is absent | `full`; the build derives the section, whatever the timestamps say |
 | a source the bank has never seen | `full` |
 | one changed source with a clearly bounded effect, and the curator recommends a partial refresh naming the sections | `partial`, with the sections named explicitly |
 | `fresh`, and the user asked for a refresh anyway | `full` (an explicit user request outranks the timestamps) |

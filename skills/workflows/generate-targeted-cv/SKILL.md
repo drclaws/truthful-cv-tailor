@@ -185,7 +185,7 @@ passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge ban
 | # | Step | Executor | Contract | Paths passed | Group | Gate |
 |---|---|---|---|---|---|---|
 | 1 | Resolve user context | `flow` | `user-context` | — | — | G1 |
-| 2 | Check bank freshness | `knowledge-bank-curator.check-freshness` | — (verdict returned) | `sources`, `bank_dir` | — | G2 |
+| 2 | Check the bank is usable | `knowledge-bank-curator.check-freshness` | — (verdict returned) | `sources`, `bank_dir` | — | G2 |
 | 3 | Scaffold the run, seed the manifest | `flow` (`scripts/create_run.py`) | `run-manifest` | `<run>/`, `<run>/run.md`, `<run>/position/` | — | — |
 | 4 | Audit the job-side inputs | `vacancy-analyst.audit-sources` | `source-audit` | `run_id`, `job_dossier_path=<run>/position/`, `transcript_paths`, `additional_inputs`, `run_manifest_path=<run>/run.md`, `constraints_ledger_path=<ledger>`, `output_path=<run>/source_audit.md` | — | G3 |
 | 5 | Analyse the vacancy | `vacancy-analyst.analyze-job` | `requirements-profile` | `run_id`, `job_dossier_path`, `source_audit_path=<run>/source_audit.md`, `constraints_ledger_path`, `output_path=<run>/requirements_profile.md` | **A** | — |
@@ -236,23 +236,36 @@ Validate the result per the contract's preflight rules, and in particular:
   exists. A shipped `validate-cv-*` skill missing from the set is a **warning** to the user (adding a
   validator without recording it leaves it inactive), never a silent addition;
 - every per-skill settings subsection names a skill that exists, and its keys are recognized by that
-  skill's own `SKILL.md`. Unrecognized keys are reported, never interpreted here;
-- the bank's `## Candidate` section exists — the export naming rule needs it. Absent ⇒ ask, or refresh.
+  skill's own `SKILL.md`. Unrecognized keys are reported, never interpreted here.
+
+Nothing about the **bank** is decided here. Whether it exists, whether it is current, and whether it
+carries the identity the export naming rule needs are all properties of the bank, and they are
+settled together at step 2 — which is also where the remedy for all three lives.
 
 Record in `run.md` `## User context`: which resolution supplied which values, and the resolved
 snapshot. An empty registered validation set is legitimate and is recorded as such: the mandatory
 truthfulness check still runs.
 
-### 2. Check bank freshness
+### 2. Check the bank is usable
 
 Invoke `knowledge-bank-curator.check-freshness` with the resolved sources and the bank directory.
 Record the verdict, the per-source and per-index statuses in `run.md` `## Bank freshness`.
 
 | Verdict | What the flow does |
 |---|---|
-| `fresh` | Proceed, recording the verdict. |
-| `stale` | **Stop this flow and run `refresh-knowledge-bank` first**, then resume from step 1 with the rebuilt bank. A CV built on a stale bank is a CV built on last month's truth, and nothing downstream can detect it. |
+| `fresh` | Proceed to the `## Candidate` check below. |
+| `stale` | **Stop this flow and run `refresh-knowledge-bank` first**, then resume from step 1 with the rebuilt bank. A bank that does not exist yet returns `stale`, so a first-ever run lands here — at the diagnosis, not at a downstream symptom. A CV built on a stale bank is a CV built on last month's truth, and nothing downstream can detect it. |
 | `unknown` (a source could not be read) | Ask the user before proceeding. Proceeding is allowed if the user accepts the risk; the acceptance and its reason go into `run.md`, and the source audit's bank stanza carries it. |
+
+Then confirm the bank carries a `## Candidate` section (contract `knowledge-bank`): *The export
+naming rule* above needs the candidate's identity, and that section is its only admissible source.
+**Absent ⇒ the same routing `stale` gets** — stop this flow, run `refresh-knowledge-bank` so the
+curator derives the section, and resume from step 1. It is decided here because it is a property of
+the bank, and the remedy for a bank that cannot serve this flow is stated once, in one place.
+
+Two other cases are *not* a rebuild. A section recording conflicting spellings is a question for the
+user (*The export naming rule*, *Escalation*). A section still absent after a refresh means the
+curator could not derive an identity at all, which is also a question — never a second refresh.
 
 The verdict is *produced* here and *transcribed* by the analyst into the source audit's
 `## Bank stanza` at step 4 — the flow records it in `run.md`, the analyst copies it, and the curator
@@ -534,8 +547,8 @@ A `complete` manifest with a red gate or an unresolved question is a defect.
 
 | Gate | Requires | Evidenced by |
 |---|---|---|
-| G1 context resolved | User context resolved through the declared order; the validation set well-formed; the bank's `## Candidate` section available for the naming rule. | `run.md` `## User context` |
-| G2 bank freshness decided | A verdict with per-source and per-index status. `stale` ⇒ refresh first. `unknown` ⇒ settled with the user. An undecided verdict is a red gate. | `run.md` `## Bank freshness` |
+| G1 context resolved | User context resolved through the declared order; the validation set well-formed; every per-skill settings subsection naming a skill that recognizes its keys. | `run.md` `## User context` |
+| G2 bank usable | A freshness verdict with per-source and per-index status, **and** the bank's `## Candidate` section present for the naming rule. `stale` — which is what a bank that does not exist yet returns — or `## Candidate` absent ⇒ refresh first, then resume from step 1. `unknown` ⇒ settled with the user. An undecided verdict is a red gate. | `run.md` `## Bank freshness` |
 | G3 sources audited | Every run input inventoried and classified; conflicts marked; the bank stanza written. | `<run>/source_audit.md` |
 | G4 evidence retrieved | One evidence-map entry per requirement in the profile, cited and strength-labelled, gaps marked `GAP`. | `<run>/evidence_map.md` |
 | G5 truthfulness | The mandatory `reviewer.fact-check` on the current revision of the document in play: `pass`, or `pass-after-edits` with every required edit applied and the check re-run. Never skipped, never waived. | `<run>/fact_check.md` |
@@ -569,8 +582,9 @@ Stop and ask the user — recording the question in `run.md` `## Open questions`
 
 - user context cannot be resolved, the validation set is malformed, or a per-skill setting is
   unrecognized by the skill it names;
-- the bank's `## Candidate` section is missing or records conflicting spellings, so the export name
-  cannot be derived;
+- the bank's `## Candidate` section records conflicting spellings, or is still absent after a
+  refresh, so the export name cannot be derived — a section that is merely absent is routed to
+  `refresh-knowledge-bank` at step 2 rather than escalated;
 - the freshness verdict is `unknown` and the affected source matters to this vacancy;
 - no readable job description was provided, or the job-side inputs contradict each other on something
   load-bearing and neither source is more canonical;
