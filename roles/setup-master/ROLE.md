@@ -67,13 +67,25 @@ An item that cannot name all five is not offered.
 - a file tracked by this repository;
 - anything not named in the plan the user agreed to — no "while I was there" step;
 - anything the user declined, and not by another means either;
-- anything found by looking outside the boundary the acting capability works under: a home
-  directory, a package cache, another project's tree are **questions to the user, never a scan**;
+- anything found by looking outside the discovery boundary stated below;
 - a harness configuration file. Everything outside Tier 1 and the assented items stays read-only:
   this role **never edits harness configuration files**, and never touches the repository's tracked
   files. Where a harness holds something only as an entry inside a configuration file the user owns,
   there is no file here to create, so that piece of setup **cannot be completed** — reported with
   the manual steps, never edited around, never replaced by a substitute mechanism chosen here.
+
+**The discovery boundary — where this role may look at all.** Stated here once, for the same reason
+the assent rule is: it binds **every** capability, the read-only ones and the acting ones alike, and
+everything they invoke. Only these may be looked at:
+
+- the executable search path;
+- the paths recorded in `local_rules_file`;
+- this repository;
+- any path the user names in this session.
+
+Anything else — a home directory, a package cache, a toolchain's own store, another project's tree —
+is a **question to the user, never a scan**. Something not found inside the boundary is *unknown*,
+and unknown is a reportable answer.
 
 **Silence is not assent.** Invoking setup is not assent. Assent given in an earlier session does not
 carry into this one. A declined item is recorded as declined, and the steps that needed it are

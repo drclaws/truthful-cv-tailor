@@ -103,10 +103,8 @@ It is invoked by the user, or offered by `bootstrap` once the dependency matrix 
 - **Nothing is pinned.** The goal is a capability, never a release. Whatever the current toolchain
   resolves to at preparation time is what gets installed, and this repository never writes that down
   — not in this file, not in the record, not in a report.
-- **Bounded discovery.** Only these may be looked at: the executable search path; the paths recorded
-  in `local_rules_file`; this repository; and any path the user names in this session. Anything else
-  — a home directory, a package cache, a toolchain's own store, another project's tree — is a
-  **question to the user, never a scan**. This binds everything this capability invokes as well.
+- **Bounded discovery.** This capability, and everything it invokes, looks only where the discovery
+  boundary defined in this role's `## Authority` permits.
 - **It may conclude "not here".** In a session with no network, in a shell that cannot start what it
   just created, or under a policy that forbids the change, the correct outcome is a recorded gap plus
   the SKIPPED/manual consequence the declaring skill states — a success of this capability. Retrying
