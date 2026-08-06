@@ -200,11 +200,12 @@ passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge ban
 | 14 | Promote the cleared draft | `experience-writer.edit-document` | `cv-document` | `document_path=<run>/draft_cv.md`, `caller_instruction`, `evidence_source`, `constraints_ledger`, `output_path=<run>/final_cv.md`, `status=final` | — | G8 |
 | 15 | Re-check the final instance | `reviewer.fact-check`; `reviewer.run-check` per implicated entry | `validation-report` | `document=<run>/final_cv.md`; same report paths, `revision:` incremented | — | G5, G6 |
 | 16 | Render the deliverable | `renderer.render-document` via `tool:render-cv-pdf` | `render-manifest` | `document=<run>/final_cv.md`, `template` (resolved from user context), `settings` (`page_target`), `export_name`, `source_out=<run>/render/final_cv.tex`, `export_out=<run>/exports/<export_name>`, `manifest_out=<run>/render/render_report.md`, `build_dir=<run>/render/`, `validation_reports=<run>/fact_check.md` + every `<run>/checks/<validator>.md` | — | G9 |
-| 17 | Resolve an overflow or a red gate | `experience-writer.edit-document` → step 15 → step 16 | `cv-document` | as steps 14–16, on `<run>/final_cv.md` | — | G5, G6, G9 |
+| 16b | Re-check the rendered form | `reviewer.run-check` — one invocation per implicated entry | `validation-report` | `check_spec`, `check_name`, the inputs of step 10 **plus** `rendered_pdf=<run>/exports/<export_name>` and the two text extractions prepared into `<run>/work/`, `check_settings`, `run_manifest=<run>/run.md`, `report_path=<run>/checks/<validator>.md` (`revision:` incremented) | — | G6 |
+| 17 | Resolve an overflow or a red gate | `experience-writer.edit-document` → step 15 → step 16 → step 16b | `cv-document` | as steps 14–16b, on `<run>/final_cv.md` | — | G5, G6, G9 |
 | 18 | Run the external checks | `reviewer.run-external-checks` | raw captures + `validation-report` (run record) | `external_entries`, `deliverable=<run>/exports/<export_name>`, `document=<run>/final_cv.md`, `job_inputs`, `run_manifest=<run>/run.md`, `raw_capture_paths=<run>/external/<validator>_raw.<ext>`, `report_path=<run>/external/run_record.md` | **C** | G10 |
 | 19 | Normalize each capture | `reviewer.normalize-external-report` — one invocation per capture | `validation-report` (advisory) | `raw_capture`, `entry_name`, `submitted_deliverable`, `document=<run>/final_cv.md`, `job_inputs`, `report_path=<run>/external/<validator>_report.md` | **C** | — |
 | 20 | Gate the external recommendations | `reviewer.gate-external-recommendations` | `external-gate-decision` | `normalized_reports`, `fact_check_report=<run>/fact_check.md`, `internal_reports`, `render_manifest=<run>/render/render_report.md`, `document=<run>/final_cv.md`, `knowledge_bank`, `constraints_ledger`, `evidence_map`, `requirements_profile`, `report_path=<run>/external/gate_decision.md` | — | G11 |
-| 21 | Apply accepted advice (conditional) | `experience-writer.edit-document` → step 15 → step 16 | `cv-document` | `document_path=<run>/final_cv.md`, `gate_decisions=<run>/external/gate_decision.md`, `evidence_source`, `constraints_ledger`, `output_path=<run>/final_cv.md`, `status=final` | — | G5, G6, G9 |
+| 21 | Apply accepted advice (conditional) | `experience-writer.edit-document` → step 15 → step 16 → step 16b | `cv-document` | `document_path=<run>/final_cv.md`, `gate_decisions=<run>/external/gate_decision.md`, `evidence_source`, `constraints_ledger`, `output_path=<run>/final_cv.md`, `status=final` | — | G5, G6, G9 |
 | 22 | Report the gaps | `vacancy-analyst.gap-analysis` | `gap-report` | `run_id`, `requirements_profile_path`, `evidence_map_path`, `cv_document_path=<run>/final_cv.md`, `validation_report_paths`, `fit_report_path`, `external_gate_decision_path`, `recruiter_signals_path`, `constraints_ledger_path`, `output_path=<run>/gap_report.md` | — | — |
 | 23 | Brief the bank | `knowledge-bank-curator.ingest-run-feedback` | `bank-update-brief` | `run_reports` (this run's analytical artifacts), `bank_dir`, `constraints_ledger`, `output_path=<run>/bank_update_brief.md`, `run_id` | — | — |
 | 24 | Ingest constraint proposals | `knowledge-bank-curator.maintain-constraints` | `constraints-ledger` | `report_paths` (every report of this run), `direct_proposals`, `constraints_ledger=<ledger>`, `bank_dir`, `run_id` | — | G12 |
@@ -416,12 +417,37 @@ document whose reports it has not cleared:
 
 **Overflow is a content problem** (step 17). The tool reports what overflowed and by how much; the
 writer compresses validated content gradually per its own capability; the template is never
-restyled, and no content is silently cut. After any content change: step 15, then step 16 again.
+restyled, and no content is silently cut. After any content change: step 15, then step 16, then step
+16b again.
 
 **G9** is every mechanical gate in `render/render_report.md` green — compile twice, page target,
 text extraction in both modes, fonts embedded, export filename matching the naming rule. An unbound
 toolchain is a **SKIPPED** render with instructions and the gates recorded as *not run*: it does not
 fail this flow, but it does not open G10 either, because a gate that did not run was never green.
+
+### 16b. Re-check the rendered form
+
+Some checks can only be made against the file that will actually be sent. A registered internal entry
+may declare rendered inputs — the deliverable and its two text extractions — and until a render
+exists those items are reported *not applicable at this stage*, never as passes. A run that stopped
+at step 16 would therefore ship a deliverable whose rendered form no internal check ever saw.
+
+So: once G9 is green, **re-run every internal entry whose spec declares rendered inputs**, over the
+same document plus the render. The flow prepares the two extractions into `<run>/work/` (plain
+reading order and layout-preserving — the same two the render gate produced) and passes them with the
+export path; each entry's report is overwritten in place at `<run>/checks/<validator>.md` with
+`revision:` incremented, so the report names the artefact pair it actually examined.
+
+- An entry whose spec declares **no** rendered inputs is not re-run here: nothing it inspects changed.
+- Extraction unbound ⇒ the rendered half is **SKIPPED with instructions** per the entry's own spec,
+  the markdown half stands, and the report is partial. It is not a failure and not a red gate.
+- A finding here is an ordinary finding: back to step 17 — the writer edits, step 15 re-checks, step
+  16 re-renders, and this step runs again. The template is never restyled to satisfy it.
+- `reviewer.fact-check` is **not** re-run here. It examines claims, and rendering changes no claim;
+  it re-runs when content changes, which is step 15's job.
+
+**G6 stays open until this has happened** for every entry it applies to. G10 reads G6, so no external
+submission precedes the rendered-form check.
 
 ### 18–20. External validation
 
@@ -513,7 +539,7 @@ A `complete` manifest with a red gate or an unresolved question is a defect.
 | G3 sources audited | Every run input inventoried and classified; conflicts marked; the bank stanza written. | `<run>/source_audit.md` |
 | G4 evidence retrieved | One evidence-map entry per requirement in the profile, cited and strength-labelled, gaps marked `GAP`. | `<run>/evidence_map.md` |
 | G5 truthfulness | The mandatory `reviewer.fact-check` on the current revision of the document in play: `pass`, or `pass-after-edits` with every required edit applied and the check re-run. Never skipped, never waived. | `<run>/fact_check.md` |
-| G6 registered internal checks | Every entry of the registered set of kind `internal`: `pass`, or `pass-after-edits` with its edits applied and the entry re-run, or a recorded `skipped` with instructions. An empty set closes this gate trivially. | `<run>/checks/<validator>.md` |
+| G6 registered internal checks | Every entry of the registered set of kind `internal`: `pass`, or `pass-after-edits` with its edits applied and the entry re-run, or a recorded `skipped` with instructions. **And, once a render exists, every entry whose spec declares rendered inputs re-run against it (step 16b)** — an entry still reporting its rendered items as *not applicable at this stage* does not close this gate. An empty set closes it trivially. | `<run>/checks/<validator>.md` |
 | G7 fit escalation settled | The rule did not trigger, or the user answered and the answer is recorded. | `<run>/fit_report.md`, `run.md` `## Open questions` |
 | G8 final document | `<run>/final_cv.md` exists at `status: final`, with no unresolved required edit from any report. | `<run>/final_cv.md` |
 | G9 render gates | Every mechanical gate green in the render manifest: compile ×2, page target, extraction in both modes, fonts embedded, export filename matching the naming rule. Gates recorded *not run* are not green. | `<run>/render/render_report.md` |

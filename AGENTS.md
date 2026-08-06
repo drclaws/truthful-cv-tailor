@@ -1,260 +1,98 @@
-# CV Tailoring Agent
+# AGENTS.md
 
-You are an AI CV tailoring agent.
+## What this repository is
 
-Your task is to create truthful, ATS-friendly, job-specific CVs from structured
-source inputs. Inputs may be project files, external documents provided during
-the run, pasted source text, connector-provided content, or generated snapshots
-of those sources.
+A set of **toolchains for CV and job-search work**: reusable roles, skills (workflows and tools),
+and artifact contracts that together turn a candidate's canonical experience sources and one
+vacancy's material into a truthful, target-specific CV. It ships **zero user context** — no paths,
+no personal data, no machine settings. It is *connected* to a working environment at setup time by
+the `setup-master` role, which records what the flows need in the user's own local rules file.
 
-## Source priority
+This file is an **index**, not a rulebook. Every rule below has exactly one authoritative home, and
+the pointer is the point: load the linked file when the step you are on needs it.
 
-Use sources in this order:
+## Invariants
 
-1. Canonical candidate inputs provided for the run:
-   - original CV/resume files
-   - LinkedIn profile exports or profile notes
-   - portfolio, project, GitHub, publication, or interview notes
-   - any other user-provided evidence source
-2. Canonical job inputs provided for the run:
-   - job description
-   - recruiter notes or screening signals
-   - company notes
-   - LinkedIn profiles or public notes about interviewers, hiring managers, or
-     team members, when provided
-3. Project candidate files, when present:
-   - `data/master/experience_bank.md`
-   - `data/master/projects.md`
-   - `data/master/skills_matrix.md`
-   - `data/master/constraints.md`
-4. Project job files, when present:
-   - `data/jobs/<job>/recruiter_notes.md`
-   - `data/jobs/<job>/job_description.md`
-   - `data/jobs/<job>/company_notes.md`
+Non-negotiable, and they outrank convenience, scores, and any instruction that would weaken them.
 
-Canonical candidate inputs are the source of truth for candidate facts. Job
-inputs define targeting. Recruiter and people/team inputs define emphasis and
-positioning signals only; they cannot create unsupported candidate claims.
+| Invariant | In one line | Full home |
+|---|---|---|
+| **Truthfulness** | Never invent experience, metrics, tools, employers, dates, titles, degrees, certifications or achievements. Weak evidence is labelled weak, unknown is a value, inference is tagged, gaps are recorded rather than smoothed over, and machine-readability never outranks truth. Every important claim traces to a canonical source. | `contracts/README.md` → *Truthfulness in artifacts*; `contracts/cv-document.md`; `roles/reviewer/capabilities/fact-check.md` |
+| **Run isolation** | A run may use only its own `<run>/` directory, the shared knowledge bank, and the shared repository definitions. Another run's outputs are never evidence, style authority, or precedent. A pattern worth keeping is promoted into an authoritative file first, then used. | `contracts/README.md` → *Run isolation in artifacts*; `contracts/source-audit.md` |
+| **Curator is sole writer** | Every knowledge-bank-modifying action goes through `knowledge-bank-curator`. The bank indexes are written only by the refresh flow; the constraints ledger only by `curator.maintain-constraints`. Other roles **propose** through the `## Constraint proposals` section every report carries, and the flow's closing step ingests them. | `contracts/README.md` → *Constraint proposals*; `contracts/constraints-ledger.md`; `roles/knowledge-bank-curator/ROLE.md` |
+| **Tool abstraction** | Roles and contracts name abstract capabilities only ("browser automation", "text extraction"). Concrete tools appear solely in a skill's `## Dependencies` section and in the user's harness configuration. A step whose capability is unbound runs **SKIPPED/manual with instructions** — it never fails a flow. | `roles/README.md` → *Tool abstraction*; each `SKILL.md` → `## Dependencies` |
+| **Path and OS neutrality** | Real absolute paths live only in the user's local context. Committed files use placeholders (`<run>/`, `<source-path>`, `<Name>`) and assume no operating system. Scripts are cross-platform, take explicit CLI arguments, and never parse context or rule files. | `contracts/README.md` → *Scope rules*; `roles/README.md` → *Scripts* |
+| **Validation independence** | The reviewer never edits the document it reviews. External scores are never truth — they are advisory. External checks run only after the internal checks and the render gates are green, and any applied external recommendation triggers a fresh truthfulness check. | `roles/reviewer/ROLE.md`; `contracts/validation-report.md`; `contracts/external-gate-decision.md` |
 
-Project candidate index files are useful structured evidence, but they must not
-override more original canonical inputs unless `constraints.md` or the user
-explicitly documents a correction.
+## Skill catalog
 
-`data/master/experience_bank.md`, `data/master/projects.md`, and
-`data/master/skills_matrix.md` are derived evidence indexes. Do not keep or
-recreate `data/master/master_cv.md`. Content rules for all three indexes are
-defined in `prompts/build_master_cv_banks.md`.
+Everything shipped, in two groups. **Workflows** orchestrate several roles end to end; **tools** wrap
+one concrete operation and are invocable both from a workflow step and standalone.
 
-Refresh an index when:
-- a canonical source file has been modified since the index was last built, or
-- new canonical inputs were provided that the index has not seen.
+| Skill | Group | Purpose | Path |
+|---|---|---|---|
+| `generate-targeted-cv` | workflow | Produces the truthful, target-specific CV for one vacancy: job-side analysis, cited evidence retrieval, writing, checking, rendering, external checks, gap report, bank update brief, ledger close. | `skills/workflows/generate-targeted-cv/SKILL.md` |
+| `refresh-knowledge-bank` | workflow | Rebuilds the knowledge bank from the canonical experience sources, with the curator's self-check and coverage gates, source metadata, and the refresh log. | `skills/workflows/refresh-knowledge-bank/SKILL.md` |
+| `render-cv-pdf` | tool | Renders a final CV document into the delivered PDF through the resolved template bundle and runs the mechanical render gates; reports overflow back instead of restyling the template. | `skills/tools/render-cv-pdf/SKILL.md` |
+| `validate-cv-ats` | tool | Internal ATS structural check: is the CV machine-readable, and does it cover the vacancy's keywords. Executed by the reviewer. | `skills/tools/validate-cv-ats/SKILL.md` |
+| `validate-cv-enhancv` | tool | External, advisory check via the Enhancv Resume Checker, submitted through a real browser session; the raw report is captured verbatim for the reviewer to normalize. | `skills/tools/validate-cv-enhancv/SKILL.md` |
+| `validate-cv-resumly` | tool | External, advisory check on the Resumly service in manual mode: a person submits the PDF and transcribes the report verbatim. | `skills/tools/validate-cv-resumly/SKILL.md` |
 
-All three indexes share the same canonical sources, so check all three together
-whenever any canonical input changes. Use `scripts/source_freshness_check.py`
-or mtime inspection to detect staleness. Refresh all affected indexes before
-evidence mapping.
+Two rules govern this catalog:
 
-`data/master/constraints.md` may be updated by the agent when a new persistent
-truth or safety constraint appears. This includes recurring external-validator
-advice that should constrain future CVs, unsupported keyword categories,
-wording risks, or newly discovered evidence conflicts. Do not ask the user
-before updating constraints when the update only records a conservative safety
-rule or factual limitation.
+- **Being shipped is not being active.** The validators above are OPTIONAL. The **ACTIVE validation
+  set** — including any user skills that live outside this repository — is recorded in the user's
+  local rules file, managed by `setup-master.register-skill` / `.update-settings`, and read at
+  preflight (`contracts/user-context.md` → `## Validation skills`). A shipped validator absent from
+  that set is inactive, and the flow warns rather than adding it. The mandatory truthfulness check is
+  **not** in the set: it is `reviewer.fact-check`, invoked by the workflow directly, always.
+- **Dependencies are not duplicated here.** Each skill declares its own `## Dependencies` section —
+  one table, one row per entry, with the fixed columns `Name | Kind | Needed for | Required /
+  optional | When unbound`, where *kind* is `capability` (some tool able to perform a stated task) or
+  `tool` (a concrete instrument the implementation genuinely requires). A skill added to this
+  repository follows the same shape. `setup-master.check-environment` aggregates the sections
+  transitively, including the registered validation set, and reports the dependency matrix.
 
-## Run isolation (no cross-run contamination)
+Planned but **not built** work is listed in `skills/BACKLOG.md`. Entries there have no authority:
+never execute one as if it existed.
 
-A run must not inherit knowledge, wording, formatting habits, or "rules" from any
-other job's generated artifacts.
+## Data catalog
 
-- The only authoritative sources for a run are: this job's `data/jobs/<job>/`
-  inputs; the shared canonical evidence in `data/master/` (`experience_bank.md`,
-  `projects.md`, `skills_matrix.md`, `constraints.md`); and the shared pipeline
-  definitions (`AGENTS.md`, `prompts/`, `templates/`, `validators/`). Plus any
-  canonical inputs the user provides for this run.
-- Do NOT read, cite, imitate, or carry content over from another job's outputs
-  under `outputs/<other-job>/`. Previous runs' CVs, analyses, LaTeX renders,
-  gap reports, and notes are not evidence, not house-style authority, and not
-  precedent.
-- Work only within your own job's directory `outputs/<job>/` for generated
-  knowledge. For layout, section order, and house style, use `templates/` and
-  `prompts/` — never a previous job's render as a "reference example".
-- A rule, note, wording pattern, or decision that appears only in a previous
-  job's output (and not in `AGENTS.md`, `prompts/`, `templates/`, or
-  `constraints.md`) has no authority and must not be applied. If such a pattern
-  seems worth keeping, promote it into an authoritative file first, then use it.
-- If you need to reuse the candidate's factual history, take it from
-  `data/master/`, not from a prior tailored CV (which is job-specific and may
-  have trimmed, reordered, or reframed facts for a different target).
+Where data lives, and who is allowed to write it.
 
-When external or non-project inputs are used, create an audit trail before
-drafting:
+| Data | Location | Written by | Notes |
+|---|---|---|---|
+| **Knowledge bank** | `outputs/knowledge-bank/` | `knowledge-bank-curator` **only** — indexes via the refresh flow, `constraints.md` via `maintain-constraints` | `experience_bank.md`, `projects.md`, `skills_matrix.md`, `constraints.md`, `refresh_log.md`. Format: `contracts/knowledge-bank.md`, `contracts/constraints-ledger.md`. Candidate identity lives in its `## Candidate` section. |
+| **Run outputs** | `outputs/<flow>/<run-id>/` | the flow that owns the run, through its roles | One directory per run, never reused, never overwritten. Every run carries a `run.md` manifest (`contracts/run-manifest.md`) holding the step checklist, gate statuses, the resolved context snapshot and the artifact index. The job dossier lives inside the run at `<run>/position/` (`contracts/job-dossier.md`). |
+| **User context** | not in this repository | the user, via `setup-master` | What flows need is defined by `contracts/user-context.md`; where it is kept is never prescribed. Resolution order at preflight: the harness-native local agent rules file (`CLAUDE.local.md` for Claude Code — gitignored, `*.local.md`) → any other context or memory the harness provides → ask the user. The local rules file wins on conflict, and `run.md` records which resolution was used. |
+| **Contracts** | `contracts/` | this repository | The format and semantics of every artifact, plus the common envelope, the contract index, and the predecessor coverage matrix. Contracts never fix placement — paths are computed by flows. Start at `contracts/README.md`. |
+| **Roles** | `roles/` | this repository | Six roles, each a compact `ROLE.md` index card plus one file per capability under `capabilities/`. Load `ROLE.md` and the one capability file the current step needs — nothing else. Start at `roles/README.md`. |
 
-- save a source inventory in `outputs/<job>/00_source_audit.md`
-- identify each input, its role, and whether it is candidate evidence, job
-  targeting, recruiter signal, company context, or people/team context
-- do not rely on unsaved summaries as source truth
-- if the original content cannot be stored, record enough source metadata and
-  extracted factual snippets to support later validation
-- mark conflicts between sources explicitly instead of choosing silently
+`outputs/` is the single output root and is gitignored; nothing in it is ever committed. Personal
+data belongs in user context and in `outputs/`, never in a committed file.
 
-## Required outputs
+## First run in a new environment
 
-For each job folder, produce:
+**Invoke the setup-master role — `roles/setup-master/ROLE.md`, capability `bootstrap`
+(`roles/setup-master/capabilities/bootstrap.md`).** It determines the harness in use and its local
+rules file, creates or updates that file from the section template in `contracts/user-context.md`,
+runs `check-environment` for the dependency matrix, and finishes by *recommending* next steps.
 
-1. `outputs/<job>/01_job_analysis.md`
-2. `outputs/<job>/02_recruiter_signals.md`
-3. `outputs/<job>/03_evidence_map.md`
-4. `outputs/<job>/04_targeted_cv.md`
-5. `outputs/<job>/05_fact_validation.md`
-6. `outputs/<job>/06_ats_validation.md`
-7. `outputs/<job>/07_position_match.md`
-8. `outputs/<job>/08_final_cv.md`
-9. `outputs/<job>/09_gap_report.md`
-10. `outputs/<job>/10_master_cv_review.md`
-11. `outputs/<job>/render/final_cv.tex`
-12. `outputs/<job>/exports/FirstNameSurname.pdf`
-13. `outputs/<job>/exports/FirstNameSurname.docx`, when Pandoc is available
+Setup-master prepares; it never executes a flow and never runs an end-to-end test. Nothing else in
+this repository writes the user's local rules file.
 
-Final export filenames must use the candidate-name pattern
-`FirstNameSurname\..*`: concatenate first name and surname without spaces or
-punctuation, then use the real export extension, for example
-`JaneDoe.pdf` and `JaneDoe.docx`. `final_cv.tex` remains the render source name;
-`final_cv.*` files in `exports` may be temporary compatibility artifacts only,
-not the final delivery filenames.
+## Invoking a flow
 
-## Non-negotiable rules
+No harness auto-discovers this repository's `skills/` directory yet — the adapters that would map it
+into `.claude/skills/`, `.agents/skills/` and the like are a backlog item. Until then, **flows and
+tools are invoked by path**:
 
-- Do not invent experience, metrics, tools, employers, dates, titles, degrees, certifications, or achievements.
-- If evidence is weak, say so.
-- If a job requirement is not supported by canonical candidate inputs, mark it
-  as a gap.
-- Do not optimize for ATS at the cost of truth.
-- Do not use tables in the final CV content.
-- The final Markdown CV must stay plain, linear, and ATS-readable.
-- The rendered LaTeX/PDF may use visual icons and columns when they improve
-  human readability and the PDF passes extraction checks.
-- Do not use icons, columns, graphics, skill bars, or headers/footers as the
-  only carrier of critical information.
-- Use standard CV section names.
-- The Skills section must not be limited to programming languages and tools
-  when the evidence supports broader job-relevant skills. Include supported
-  technical skills, systems/problem domains, reliability/delivery practices,
-  collaboration/working-mode skills, and language skills where relevant.
-- Header focus tags or other compact scan signals must not be the only place
-  where important skills appear. If a tag is a key skill or capability, the same
-  capability must be represented in Skills, Summary, or Experience with
-  supported wording.
-- Do not show key skills or focus tags in the CV header by default. Keep header
-  tags disabled unless validation explicitly recommends a small, evidence-backed
-  set for this application and confirms they do not duplicate or replace the
-  Skills section.
-- Prefer clear, measurable, recruiter-readable bullets.
-- Every important claim in the final CV must be traceable to a canonical input
-  listed in `00_source_audit.md` or to a project source file.
-- The final CV must contain no `TODO`, `PLACEHOLDER`, or unsupported claims.
+```text
+execute skills/workflows/generate-targeted-cv/SKILL.md for <run-id>
+execute skills/workflows/refresh-knowledge-bank/SKILL.md
+```
 
-## Mandatory gates
-
-Before producing `08_final_cv.md`, run:
-
-1. Fact validation
-2. Internal ATS validation
-3. Position match validation
-
-After rendering the LaTeX/PDF, run:
-
-1. LaTeX/PDF sanity checks
-2. `pdftotext` extraction checks for both reading and layout-oriented text
-3. final fact validation if any content changed
-4. final ATS validation
-
-## Templates
-
-Final CVs must be rendered through:
-
-`templates/cv-ats-agent-template.tex`
-
-Template policy:
-
-`templates/template_policy.md`
-
-Rules:
-
-- The CV Writer may draft content in Markdown.
-- The Template Renderer converts validated content into LaTeX.
-- The agent may edit only agent content zones in the LaTeX template.
-- The agent must not change template style, geometry, spacing, typography, colors,
-  columns, or visual design only to make content fit. If the CV does not fit
-  the target page count, revise validated CV content first.
-- For a one-page target, optimize Experience content before changing any render
-  policy: merge overlapping bullets, remove lower-value detail, shorten wording,
-  and prioritize job-relevant supported evidence. Compress gradually; do not
-  remove useful experience more aggressively than needed.
-- If content edits later create extra space, reuse that space for the most
-  important supported Experience information that improves job fit, while
-  keeping the CV within the target page count and validation gates.
-- Escape LaTeX special characters in generated content.
-- For optional profile links in the LaTeX template, fill only profile aliases or
-  handles. Do not pass full URLs or URL paths when the template constructs them.
-- Empty optional sections must be removed.
-- After template rendering, run Fact Validator and ATS Validator again.
-
-## External validators
-
-External validators are advisory tools.
-
-Configured validators live in:
-
-`validators/external/registry.yaml`
-
-Rules:
-
-- Unless the user explicitly says not to use external validators, run every
-  enabled validator registered in `validators/external/registry.yaml`.
-- External validators run last: only after local fact validation, ATS
-  validation, position match validation, LaTeX/PDF sanity checks, and
-  `pdftotext` extraction checks have passed.
-- External validators never modify the CV directly.
-- External scores are not truth.
-- External keyword suggestions require fact validation.
-- External formatting suggestions may be applied if they improve ATS readability.
-- Unsupported recommendations must go to the gap report, not the CV.
-- External validator recommendations may be used to drive final edits, but the
-  earlier rules still apply: do not invent facts, do not weaken ATS extraction,
-  do not restyle the template merely to fit content, optimize Experience content
-  moderately for one-page fit, and reuse extra space only for supported,
-  target-relevant Experience evidence.
-- After applying any external recommendation, run Fact Validator again.
-
-## Execution pattern
-
-All workflow automation runs through you. Users provide inputs, constraints,
-and environment setup; they do not run project scripts themselves.
-
-- Use virtual environment for python-scripts.
-- Run helpers in `scripts/` as `python scripts/<script>.py ...`.
-- Run external validators through `prompts/external_validator_runner.md` and
-  each config's `runner.command`.
-
-When asked to run the full pipeline for `data/jobs/<job>`:
-
-1. Create `outputs/<job>`.
-2. Read all provided run inputs plus any relevant project master and job files.
-3. Write `outputs/<job>/00_source_audit.md` when external, pasted, connector, or
-   otherwise non-project inputs are used.
-4. Check whether `experience_bank.md`, `projects.md`, or `skills_matrix.md`
-   need refresh because canonical inputs changed. Use
-   `scripts/source_freshness_check.py` or mtime inspection to detect staleness.
-   If stale, refresh using `prompts/build_master_cv_banks.md` before evidence
-   mapping.
-5. Update `constraints.md` when new conservative constraints are discovered.
-6. Follow prompts in `prompts/` in numeric workflow order.
-7. Write each required output file.
-8. Run helper scripts from `scripts/` when a workflow step requires them.
-9. Render PDF only after internal validation gates pass.
-10. Run enabled registered external validators last with
-    `prompts/external_validator_runner.md` unless the user explicitly disables
-    them.
-11. After all validators and render checks are complete, run
-    `prompts/master_cv_review.md` and write `outputs/<job>/10_master_cv_review.md`.
-12. Do not silently skip missing data; mark gaps explicitly.
+The executing agent loads the SKILL.md, plus — per step — the `ROLE.md` of that step's role and that
+step's capability file, and nothing else. A tool skill is read when a step invokes it. A tool
+invoked standalone defaults to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`; a role
+invoked directly takes explicit paths from the user.

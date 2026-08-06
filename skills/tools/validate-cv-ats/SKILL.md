@@ -254,26 +254,8 @@ Registration itself (name + kind `internal`) lives in the `## Validation skills`
 
 ## Dependencies
 
-| Field | Value |
-|---|---|
-| **name** | `python3` (≥ 3.10) |
-| **kind** | tool |
-| **needed for** | running the bundled `scripts/ats_static_check.py` and `scripts/keyword_match.py` |
-| **required \| optional** | optional |
-| **when unbound** | the check still runs — every item is decidable by reading. The measurements are derived manually per the runbook's manual fallback, and the report states that no script measurement was available. |
-
-| Field | Value |
-|---|---|
-| **name** | rendered-document text extraction (normal and layout-preserving) |
-| **kind** | capability |
-| **needed for** | inspecting the rendered PDF: item 13, the columnar-extraction gate, and the rendered halves of items 1, 3, 5 and 9 |
-| **required \| optional** | optional |
-| **when unbound** | the rendered half runs SKIPPED with instructions (bind an extraction tool, or extract the text manually and pass the two text files as inputs); the markdown half runs normally and the report is marked partial. |
-
-| Field | Value |
-|---|---|
-| **name** | file reading and writing within the paths passed |
-| **kind** | capability |
-| **needed for** | reading the CV, the job-side inputs and the extractions; writing the report at the path the caller passed |
-| **required \| optional** | required |
-| **when unbound** | the check cannot run at all; the reviewer reports `blocked`. |
+| Name | Kind | Needed for | Required / optional | When unbound |
+|---|---|---|---|---|
+| `python3` (≥ 3.10) | tool | Running the bundled `scripts/ats_static_check.py` and `scripts/keyword_match.py`. | optional | The check still runs — every item is decidable by reading. The measurements are derived manually per the runbook's manual fallback, and the report states that no script measurement was available. |
+| Rendered-document text extraction (normal and layout-preserving) | capability | Inspecting the rendered PDF: item 13, the columnar-extraction gate, and the rendered halves of items 1, 3, 5 and 9. | optional | The rendered half runs SKIPPED with instructions (bind an extraction tool, or extract the text manually and pass the two text files as inputs); the markdown half runs normally and the report is marked partial. |
+| File reading and writing within the paths passed | capability | Reading the CV, the job-side inputs and the extractions; writing the report at the path the caller passed. | required | The check cannot run at all; the reviewer reports `blocked`. |

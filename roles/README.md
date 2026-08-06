@@ -132,6 +132,33 @@ context files, rule files, or contracts themselves.
 Scripts are cross-platform: `pathlib` for paths, `shutil.which` for binary discovery, no hardcoded
 tool paths, no OS-specific assumptions.
 
+### Reading a script's outcome
+
+This applies to **every bundled script**, role-owned and skill-owned alike, and it exists because the
+scripts do not all answer in the same way.
+
+- **The printed report is always authoritative.** Every script writes its findings to stdout or to
+  the path it was given; that text is what the calling agent reads and what goes into the artifact.
+  No script is a verdict — a script measures, and the role decides.
+- **The exit code carries at most a summary, and never more than the report.** Two conventions are in
+  use, both deliberate:
+  - *outcome in the report only* — the exit code distinguishes "the script ran" from "the script
+    could not run" and nothing else. `roles/setup-master/scripts/check_environment.py` (`0` for any
+    valid invocation, a missing tool being a reported status rather than a failure),
+    `skills/tools/validate-cv-enhancv/scripts/run_enhancv.py` (the outcome is the printed
+    `completed` / `not-completed` / `blocked` / `skipped` line), and
+    `skills/tools/validate-cv-ats/scripts/{ats_static_check,keyword_match}.py` (`0` produced a
+    report, `2` could not read an input or write an output);
+  - *outcome also in the exit code* — a gate-shaped script additionally encodes its verdict, so a
+    caller that only checks the status can still branch.
+    `roles/knowledge-bank-curator/scripts/check_sources_freshness.py` (`0` fresh, `1`
+    refresh-required, `3` unknown) and `skills/tools/render-cv-pdf/scripts/pdf_text_check.py` (`0`
+    pass, `1` fail, `2` usage error, `3` skipped, `4` error).
+- **Never assume which convention a script follows.** The list above is the summary; the scripts that
+  encode a verdict also state their codes in their module docstring and in `--help`. A non-zero exit
+  is never by itself a reason to fail a step — read the report, then apply the owning skill's or
+  capability's failure-and-skip rules. A script added later declares its convention the same way.
+
 ## The role set
 
 | Role | Directory | Mission in one line |

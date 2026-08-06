@@ -280,13 +280,12 @@ sign-in wall the user has to resolve on their own time):
 
 ## Dependencies
 
-| Field | Entry 1 | Entry 2 | Entry 3 | Entry 4 |
+| Name | Kind | Needed for | Required / optional | When unbound |
 |---|---|---|---|---|
-| **name** | Human operator (an interactive session with the user present) | Web browsing with file upload | File writing at the paths passed | Screen or page capture |
-| **kind** | `capability` | `capability` | `capability` | `capability` |
-| **needed for** | Performing the whole procedure: opening the service, signing in if it asks, submitting the PDF and the job description, completing any human challenge, reading the report and transcribing it | Reaching the service's public web interface and uploading a local PDF from the export path | Saving the raw capture at `raw_capture_path` (and the minimal `run.md` on a standalone run) | Saving an additional verbatim capture when `extra_captures` asks for one, or when the report is partly graphical |
-| **required / optional** | required | required | required | optional |
-| **when unbound** | No interactive user (an unattended or batch run) ⇒ the entry is recorded **SKIPPED-manual** with the checklist from *Manual procedure* above, so the user can complete it later. The flow continues; this is never a failure and never a red gate. | No browser reaching the service ⇒ **SKIPPED** with instructions: what is missing, what it is needed for, and the manual procedure to run once it is available. | The operator saves the capture themselves and reports its path; the entry counts as executed only once the capture exists at the assigned path, otherwise it is **SKIPPED-manual**. | The text transcription alone is sufficient; record in the capture that a graphical element could not be captured verbatim. |
+| Human operator (an interactive session with the user present) | capability | Performing the whole procedure: opening the service, signing in if it asks, submitting the PDF and the job description, completing any human challenge, reading the report and transcribing it. | required | No interactive user (an unattended or batch run) ⇒ the entry is recorded **SKIPPED-manual** with the checklist from *Manual procedure* above, so the user can complete it later. The flow continues; this is never a failure and never a red gate. |
+| Web browsing with file upload | capability | Reaching the service's public web interface and uploading a local PDF from the export path. | required | No browser reaching the service ⇒ **SKIPPED** with instructions: what is missing, what it is needed for, and the manual procedure to run once it is available. |
+| File writing at the paths passed | capability | Saving the raw capture at `raw_capture_path` (and the minimal `run.md` on a standalone run). | required | The operator saves the capture themselves and reports its path; the entry counts as executed only once the capture exists at the assigned path, otherwise it is **SKIPPED-manual**. |
+| Screen or page capture | capability | Saving an additional verbatim capture when `extra_captures` asks for one, or when the report is partly graphical. | optional | The text transcription alone is sufficient; record in the capture that a graphical element could not be captured verbatim. |
 
 **No script, and therefore no script dependencies.** This skill bundles no automation, so it requires
 no language runtime, no browser-automation driver and no browser engine of its own — unlike an
