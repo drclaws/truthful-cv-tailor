@@ -13,11 +13,11 @@ agent-content zones, build the PDF, run the mechanical gates, report.
 ## This skill is not an actor
 
 A tool skill is **procedures-plus-assets, never an agent**. This skill defines no role, holds no
-authority of its own, and decides nothing about content. It is executed by the **renderer**
-(`roles/renderer/ROLE.md`, capability `roles/renderer/capabilities/render-document.md`), and the
-renderer's invariants apply to every line of it: content is transcribed and never authored, only the
-template's delimited agent zones are edited, the template's style is never changed, the knowledge
-bank and the constraints ledger are never written, another run's output is never a style authority.
+authority of its own, and decides nothing about content. It is executed by the role `renderer`,
+capability `renderer.render-document`, and the renderer's invariants apply to every line of it:
+content is transcribed and never authored, only the template's delimited agent zones are edited, the
+template's style is never changed, the knowledge bank and the constraints ledger are never written,
+another run's output is never a style authority.
 
 Where this file and the renderer's capability describe the same step, the role states *what* the
 renderer is responsible for, and this skill states the *operation rules* — the page target, the fit
@@ -50,8 +50,8 @@ Build byproducts go to `build_dir` and are never part of the deliverable.
 
 ## Settings recognized in user context
 
-Per `contracts/user-context.md`, a skill's own `SKILL.md` defines the keys of its settings
-subsection. This skill recognizes exactly one:
+Per contract `user-context`, a skill's own `SKILL.md` defines the keys of its settings subsection.
+This skill recognizes exactly one:
 
 ```markdown
 ### render-cv-pdf

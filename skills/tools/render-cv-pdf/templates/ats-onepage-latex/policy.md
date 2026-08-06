@@ -15,9 +15,8 @@ Scope, so that nothing is stated twice:
   chosen, what may be claimed at all — belong to the `cv-document` contract. This file never restates
   them and never competes with them: if a rule here seems to contradict the document contract, stop
   and ask; do not choose.
-- **The invariants of the actor** filling the template are the renderer's
-  (`roles/renderer/ROLE.md`, `roles/renderer/capabilities/render-document.md`). Content is
-  transcribed, never authored.
+- **The invariants of the actor** filling the template are the renderer's — role `renderer`,
+  capability `renderer.render-document`. Content is transcribed, never authored.
 
 ## What this template is
 
@@ -220,8 +219,7 @@ The concrete commands are in `runbook.md`; the gate's place in the overall seque
 `../../SKILL.md`.
 
 **When the gate fails**, it is a red gate: report it, with the evidence, and hand back to the caller
-— exactly as `roles/renderer/capabilities/render-document.md` requires. The remedy this template
-recommends, and which the report should state, is to **simplify the rendered layout before export —
-a single-column fallback render is preferable to a visually strong PDF that extracts badly**. That
-simplification changes the visual composition, so it is the caller's decision to take, not one the
-renderer makes on its own.
+— exactly as `renderer.render-document` requires. The remedy this template recommends, and which the
+report should state, is to **simplify the rendered layout before export — a single-column fallback
+render is preferable to a visually strong PDF that extracts badly**. That simplification changes the
+visual composition, so it is the caller's decision to take, not one the renderer makes on its own.

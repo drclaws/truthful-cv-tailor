@@ -18,11 +18,11 @@ turns it into a `validation-report` and judges it in separate, later steps.
 ## What this skill is, and is not
 
 - **A procedure plus its assets, never an actor.** It defines no agent and carries no authority of
-  its own. It is executed by the reviewer (`roles/reviewer/ROLE.md`), and the reviewer's invariants
-  always apply — in particular: the document under review is never edited here, external scores are
-  never truth, and nothing this service says can justify a claim the evidence does not carry.
+  its own. It is executed by the role `reviewer`, and the reviewer's invariants always apply — in
+  particular: the document under review is never edited here, external scores are never truth, and
+  nothing this service says can justify a claim the evidence does not carry.
 - **Optional and registered.** It runs only when the user's local rules file lists it in the active
-  validation set as an `external` entry (`contracts/user-context.md`). Membership is never decided by
+  validation set as an `external` entry (contract `user-context`). Membership is never decided by
   the executing role or by this file.
 - **Gated.** External checks run only after the run's internal checks and render gates are green. A
   submission before that wastes the run and invites advice about problems that were already fixed.
@@ -33,7 +33,7 @@ turns it into a `validation-report` and judges it in separate, later steps.
 
 | Context | Who runs it | Where the outputs go |
 |---|---|---|
-| Inside a CV workflow | the reviewer, through `roles/reviewer/capabilities/run-external-checks.md` | the raw-capture paths the workflow passes |
+| Inside a CV workflow | the reviewer, through `reviewer.run-external-checks` | the raw-capture paths the workflow passes |
 | Standalone | the user, invoking the reviewer or the script directly | `outputs/validate-cv-enhancv/<run-id>/`, with a minimal `run.md` |
 
 Paths are always supplied by the caller. This skill derives no path from repository layout, and the
@@ -62,10 +62,9 @@ only deliverable this repository produces.
 | raw capture (screenshot) | full-page PNG | evidence of what was on screen, including a partial or failed run |
 | outcome | `completed` / `not-completed` / `blocked` / `skipped` | printed, and written as JSON on request |
 
-After the reviewer runs `roles/reviewer/capabilities/normalize-external-report.md` over the raw
-capture, a `validation-report` instance exists for it — advisory, never carrying a blocking verdict.
-The recommendations are then judged by
-`roles/reviewer/capabilities/gate-external-recommendations.md`.
+After the reviewer runs `reviewer.normalize-external-report` over the raw capture, a
+`validation-report` instance exists for it — advisory, never carrying a blocking verdict. The
+recommendations are then judged by `reviewer.gate-external-recommendations`.
 
 ## Service parameters
 
@@ -214,9 +213,9 @@ follow, or when the user prefers to drive the service themselves.
 
 ## Bundled script
 
-`skills/tools/validate-cv-enhancv/scripts/run_enhancv.py` — drives the service and writes the
-captures. It takes explicit command-line arguments only, reads no rules or context file, and derives
-no path from repository layout.
+`scripts/run_enhancv.py`, beside this file — drives the service and writes the captures. It takes
+explicit command-line arguments only, reads no rules or context file, and derives no path from
+repository layout.
 
 ```text
 run_enhancv.py --pdf <export.pdf> --raw-out <run>/external/enhancv_raw.md \
@@ -252,7 +251,7 @@ vocabulary (`executed`, `SKIPPED`, `not completed`, `blocked`).
 ## Settings recognized in the user's context
 
 Recorded under `## Skill settings` → `### validate-cv-enhancv` in the user's local rules file (see
-`contracts/user-context.md`). All are optional; the machine-specific bindings of this skill's
+contract `user-context`). All are optional; the machine-specific bindings of this skill's
 dependencies belong here and nowhere else. Keys this file does not define are reported to the user,
 never silently ignored.
 

@@ -12,9 +12,8 @@ whole procedure is a checklist a person follows, written to be executable from t
 ## What this skill is, and what it is not
 
 - **It is a procedure plus its parameters, never an actor.** It defines no agent and carries no
-  authority of its own. It is executed by the **reviewer** role
-  (`roles/reviewer/capabilities/run-external-checks.md`), and the reviewer's invariants
-  (`roles/reviewer/ROLE.md`) apply in full, always, and win over anything written here.
+  authority of its own. It is executed by `reviewer.run-external-checks`, and the invariants of the
+  role `reviewer` apply in full, always, and win over anything written here.
 - **External scores are never truth.** Everything the service reports is recorded as *that service's
   claim* — advisory input to a later decision, never a verdict about the CV and never a gate.
 - **It runs last.** An external check may start only after the run's internal checks and render gates
@@ -22,9 +21,9 @@ whole procedure is a checklist a person follows, written to be executable from t
   already been asserted and must not be used to peek at a service "just to see what it says".
 - **It never edits anything.** No edit to the CV, the rendered file, the export, the knowledge bank or
   the constraints ledger originates here. It produces one thing: a verbatim raw capture.
-- **It does not judge.** Normalization is `roles/reviewer/capabilities/normalize-external-report.md`;
-  the binding decision is `roles/reviewer/capabilities/gate-external-recommendations.md`. This skill
-  hands back raw material and stops. It never chains those steps itself.
+- **It does not judge.** Normalization is `reviewer.normalize-external-report`; the binding decision
+  is `reviewer.gate-external-recommendations`. This skill hands back raw material and stops. It
+  never chains those steps itself.
 - Repository-wide invariants (truthfulness, run isolation, tool abstraction, path/OS neutrality) apply
   as stated in `AGENTS.md`.
 
@@ -107,13 +106,13 @@ What this service is allowed to influence, and what it can never do. These are p
 
 A recommendation this service keeps pushing that the evidence does not support is a good candidate for
 a durable guardrail: it is proposed through the `## Constraint proposals` section of the reviewer's
-report, and only `curator.maintain-constraints` writes the ledger.
+report, and only `knowledge-bank-curator.maintain-constraints` writes the ledger.
 
 ## User-context settings
 
 Recognized keys for the `### validate-cv-resumly` subsection under `## Skill settings` in the user's
-local rules file (shape and resolution: `contracts/user-context.md`). Unrecognized keys are reported
-at preflight, never silently ignored.
+local rules file (shape and resolution: contract `user-context`). Unrecognized keys are reported at
+preflight, never silently ignored.
 
 | Key | Required | Default | Meaning |
 |---|---|---|---|
