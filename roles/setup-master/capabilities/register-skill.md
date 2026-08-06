@@ -50,12 +50,23 @@ not install anything, does not bind any dependency, and never runs the skill.
    - location — only for a skill kept outside this repository, written as the user stated it;
    - a note when the skill could not be read directly (an out-of-repo skill the environment cannot
      reach): the entry is recorded as **unverified**, on the user's statement.
-6. **Offer settings, do not invent them.** If the skill declares recognized keys, offer a per-skill
-   settings subsection and record only values the user states. Machine-specific bindings of that
-   skill's external dependencies belong in its own subsection, never in a shared lump.
+6. **Offer settings, do not invent them — and ask for the ones the skill cannot run without.** If the
+   skill declares recognized keys, offer a per-skill settings subsection and record only values the
+   user states. Machine-specific bindings of that skill's external dependencies belong in its own
+   subsection, never in a shared lump.
+
+   A key the skill declares **required with no default** is different in kind from the rest, and it
+   is **asked for** here rather than merely offered. Registration is the one moment at which such a
+   key can still be caught: the repository pins no value for it, so nothing can supply a default, and
+   no flow reaches the skill until it is registered, so run time is too late to be the first warning.
+   Ask, say what the skill does without it, and record the answer. If the user has no value yet,
+   register the skill all the same and **report the key as not recorded**: it becomes a `setting` row
+   of the dependency matrix and stays visible there until it is filled. Never invent a value, and
+   never record the skill as though the key had been answered.
 7. **Report and recommend.** State the recorded entry, when it will run, and which dependencies it
-   declares. Recommend running `check-environment` so the new skill's dependencies enter the
-   dependency matrix — recommend it; do not run the skill itself, and do not run a flow to try it.
+   declares — including any required key still not recorded, which enters the matrix as a `setting`
+   row. Recommend running `check-environment` so the new skill's dependencies enter the dependency
+   matrix — recommend it; do not run the skill itself, and do not run a flow to try it.
 
 ## Rules
 
@@ -106,5 +117,6 @@ wrote it.
 | The skill exists but has no `SKILL.md` frontmatter | Report it as not a valid skill and stop; ask whether it should be built properly first. |
 | The skill's kind is neither stated nor confirmed | Do not record. Ask; a guessed kind puts the check in the wrong gate. |
 | An out-of-repo skill cannot be read from this environment | Record the entry on the user's statement, marked **unverified**, and say its dependencies could not be read. |
+| The skill declares a settings key **required with no default** and the user has no value yet | Register the skill; report the key as **not recorded**, with what the skill does without it. The gap stays visible as a `setting` row in the dependency matrix until it is filled — never invented here, never passed over in silence. |
 | An entry with the same name already exists | Do not duplicate. Show both, confirm which one survives. |
 | The skill is not built yet | Record as `planned` if the user wants the reminder, and state that it is inert. |
