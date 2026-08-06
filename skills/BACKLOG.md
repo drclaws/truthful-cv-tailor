@@ -14,9 +14,8 @@ This is the hard rule of this file, and it admits no exceptions:
   instruction. Referencing an entry as though it were a shipped skill, role, or contract is a
   defect.
 - **Nothing here may be cited as a rule or an authority** by a flow, a role, a contract, or an
-  artifact. If a step needs a rule, that rule must live in an authoritative file
-  (`contracts/*.md`, `roles/<role>/`, `skills/**/SKILL.md`) — the same promotion rule that run
-  isolation imposes on run outputs.
+  artifact. If a step needs a rule, that rule must live in an authoritative file — a contract, a role
+  package, or a skill — the same promotion rule that run isolation imposes on run outputs.
 - **Promotion happens only when the user asks for the item to be built.** At that point the item
   becomes a real skill or role in its own directory, with its contracts and dependencies declared,
   and its entry is **removed from this file**. An item is either here or built — never both.
@@ -147,7 +146,7 @@ improvised.
 - **Kind:** role
 - **Intent:** Import meeting recordings — recruiter screens, interviews, calls — as timestamped
   transcripts the vacancy analyst can read as people-side input. The output contract already exists
-  (`contracts/transcript.md`), because the recruiter-notes format points at it; what does not exist is
+  (contract `transcript`), because the recruiter-notes format points at it; what does not exist is
   the role that produces one. Building it turns "the recruiter said something about the team's real
   problem" from a memory into a citable source, which is the difference between a positioning signal
   that can be attributed and one that cannot.
@@ -184,5 +183,5 @@ improvised.
   a guardrail or freezes a preference into a binding rule. No agent performs the split on its own
   initiative, and the standing rule of this file applies with full force: until the user asks for
   it, it has not happened, and an imported ledger is read exactly as it is under the legacy-import
-  allowance in `contracts/constraints-ledger.md`. Done once per ledger; there is nothing to build
+  allowance in contract `constraints-ledger`. Done once per ledger; there is nothing to build
   and nothing to schedule.
