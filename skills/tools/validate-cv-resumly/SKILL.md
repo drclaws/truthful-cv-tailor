@@ -114,14 +114,14 @@ Recognized keys for the `### validate-cv-resumly` subsection under `## Skill set
 local rules file (shape and resolution: contract `user-context`). Unrecognized keys are reported at
 preflight, never silently ignored.
 
-| Key | Required | Default | Meaning |
-|---|---|---|---|
-| `service_url` | required | none — the repository pins no entry point | The service page where a CV is submitted for checking. Absent ⇒ ask the user at preflight; unanswered ⇒ the entry runs SKIPPED with instructions. |
-| `account` | optional | none | Which account the user signs in with, or `none` when the service can be used without signing in. **Record which account, never a sign-in secret** — this file is plaintext even though it is gitignored. Secrets stay in the browser's own credential store. |
-| `manual_wait_seconds` | optional | `120` | How long to let the service process a submission before treating a stalled page as *not completed*. Raise it on a slow connection. |
-| `capture_format` | optional | `markdown` | The form of the raw capture: a faithful text transcription of the report (`markdown`), or a saved page (`html`). |
-| `extra_captures` | optional | none | Additional verbatim captures to save alongside the text, e.g. `screenshot`. Useful when the report is partly graphical. |
-| `notes` | optional | none | Free-text local notes about this service on this machine (interface quirks, where the report opens). Honoured as guidance; never as an override of the trust policy. |
+| Key | Required | Values | Default | Meaning |
+|---|---|---|---|---|
+| `service_url` | required | URL | none — the repository pins no entry point | The service page where a CV is submitted for checking. Absent ⇒ ask the user at preflight; unanswered ⇒ the entry runs SKIPPED with instructions. |
+| `account` | optional | an account name, or `none` | none | Which account the user signs in with, or `none` when the service can be used without signing in. **Record which account, never a sign-in secret** — this file is plaintext even though it is gitignored. Secrets stay in the browser's own credential store. |
+| `manual_wait_seconds` | optional | integer seconds | `120` | How long to let the service process a submission before treating a stalled page as *not completed*. Raise it on a slow connection. |
+| `capture_format` | optional | `markdown`, `html` | `markdown` | The form of the raw capture: a faithful text transcription of the report (`markdown`), or a saved page (`html`). |
+| `extra_captures` | optional | capture kinds, e.g. `screenshot` | none | Additional verbatim captures to save alongside the text, e.g. `screenshot`. Useful when the report is partly graphical. |
+| `notes` | optional | free text | none | Free-text local notes about this service on this machine (interface quirks, where the report opens). Honoured as guidance; never as an override of the trust policy. |
 
 Example of the subsection, with placeholders only:
 

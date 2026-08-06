@@ -48,7 +48,7 @@ least of all the export filename.
 
 Build byproducts go to `build_dir` and are never part of the deliverable.
 
-## Settings recognized in user context
+## User-context settings
 
 Per contract `user-context`, a skill's own `SKILL.md` defines the keys of its settings subsection.
 This skill recognizes exactly one:
@@ -58,9 +58,9 @@ This skill recognizes exactly one:
 - template: ats-onepage-latex        # or a path to an external template bundle
 ```
 
-| Key | Value | Default |
-|---|---|---|
-| `template` | the name of a folder under this skill's `templates/`, or a path to an external bundle satisfying the template bundle contract below | `ats-onepage-latex` |
+| Key | Required | Values | Default | Meaning |
+|---|---|---|---|---|
+| `template` | optional | the name of a folder under this skill's `templates/`, or a path to an external bundle satisfying the template bundle contract below | `ats-onepage-latex` | Which template bundle this skill resolves and fills. |
 
 Any other key in this subsection is **reported as unrecognized** at preflight, never silently
 ignored and never guessed at. The page target is an operation rule of this skill (default: one page),

@@ -248,25 +248,25 @@ status, never a crash. Exit `2` means the command line itself was wrong; exit `1
 interrupted. The reviewer reads the outcome, and records it in its run record with the reviewer's own
 vocabulary (`executed`, `SKIPPED`, `not completed`, `blocked`).
 
-## Settings recognized in the user's context
+## User-context settings
 
 Recorded under `## Skill settings` → `### validate-cv-enhancv` in the user's local rules file (see
 contract `user-context`). All are optional; the machine-specific bindings of this skill's
 dependencies belong here and nowhere else. Keys this file does not define are reported to the user,
 never silently ignored.
 
-| Key | Values | Default | Effect |
-|---|---|---|---|
-| `mode` | `browser`, `manual` | `browser` | `manual` forces the manual fallback without attempting automation |
-| `python_interpreter` | path or name | the caller's `python3` | the interpreter that has the automation stack installed |
-| `browser_engine` | `chromium`, `firefox`, `webkit` | `chromium` | which engine the run drives |
-| `browser_channel` | channel name | none | launch a locally installed browser channel instead of the bundled build |
-| `browser_executable` | path or name | none | launch a specific browser binary; a bare name is resolved on `PATH` |
-| `headless` | `true`, `false` | `false` | `true` only for unattended automation the user asked for |
-| `manual_wait_seconds` | integer | `120` visible / `0` headless | grace period for completing a challenge |
-| `timeout_ms` | integer | `180000` | maximum wait for the upload UI and for processing |
-| `service_url` | URL | the service URL above | override when the service moves |
-| `max_input_mb` | number | `2` | override when the service's limit changes |
+| Key | Required | Values | Default | Meaning |
+|---|---|---|---|---|
+| `mode` | optional | `browser`, `manual` | `browser` | `manual` forces the manual fallback without attempting automation |
+| `python_interpreter` | optional | path or name | the caller's `python3` | the interpreter that has the automation stack installed |
+| `browser_engine` | optional | `chromium`, `firefox`, `webkit` | `chromium` | which engine the run drives |
+| `browser_channel` | optional | channel name | none | launch a locally installed browser channel instead of the bundled build |
+| `browser_executable` | optional | path or name | none | launch a specific browser binary; a bare name is resolved on `PATH` |
+| `headless` | optional | `true`, `false` | `false` | `true` only for unattended automation the user asked for |
+| `manual_wait_seconds` | optional | integer | `120` visible / `0` headless | grace period for completing a challenge |
+| `timeout_ms` | optional | integer | `180000` | maximum wait for the upload UI and for processing |
+| `service_url` | optional | URL | the service URL above | override when the service moves |
+| `max_input_mb` | optional | number | `2` | override when the service's limit changes |
 
 ## Dependencies
 

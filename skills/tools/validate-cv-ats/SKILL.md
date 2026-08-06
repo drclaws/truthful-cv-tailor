@@ -241,7 +241,7 @@ derived manually, and give `ATS score` and `Keyword coverage` from the same defi
 - *The two rendered extractions disagree* — that is the columnar-render finding of item 1/9, not a
   tooling problem. Report it.
 
-## Settings
+## User-context settings
 
 This skill recognizes **no keys** under `## Skill settings` in the user's context. Its behaviour is
 fully determined by its inputs and the CLI options above. Any key recorded under a
