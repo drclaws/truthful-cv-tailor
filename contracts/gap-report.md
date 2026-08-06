@@ -70,8 +70,8 @@ Recorded so the same suggestion is not silently re-litigated in the next run.
 ### `## Constraint proposals`
 
 Guardrails the gaps suggest — typically "do not claim <X> unless a canonical source adds it" for a
-gap that keeps being pressed by targets in this market. See `contracts/README.md`. `None.` when there
-is nothing to propose.
+gap that keeps being pressed by targets in this market. See `artifact-conventions.md`. `None.` when
+there is nothing to propose.
 
 ## Rules
 

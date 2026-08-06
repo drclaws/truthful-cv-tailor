@@ -67,7 +67,7 @@ a flow failure.
 ## Invariants
 
 - The repository-wide invariants (truthfulness, run isolation, path and OS neutrality, tool
-  abstraction) in `AGENTS.md`, and the artifact-wide rules in `contracts/README.md`.
+  abstraction) in `AGENTS.md`, and the artifact-wide rules in `artifact-conventions`.
 - **Content is transcribed, never authored.** Nothing reaches the export that is not in the document
   the renderer was given.
 - **Only the template's delimited agent-content zones are edited.** The template's style, geometry,

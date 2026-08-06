@@ -75,5 +75,5 @@ Consumers classify a transcript accordingly in the `source-audit`.
 
 | Direction | Roles |
 |---|---|
-| Producer | transcriber (planned; see `skills/BACKLOG.md`) or the user |
+| Producer | transcriber (planned; see `BACKLOG`) or the user |
 | Consumers | `vacancy-analyst` (via the job dossier), `reviewer` (when checking what a signal was based on) |

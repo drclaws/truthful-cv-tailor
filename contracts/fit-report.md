@@ -140,7 +140,7 @@ One verdict, with a short justification:
 ### `## Constraint proposals`
 
 Guardrails discovered while scoring — most often a requirement the target invites the candidate to
-over-claim. See `contracts/README.md`. `None.` when there is nothing to propose.
+over-claim. See `artifact-conventions.md`. `None.` when there is nothing to propose.
 
 ## Producer and consumers
 

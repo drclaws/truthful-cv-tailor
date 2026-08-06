@@ -64,9 +64,10 @@ account of what changed materially — the flow uses that to decide which checks
    the constraints ledger and any in-run proposals. New supported detail introduced while refilling
    space is subject to exactly the same discipline as first-draft content: cited, strength-honest,
    never invented.
-7. **Update the envelope** per `contracts/README.md`: increment `revision:` when overwriting in place,
-   or write `revision: 1` and list the predecessor under `inputs:` when creating a new instance; set
-   the caller's status; refresh `updated:`; add the findings and gate decisions consumed to `inputs:`.
+7. **Update the envelope** per `artifact-conventions`: increment `revision:` when overwriting in
+   place, or write `revision: 1` and list the predecessor under `inputs:` when creating a new
+   instance; set the caller's status; refresh `updated:`; add the findings and gate decisions
+   consumed to `inputs:`.
 8. **Fill the decision record and constraint proposals** in whatever annex the format contract
    declares, and hand the disposition list back to the calling flow. Never mark a finding resolved
    inside the reviewer's own artifact.

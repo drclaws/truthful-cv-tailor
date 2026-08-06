@@ -80,7 +80,7 @@ Convenience only — the entries remain the source of truth.
 
 Guardrails discovered while mapping: evidence that consistently invites over-claiming, a term whose
 apparent match is misleading, a mapping that must not be read as equivalence. See
-`contracts/README.md`. `None.` when there is nothing to propose.
+`artifact-conventions.md`. `None.` when there is nothing to propose.
 
 ## Deliberate non-features
 

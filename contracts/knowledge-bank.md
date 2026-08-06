@@ -16,17 +16,26 @@ be used.
 
 The bank is a set of files, each an instance of this contract:
 
-| File | Role |
-|---|---|
-| experience bank | Themed, bullet-ready evidence statements, plus candidate identity, employment history, education and certifications. |
-| projects index | One entry per significant body of work: context, role, deliverables, stack, impact, evidence. |
-| skills matrix | Capability index with evidence context, conservative level signals and safe-use constraints. |
-| refresh log | Append-only history of bank builds and refreshes. |
+| File | Conventional filename | Role |
+|---|---|---|
+| experience bank | `experience_bank.md` | Themed, bullet-ready evidence statements, plus candidate identity, employment history, education and certifications. |
+| projects index | `projects.md` | One entry per significant body of work: context, role, deliverables, stack, impact, evidence. |
+| skills matrix | `skills_matrix.md` | Capability index with evidence context, conservative level signals and safe-use constraints. |
+| refresh log | `refresh_log.md` | Append-only history of bank builds and refreshes. |
 
-The constraints ledger lives beside these files but is governed by its own contract
-(`constraints-ledger`) and is written by a different capability.
+### Conventional filenames
 
-Placement is not defined here. The flow passes the bank directory to roles as an explicit parameter.
+The filenames above are **fixed by this contract**, in the same way contract `run-manifest` fixes
+`run.md`. A producer writes no other name, and a consumer holding only this contract can name a bank
+file — to read it, to query it, to construct a freshness check — without being told what the files
+are called.
+
+The constraints ledger, `constraints.md`, lives beside these files in the same directory but is
+**not** an instance of this contract: it is governed by contract `constraints-ledger` and is written
+by a different capability.
+
+Placement is not defined here. The flow passes the bank directory to roles as an explicit parameter,
+and these names are relative to that directory.
 
 ## Status values
 
@@ -37,7 +46,7 @@ state: a partially built bank file is never saved over a good one.
 
 ## Envelope
 
-The common envelope of `contracts/README.md` applies, with:
+The common envelope of `artifact-conventions.md` applies, with:
 
 - `run_id: n/a` — the bank outlives runs;
 - `producer: knowledge-bank-curator.build-banks`;

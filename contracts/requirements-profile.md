@@ -106,8 +106,8 @@ is verified later, and no tag reaches a rendered document unverified.
 ### `## Constraint proposals`
 
 Guardrails discovered while reading the vacancy — for instance a domain claim the vacancy invites
-that the candidate evidence must not be stretched to meet. See `contracts/README.md`. `None.` when
-there is nothing to propose.
+that the candidate evidence must not be stretched to meet. See `artifact-conventions.md`. `None.`
+when there is nothing to propose.
 
 ## Producer and consumers
 

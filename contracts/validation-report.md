@@ -102,7 +102,7 @@ not carry is a gap, not a defect in the document.
 ### `## Constraint proposals`
 
 Guardrails discovered while checking — a claim that keeps reappearing unsupported, a wording pattern
-that repeatedly overstates. See `contracts/README.md`. `None.` when there is nothing to propose.
+that repeatedly overstates. See `artifact-conventions.md`. `None.` when there is nothing to propose.
 
 ## Profiles
 

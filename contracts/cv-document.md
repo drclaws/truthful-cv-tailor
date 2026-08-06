@@ -246,14 +246,15 @@ takes the document above it, a reviewer reads both.
 5. **Open issues** — anything the writer could not resolve: a requirement with no honest angle, a
    conflict between sources, a claim awaiting a decision.
 6. **`## Constraint proposals`** — the guardrails the writing surfaced, in the form every report-type
-   contract uses (see `contracts/README.md`): a claim the evidence kept inviting but could not
+   contract uses (see `artifact-conventions.md`): a claim the evidence kept inviting but could not
    support, a phrasing that repeatedly drifted past what the sources say. `None.` when there is
    nothing to propose.
 
    The document itself is a deliverable, not a report — but the writer is a role like any other, and
-   §3's sole-writer rule gives every role exactly one way to reach the constraints ledger. The
-   proposals therefore live in the annex, and `curator.maintain-constraints` ingests them at flow
-   close together with every other report's.
+   the sole-writer rule of `artifact-conventions.md` gives every role exactly one way to reach the
+   constraints ledger. The proposals therefore live in the annex, and
+   `knowledge-bank-curator.maintain-constraints` ingests them at flow close together with every
+   other report's.
 
 ## Producer and consumers
 
