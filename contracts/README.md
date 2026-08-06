@@ -158,6 +158,10 @@ authoritative once written; this table only says where to look).
 designated, landed by the task that owns that file. Actual landing is verified by those tasks and by
 the final sweep.
 
+The final sweep has since walked every row against its designated home; the predecessor files were
+deleted only after that walk. The matrix is kept as the map from an old rule to its current home —
+read it that way, and update a row whenever a rule moves.
+
 A rule may legitimately appear in two homes when both a contract and a role need it — the contract is
 then the normative home and the role's copy is operational guidance. A rule may never have **no** home.
 
@@ -377,7 +381,7 @@ Not rule files, but they carry normative content; the port map assigns each a ho
 | Predecessor asset | Designated home | Status |
 |---|---|---|
 | `templates/cv-ats-agent-template.tex` | `skills/tools/render-cv-pdf/templates/ats-onepage-latex/template.tex` (copied verbatim) | → T5a |
-| `templates/template_policy.md` + `template_selection.md` | the shipped template's `policy.md` (merged; layout placement, fit policy, extraction contract, column gate, escaping table, section order) | → T5a |
+| `templates/template_policy.md` + `template_selection.md` | the shipped template's `policy.md` (layout placement, fit policy, extraction contract, column gate, escaping table); template selection, resolution and the bundle contract in `skills/tools/render-cv-pdf/SKILL.md`; section order in `contracts/cv-document.md`, which already owns it | → T5a / T2 |
 | `templates/latex_rendering_notes.md` + `runbooks/04_render_latex.md` | the template's `runbook.md` + the render tool's runbook section | → T5a |
 | `validators/external/registry.yaml` | Superseded by the recorded validation set — `contracts/user-context.md` | T1 |
 | `validators/external/{enhancv,resumly}.yaml` + `README.md` | `skills/tools/validate-cv-{enhancv,resumly}/SKILL.md` | → T5c / → T5d |

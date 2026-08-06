@@ -81,6 +81,11 @@ not a user-context key; a caller that needs a different target passes `page_targ
 5. Record the bundle's **name and version** in the render report — the `render-manifest` contract
    requires them, and a rerun must be attributable to a specific template.
 
+**Which bundle to register is the user's decision**, recorded in this skill's settings subsection in
+user context — for instance a simpler or stricter bundle when the target system demands one. This
+skill never switches bundle on its own, and a bundle is **never** changed to make content fit: that
+is an overflow, and overflow goes back to the caller as content to revise.
+
 ## Template bundle contract
 
 Any bundle — shipped or the user's own — satisfies this contract. It is what makes a user-supplied
