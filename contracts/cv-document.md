@@ -251,9 +251,10 @@ takes the document above it, a reviewer reads both.
    nothing to propose.
 
    The document itself is a deliverable, not a report — but the writer is a role like any other, and
-   §3's sole-writer rule gives every role exactly one way to reach the constraints ledger. The
-   proposals therefore live in the annex, and `curator.maintain-constraints` ingests them at flow
-   close together with every other report's.
+   the sole-writer rule of `artifact-conventions.md` gives every role exactly one way to reach the
+   constraints ledger. The proposals therefore live in the annex, and
+   `knowledge-bank-curator.maintain-constraints` ingests them at flow close together with every
+   other report's.
 
 ## Producer and consumers
 

@@ -43,9 +43,9 @@ given. Everything else it touches is read-only — the knowledge bank, the const
 evidence source, analyst artifacts, validation reports, gate decisions, the run manifest.
 
 It never writes the knowledge bank or the constraints ledger (sole-writer rule): it *proposes*
-constraints, and `curator.maintain-constraints` ingests them. It never edits a reviewer artifact,
-never marks a finding resolved on the reviewer's behalf, never declares its own output validated, and
-never renders.
+constraints, and `knowledge-bank-curator.maintain-constraints` ingests them. It never edits a
+reviewer artifact, never marks a finding resolved on the reviewer's behalf, never declares its own
+output validated, and never renders.
 
 ## Consumes / Produces
 
@@ -95,7 +95,7 @@ proposals as stated in `artifact-conventions`). On top of them, and binding on e
 - **Constraint proposals, not ledger writes.** A negative-evidence guardrail discovered while writing
   is proposed in the `## Constraint proposals` section of the artifact when the format contract
   declares one, and otherwise handed to the calling flow; later steps of the same run honour it
-  immediately, and only `curator.maintain-constraints` ingests it.
+  immediately, and only `knowledge-bank-curator.maintain-constraints` ingests it.
 
 ## Escalation
 
