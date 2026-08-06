@@ -285,11 +285,12 @@ sign-in wall the user has to resolve on their own time):
 | Web browsing with file upload | capability | Reaching the service's public web interface and uploading a local PDF from the export path. | required | No browser reaching the service ⇒ **SKIPPED** with instructions: what is missing, what it is needed for, and the manual procedure to run once it is available. |
 | File writing at the paths passed | capability | Saving the raw capture at `raw_capture_path` (and the minimal `run.md` on a standalone run). | required | The operator saves the capture themselves and reports its path; the entry counts as executed only once the capture exists at the assigned path, otherwise it is **SKIPPED-manual**. |
 | Screen or page capture | capability | Saving an additional verbatim capture when `extra_captures` asks for one, or when the report is partly graphical. | optional | The text transcription alone is sufficient; record in the capture that a graphical element could not be captured verbatim. |
+| `service_url` recorded in this skill's settings subsection | setting | Knowing where to submit at all: this repository pins no entry point, so nothing else in the check can name the page. | required | Ask the user at preflight; unanswered ⇒ the entry runs **SKIPPED** with the checklist from *Manual procedure*, and the flow continues. |
 
 **No script, and therefore no script dependencies.** This skill bundles no automation, so it requires
 no language runtime, no browser-automation driver and no browser engine of its own — unlike an
 automated external validator. The only "runtime" is a person with a browser.
 
-**Not a dependency, but a precondition:** `service_url` recorded in user context (see above). A
-missing setting is resolved by asking the user at preflight; it is not an environment binding and does
-not appear in the setup-time dependency matrix.
+`service_url` is the one entry of kind `setting`: it is required, it has no default, and it is a
+value the user records rather than a binding on this machine. Its status is `recorded` or `not
+recorded` and nothing else — the value itself is the user's and is never copied into a report.
