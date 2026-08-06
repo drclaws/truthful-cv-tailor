@@ -163,8 +163,10 @@ How it is built, in order:
 
 Escalations belonging to this rule — all of them questions, never guesses:
 
-- **`## Candidate` is absent** (a bank imported before the section existed): ask the user for the
-  name, or run `refresh-knowledge-bank` so the curator derives it. Record the answer in `run.md`.
+- **`## Candidate` is absent** (a bank imported before the section existed): the rule is never
+  reached in that state — G2 settles it at step 2, by running `refresh-knowledge-bank` so the curator
+  derives the section. If a run somehow arrives here without one, ask the user for the name rather
+  than deriving it from anywhere else, and record the answer in `run.md`.
 - **`## Candidate` records two spellings** with the conflict marked: ask which to use. The flow never
   picks one.
 - **The rule yields a name the filesystem cannot hold**: report it and ask. Do not silently
@@ -682,7 +684,7 @@ skills and inherited transitively; `setup-master.check-environment` aggregates b
 | Name | Kind | Needed for | Required / optional | When unbound |
 |---|---|---|---|---|
 | File reading and writing within the paths this flow computes | capability | Creating the run directory, writing and updating `run.md` throughout the run, and reading the knowledge bank and the repository definitions the steps need. | required | Nothing can run. The flow reports `blocked` naming the path it could not reach; it never writes outside the paths it computed. |
-| A question channel to the user | capability | Every escalation in this flow is a question, not a decision: unresolvable context, a missing `## Candidate` section, the fit escalation at step 13, a `MANUAL_REVIEW`, a source conflict. | required | The flow records the question in `run.md` `## Open questions`, sets `status: blocked`, and stops. It never answers its own question. |
+| A question channel to the user | capability | Every escalation in this flow is a question, not a decision: unresolvable context, a `## Candidate` section a refresh could not supply, the fit escalation at step 13, a `MANUAL_REVIEW`, a source conflict. | required | The flow records the question in `run.md` `## Open questions`, sets `status: blocked`, and stops. It never answers its own question. |
 | `python3` ≥ 3.10 | tool | Running this skill's `scripts/create_run.py` (step 3) and the curator's bundled freshness script (step 2). | optional | Create the layout and seed `run.md` by hand from the declarations above; compare source and index timestamps with the harness's own file tools. Note in `run.md` that both were done manually. A missing script runtime never fails this flow. |
 | Concurrent step execution (subagents or an equivalent) | capability | Running the declared parallel groups A, B and C at the same time. | optional | The groups run sequentially in table order. The outcome is identical by construction — no group member reads another's output — so this only costs time. |
 | Web search | capability | The optional company and market enrichment the job-side steps (4, 5) may request. | optional | The affected entry is recorded `SKIPPED` with instructions inside the artifact that wanted it; the analysis proceeds from the provided inputs alone. Recalled knowledge is never a substitute for a lookup that did not happen. |
