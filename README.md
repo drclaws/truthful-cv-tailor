@@ -1,125 +1,122 @@
-# CV Tailoring Pipeline Starter Kit
+# Truthful CV Tailor
 
-Starter kit for a truthful, ATS-friendly CV tailoring pipeline.
+A set of **toolchains for CV and job-search work**, driven by an AI agent: they turn your canonical
+experience sources plus one vacancy's material into a truthful, ATS-friendly, target-specific CV —
+rendered to PDF, checked at every step, with the gaps written down instead of papered over.
 
-The project is designed around these guarantees:
+The repository ships **no personal data and no machine settings**. It defines *what* the flows need;
+you connect it to your own environment once, and the connection lives in your local rules file,
+outside version control.
 
-1. **Truth first**: final CV claims must be supported by canonical candidate inputs.
-2. **Position fit**: each generated CV is checked against the target job.
-3. **ATS safety**: final CV is rendered through an ATS-gated LaTeX template and validated with local checks.
-4. **External validators are last and advisory**: enabled registered validators run after local gates unless explicitly disabled. Their reports can suggest improvements, but cannot modify the CV directly.
-5. **Flexible plugins**: new external validators can be added through `validators/external/registry.yaml`.
-6. **Useful scan signals survive**: optional render tags can preserve verified
-   hiring-manager signals that are relevant but do not need primary CV space.
+Three guarantees shape everything in here:
 
-## What The User Provides
+1. **Truth first.** Nothing is invented. Weak evidence is called weak, an unsupported requirement
+   becomes a recorded gap, and machine-readability never outranks the truth.
+2. **One source of candidate facts.** A knowledge bank, built from your canonical sources by a single
+   role, is the only thing the CV flow reads about you — so every claim is traceable to a citation.
+3. **Validation is independent and advisory.** The reviewer never edits the CV; external services
+   never edit it either, and their scores are never treated as truth.
 
-Start each CV run with explicit inputs in the request or in files referenced by
-the request.
-
-- Candidate evidence: original Master CV, LinkedIn/profile notes,
-  portfolio/project notes, GitHub/publication notes, interview notes,
-  or other source material.
-  The most important is original Master CV which is the fullest knowledge base
-  of your experience and the main source for the agent.
-- Job targeting: job description, recruiter notes, company notes, and any
-  provided team/interviewer context.
-- Output target: job slug, target page count, export formats, and whether
-  external validators should run.
-- Constraints: claims to avoid, sensitive facts, preferred positioning, or
-  anything that must stay out of the CV.
-
-Example request:
+## Quickstart
 
 ```text
-Create a targeted one-page CV for <job slug>.
-Use my attached CV and LinkedIn notes as candidate evidence.
-Use the pasted job description and recruiter notes for targeting.
-Run external validators unless setup is missing.
-Export PDF and DOCX.
+1. Connect the repository to your environment — once:
+   invoke the setup-master role (roles/setup-master/ROLE.md), capability `bootstrap`.
+
+2. Build the knowledge bank from your experience sources:
+   execute skills/workflows/refresh-knowledge-bank/SKILL.md
+
+3. Produce a CV for one vacancy:
+   execute skills/workflows/generate-targeted-cv/SKILL.md for <run-id>
 ```
 
-The optional project files under `data/master/` and `data/jobs/<job>/` are a
-convenient local structure for repeated runs, but they are not the only valid
-input format.
+Step 3 wants a job dossier — at minimum a job description — under the run's `position/` directory;
+the flow's scaffolding script creates the stubs for you to fill. The result lands in
+`outputs/generate-targeted-cv/<run-id>/`: the manifest `run.md` with every step and gate, the
+analysis artifacts, the checked document, the rendered PDF under `exports/`, and the gap report.
 
-## Local Tools
+No harness auto-discovers the `skills/` directory yet, so flows are invoked **by path**, exactly as
+above. Agent-side details, invariants and catalogs live in [`AGENTS.md`](AGENTS.md).
 
-The agent can create a local `.venv`, run scripts, check tool availability, and
-report missing dependencies. For a complete local run, the machine should have:
+## Setup
 
-- Python 3.10+
-- LaTeX with `pdflatex` for PDF rendering
-- Poppler/Xpdf tools such as `pdftotext`, `pdffonts`, and `pdfinfo`
-- Pandoc for DOCX export
-- Python Playwright and Chromium only for browser-based Enhancv validation
+**Setup is a role, not a script: [`roles/setup-master/ROLE.md`](roles/setup-master/ROLE.md).** Invoke
+it directly and it will do the asking. Its capabilities:
 
-## Run The Pipeline
+| Capability | What it does |
+|---|---|
+| [`bootstrap`](roles/setup-master/capabilities/bootstrap.md) | First run. Detects your harness, determines its local rules file (Claude Code: `CLAUDE.local.md`), and creates or updates it from the template in `contracts/user-context.md` — your experience sources, the active validation set, per-skill settings. Then checks the environment and recommends next steps. |
+| [`update-settings`](roles/setup-master/capabilities/update-settings.md) | Revisit or change any recorded setting later. |
+| [`register-skill`](roles/setup-master/capabilities/register-skill.md) | Activate a validation skill — one shipped here, or one that lives in your own environment. **This is also the guide for adding a new validator.** |
+| [`check-environment`](roles/setup-master/capabilities/check-environment.md) | Aggregate every shipped and registered skill's `## Dependencies` section and report the dependency matrix: dependency → status → affected steps. |
 
-Run the workflow through your agent from the project root. Include the candidate
-evidence, job targeting inputs, and desired output target in the request, or
-reference local files that contain those inputs.
+The local rules file is gitignored (`*.local.md`) and must never be committed: it holds real paths
+and personal data.
 
-The project policy lives in `AGENTS.md`, stage templates live in `prompts/`,
-and helper automation lives in `scripts/*.py`. Local assistant settings such as
-`.codex/`, `.claude/`, `.cursor/`, `.continue/`, and `.windsurf/` are
-intentionally ignored by git.
+### What the flows can use
 
-## Main workflow
+Every capability below is checked at setup time and again at run time. **An unbound capability is
+never a failure** — the step that needed it runs SKIPPED or manual, with instructions, and the flow
+continues. Only the truthfulness check is unskippable.
 
-**Note:** The workflow should be reworked after the 10th step.
-Right now it's like the agent decides not to enhance the CV,
-according to provided advice
+| Capability | Used by | Typical binding | Required? |
+|---|---|---|---|
+| Read access to your canonical experience sources | `refresh-knowledge-bank` | the harness's own file tools, or a shell that can reach them | required — the bank cannot be built without it |
+| A question channel to you | both workflows | the interactive session | required — every escalation is a question, never a decision |
+| A LaTeX-class typesetting toolchain | `render-cv-pdf` | `pdflatex` (pdfTeX) with the packages the shipped template names | required to produce the PDF |
+| PDF text extraction and inspection | `render-cv-pdf`, `validate-cv-ats` | Poppler/Xpdf `pdftotext`, `pdffonts`, `pdfinfo` | required for the render gates |
+| Browser automation | `validate-cv-enhancv` | a browser-driver package plus a browser build, in a session with a visible window | optional — external checks are advisory |
+| A person with a browser | `validate-cv-resumly` | you, interactively | optional — the manual-mode external check |
+| Web search | both workflows | any search binding the harness offers | optional — company/market enrichment, and verifying inferred capability names |
+| Professional-network profile lookup | `generate-targeted-cv` | any binding that reaches public profiles | optional — people/team context for recruiter signals |
+| `python3` ≥ 3.10 | the bundled scripts | a local interpreter | optional — every script has a documented manual fallback |
+| Concurrent step execution | `generate-targeted-cv` | subagents, where the harness has them | optional — the parallel groups then run sequentially, with an identical result |
+
+The exact, authoritative list is each skill's own `## Dependencies` section; the table above is the
+overview. PDF is the only deliverable this repository produces.
+
+## How it fits together
+
+- **Contracts** (`contracts/`) define the format and semantics of every artifact — and never its
+  location. Paths are computed by the flow and passed to roles as explicit parameters.
+- **Roles** (`roles/`) are the actors: `setup-master`, `knowledge-bank-curator`, `vacancy-analyst`,
+  `experience-writer`, `reviewer`, `renderer`. Each is a compact `ROLE.md` index card plus one file
+  per capability. Roles never call each other — data flows only through artifacts.
+- **Skills** (`skills/`) are the procedures: workflows orchestrate roles end to end; tools wrap one
+  operation and can also be run on their own.
+- **Outputs** (`outputs/`) is the single output root: the knowledge bank, plus one directory per run.
+  Gitignored in full.
+
+## Repository map
 
 ```text
-1. Job Parser
-2. Recruiter Signal Extractor
-3. Evidence Mapper
-4. CV Writer
-5. Fact Validator
-6. ATS Static Validator
-7. Position Match Validator
-8. Template Renderer into LaTeX
-9. PDF/DOCX Export
-10. External Validator Runner, unless explicitly disabled
-11. External Report Normalizer
-12. External Validation Gate
-13. Final Fact + ATS re-validation
+AGENTS.md                                    Agent entry point: invariants, skill and data catalogs
+README.md                                    This file
+contracts/README.md                          Envelope, contract index, predecessor coverage matrix
+contracts/*.md                               One file per artifact contract
+roles/README.md                              Role-card template, interaction model, conventions
+roles/<role>/ROLE.md                         Compact index card per role
+roles/<role>/capabilities/<name>.md          Full rules of one capability
+roles/<role>/scripts/*.py                    Role-owned helpers, explicit CLI arguments only
+skills/workflows/<flow>/SKILL.md             End-to-end flows
+skills/tools/<tool>/SKILL.md                 Single-operation skills, incl. the validators
+skills/tools/render-cv-pdf/templates/        Shipped CV template bundles (default: ats-onepage-latex)
+skills/BACKLOG.md                            Deferred work; entries have NO authority
+outputs/knowledge-bank/                      The knowledge bank (gitignored)
+outputs/<flow>/<run-id>/                     One directory per run (gitignored)
 ```
 
-## Important files
+## Privacy and git hygiene
 
-```text
-AGENTS.md                                  Project operating policy
-prompts/*.md                               Stage templates for the workflow
-templates/cv-ats-agent-template.tex        Production ATS-gated LaTeX template
-templates/template_policy.md               Rules for safe rendering
-data/master/experience_bank.md             Derived candidate evidence index
-data/master/projects.md                    Derived project evidence index
-data/master/skills_matrix.md               Derived skills evidence index
-data/master/constraints.md                 Persistent truth and safety constraints
-data/jobs/<job>/*.md                       Per-job inputs
-outputs/<job>/*                            Generated artifacts and reports
-validators/external/registry.yaml          External validator plugin registry
-scripts/*.py                               Local checks and browser runners for the agent
-runbooks/*.md                              Setup notes and example agent requests
-```
+This repository is safe to publish. Ignored by default: everything under `outputs/` (the knowledge
+bank, every run, every export), the harness-native local rules file (`*.local.md`), local
+AI-assistant settings (`.claude/`, `.codex/`, `.cursor/`, `.continue/`, `.windsurf/`, …), virtual
+environments, LaTeX byproducts, and rendered PDF/DOCX files.
 
-## Safety rule
+The rule behind the list: **committed files carry rules and scripts, never personal data.** Real
+paths, real names and real job material belong in your local context and in `outputs/`. Committed
+examples use placeholders.
 
-Never let external validators directly modify the CV. Import their reports,
-normalize them, pass them through `External Validation Gate`, then re-run `Fact
-Validator`. Final exports in `outputs/<job>/exports/` should be named with the
-`FirstNameSurname\..*` pattern, for example `JaneDoe.pdf` and `JaneDoe.docx`.
+## License
 
-## Git hygiene
-
-This starter kit is safe to publish with the included `.gitignore`: generated
-CV outputs, validator artifacts, private candidate indexes in `data/master/`,
-real per-job inputs in `data/jobs/<job>/`, local AI-assistant/agent settings
-such as `.codex/`, `.claude/`, `.cursor/`, `.continue/`, and `.windsurf/`,
-virtual environments, and rendered PDF/DOCX files are ignored by default.
-
-Keep reusable examples under `data/jobs/example-company-role/`. Put real
-candidate evidence, recruiter notes, job inputs, and generated exports only in
-ignored paths unless they have been explicitly sanitized.
+See [LICENSE](LICENSE).
