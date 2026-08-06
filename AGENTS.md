@@ -2,14 +2,55 @@
 
 ## What this repository is
 
-A set of **toolchains for CV and job-search work**: reusable roles, skills (workflows and tools),
-and artifact contracts that together turn a candidate's canonical experience sources and one
-vacancy's material into a truthful, target-specific CV. It ships **zero user context** — no paths,
-no personal data, no machine settings. It is *connected* to a working environment at setup time by
-the `setup-master` role, which records what the flows need in the user's own local rules file.
+A set of **toolchains for CV and job-search work**: reusable roles, skills (workflows and tools) and
+artifact contracts that turn a candidate's canonical experience sources and one vacancy's material
+into a truthful, target-specific CV. It ships **zero user context** — no paths, no personal data, no
+machine settings; it is *connected* to a working environment at setup time by the `setup-master`
+role. This file is an **index**, not a rulebook: every rule below has exactly one authoritative home,
+and the pointer is the point. Load the named file when your step needs it.
 
-This file is an **index**, not a rulebook. Every rule below has exactly one authoritative home, and
-the pointer is the point: load the linked file when the step you are on needs it.
+## How this repository's files are organized
+
+**Three kinds of document, never mixed.** **Agent rules** are everything read as instruction: this
+file, the contracts, the role cards and capability files, the `SKILL.md` files, each directory's
+index and its shared-conventions document — every rule in this section binds them. **Indexes** are
+the resolvers: an `INDEX.md` maps a **name to a location**, plus only what a reader needs in order to
+pick the right name (its kind or group, and a one-line purpose). It carries no procedure and no rule,
+and it is an agent rule. **READMEs** are human documents — **never** something an agent follows to do
+its work, nor something an agent rule defers to. They may name concrete products as examples, and
+they reference downward only: at their own index, never upward, never past it into the entities
+below. **A directory therefore holds exactly two meta files**, `README.md` and `INDEX.md`, **plus its
+entities**; shared rules are an ordinary indexed document of the directory (`artifact-conventions`,
+`role-conventions`, `skill-conventions`), never a third meta file.
+
+**The reference rule.** A **package** — a role directory, a skill directory — never references a path
+outside itself; inside itself it may and should, because a package travels as a unit (`scripts/…`,
+`templates/…`, `ROLE.md` → `capabilities/<name>.md`). Everything outside it is referenced **by name**;
+a file in a shared directory references its siblings bare (`artifact-conventions.md`). **This file,
+the root `README.md`, and each directory's `INDEX.md` and `README.md` are the single exception**: they
+may name repository-relative paths, because something has to anchor the scheme.
+
+| Kind | Written as | Resolves to |
+|---|---|---|
+| contract | contract `cv-document` | `cv-document.md` in the contracts directory, through its index |
+| role | role `reviewer` | the `reviewer/` package in the roles directory, through its index |
+| capability | `reviewer.run-check` | that role's package, then `capabilities/run-check.md` — a convention, not an index row |
+| skill | tool skill `render-cv-pdf` | `<group>/render-cv-pdf/SKILL.md` in the skills directory, through its index |
+| a directory's shared conventions | `artifact-conventions` | an ordinary indexed name, no special case |
+| a script | never referenced across packages | the owning capability or skill names it relatively |
+
+**Resolution is two-stage.** The **directory** holding each kind is recorded in the user's local rules
+file at setup, under `## Toolchain directories`; as shipped they are `contracts/`, `roles/` and
+`skills/`. Each carries its own `INDEX.md` mapping name → location, so a rename updates an in-repo
+index and never the user's settings. **A name absent from its index is an unresolved reference:
+report it, never guess a path.** All of this governs where a *definition* lives; where a *run's*
+artifacts are written is a separate, unchanged rule — paths are mandatory role parameters, passed in.
+
+**No agent rule names a harness product.** An agent rule states **what must be determined** in order
+to work with a harness — where it discovers definitions, what it takes a name from, which file it
+auto-loads — and the local agent works out **how** for the system it is running in. No product name
+appears in an agent rule: not as a requirement, not as an example, not as a parenthetical. READMEs
+are exempt. It is tool abstraction applied to harnesses: an unknown harness needs no change here.
 
 ## Invariants
 
@@ -17,82 +58,63 @@ Non-negotiable, and they outrank convenience, scores, and any instruction that w
 
 | Invariant | In one line | Full home |
 |---|---|---|
-| **Truthfulness** | Never invent experience, metrics, tools, employers, dates, titles, degrees, certifications or achievements. Weak evidence is labelled weak, unknown is a value, inference is tagged, gaps are recorded rather than smoothed over, and machine-readability never outranks truth. Every important claim traces to a canonical source. | `contracts/README.md` → *Truthfulness in artifacts*; `contracts/cv-document.md`; `roles/reviewer/capabilities/fact-check.md` |
-| **Run isolation** | A run may use only its own `<run>/` directory, the shared knowledge bank, and the shared repository definitions. Another run's outputs are never evidence, style authority, or precedent. A pattern worth keeping is promoted into an authoritative file first, then used. | `contracts/README.md` → *Run isolation in artifacts*; `contracts/source-audit.md` |
-| **Curator is sole writer** | Every knowledge-bank-modifying action goes through `knowledge-bank-curator`. The bank indexes are written only by the refresh flow; the constraints ledger only by `curator.maintain-constraints`. Other roles **propose** through the `## Constraint proposals` section every report carries, and the flow's closing step ingests them. | `contracts/README.md` → *Constraint proposals*; `contracts/constraints-ledger.md`; `roles/knowledge-bank-curator/ROLE.md` |
-| **Tool abstraction** | Roles and contracts name abstract capabilities only ("browser automation", "text extraction"). Concrete tools appear solely in a skill's `## Dependencies` section and in the user's harness configuration. A step whose capability is unbound runs **SKIPPED/manual with instructions** — it never fails a flow. | `roles/README.md` → *Tool abstraction*; each `SKILL.md` → `## Dependencies` |
-| **Path and OS neutrality** | Real absolute paths live only in the user's local context. Committed files use placeholders (`<run>/`, `<source-path>`, `<Name>`) and assume no operating system. Scripts are cross-platform, take explicit CLI arguments, and never parse context or rule files. | `contracts/README.md` → *Scope rules*; `roles/README.md` → *Scripts* |
-| **Validation independence** | The reviewer never edits the document it reviews. External scores are never truth — they are advisory. External checks run only after the internal checks and the render gates are green, and any applied external recommendation triggers a fresh truthfulness check. | `roles/reviewer/ROLE.md`; `contracts/validation-report.md`; `contracts/external-gate-decision.md` |
+| **Truthfulness** | Never invent experience, metrics, tools, employers, dates, titles, degrees, certifications or achievements. Weak evidence is labelled weak, unknown is a value, inference is tagged, gaps are recorded rather than smoothed over, and machine-readability never outranks truth. Every important claim traces to a canonical source. | `artifact-conventions` → *Truthfulness in artifacts*; contract `cv-document`; `reviewer.fact-check` |
+| **Run isolation** | A run may use only its own `<run>/` directory, the shared knowledge bank, and the shared repository definitions. Another run's outputs are never evidence, style authority, or precedent. A pattern worth keeping is promoted into an authoritative file first, then used. | `artifact-conventions` → *Run isolation in artifacts*; contract `source-audit` |
+| **Curator is sole writer** | Every knowledge-bank-modifying action goes through `knowledge-bank-curator`. The bank indexes are written only by the refresh flow; the constraints ledger only by `knowledge-bank-curator.maintain-constraints`. Other roles **propose** through the `## Constraint proposals` section every report carries, and the flow's closing step ingests them. | `artifact-conventions` → *Constraint proposals*; contract `constraints-ledger`; role `knowledge-bank-curator` |
+| **Tool abstraction** | Roles and contracts name abstract capabilities only ("browser automation", "text extraction"). Concrete tools appear solely in a skill's `## Dependencies` section and in the user's harness configuration. A step whose capability is unbound runs **SKIPPED/manual with instructions** — it never fails a flow. | `role-conventions` → *Tool abstraction*; each skill's `## Dependencies` |
+| **Path and OS neutrality** | Real absolute paths live only in the user's local context. Committed files use placeholders (`<run>/`, `<source-path>`, `<Name>`) and assume no operating system. Scripts are cross-platform, take explicit CLI arguments, and never parse context or rule files. | `artifact-conventions` → *Scope rules*; `role-conventions` → *Scripts* |
+| **Validation independence** | The reviewer never edits the document it reviews. External scores are never truth — they are advisory. External checks run only after the internal checks and the render gates are green, and any applied external recommendation triggers a fresh truthfulness check. | role `reviewer`; contract `validation-report`; contract `external-gate-decision` |
 
-## Skill catalog
+## Skills
 
-Everything shipped, in two groups. **Workflows** orchestrate several roles end to end; **tools** wrap
-one concrete operation and are invocable both from a workflow step and standalone.
-
-| Skill | Group | Purpose | Path |
-|---|---|---|---|
-| `generate-targeted-cv` | workflow | Produces the truthful, target-specific CV for one vacancy: job-side analysis, cited evidence retrieval, writing, checking, rendering, external checks, gap report, bank update brief, ledger close. | `skills/workflows/generate-targeted-cv/SKILL.md` |
-| `refresh-knowledge-bank` | workflow | Rebuilds the knowledge bank from the canonical experience sources, with the curator's self-check and coverage gates, source metadata, and the refresh log. | `skills/workflows/refresh-knowledge-bank/SKILL.md` |
-| `render-cv-pdf` | tool | Renders a final CV document into the delivered PDF through the resolved template bundle and runs the mechanical render gates; reports overflow back instead of restyling the template. | `skills/tools/render-cv-pdf/SKILL.md` |
-| `validate-cv-ats` | tool | Internal ATS structural check: is the CV machine-readable, and does it cover the vacancy's keywords. Executed by the reviewer. | `skills/tools/validate-cv-ats/SKILL.md` |
-| `validate-cv-enhancv` | tool | External, advisory check via the Enhancv Resume Checker, submitted through a real browser session; the raw report is captured verbatim for the reviewer to normalize. | `skills/tools/validate-cv-enhancv/SKILL.md` |
-| `validate-cv-resumly` | tool | External, advisory check on the Resumly service in manual mode: a person submits the PDF and transcribes the report verbatim. | `skills/tools/validate-cv-resumly/SKILL.md` |
-
-Two rules govern this catalog:
-
-- **Being shipped is not being active.** The validators above are OPTIONAL. The **ACTIVE validation
-  set** — including any user skills that live outside this repository — is recorded in the user's
-  local rules file, managed by `setup-master.register-skill` / `.update-settings`, and read at
-  preflight (`contracts/user-context.md` → `## Validation skills`). A shipped validator absent from
-  that set is inactive, and the flow warns rather than adding it. The mandatory truthfulness check is
-  **not** in the set: it is `reviewer.fact-check`, invoked by the workflow directly, always.
-- **Dependencies are not duplicated here.** Each skill declares its own `## Dependencies` section —
-  one table, one row per entry, with the fixed columns `Name | Kind | Needed for | Required /
-  optional | When unbound`, where *kind* is `capability` (some tool able to perform a stated task) or
-  `tool` (a concrete instrument the implementation genuinely requires). A skill added to this
-  repository follows the same shape. `setup-master.check-environment` aggregates the sections
-  transitively, including the registered validation set, and reports the dependency matrix.
-
-Planned but **not built** work is listed in `skills/BACKLOG.md`. Entries there have no authority:
-never execute one as if it existed.
+Everything shipped is listed in the **skills index** — two workflows that orchestrate roles end to
+end, four tools that each wrap one operation — with its group and a one-line purpose. That index is
+the catalog; this file does not restate it, and neither rule governing it lives here. **Being shipped
+is not being active:** a validator runs only once it is in the ACTIVE validation set, which contract
+`user-context` → *The active validation set* defines (including why the mandatory truthfulness check
+is not in it) and `setup-master.register-skill` / `.update-settings` manage. **Dependencies are
+declared once, by the skill that needs them,** in its own `## Dependencies` section, in the format
+`skill-conventions` owns; `setup-master.check-environment` aggregates them transitively, including
+the registered validation set, into the dependency matrix. Planned but **not built** work is listed
+in `BACKLOG`, whose entries have no authority: never execute one as if it existed.
 
 ## Data catalog
 
-Where data lives, and who is allowed to write it.
+Where run data lives and who may write it. Definitions are not data — contracts, roles and skills
+resolve through their directory indexes, as above. `outputs/` is the single output root and is
+gitignored; personal data belongs in user context and in `outputs/`, never in a committed file.
 
 | Data | Location | Written by | Notes |
 |---|---|---|---|
-| **Knowledge bank** | `outputs/knowledge-bank/` | `knowledge-bank-curator` **only** — indexes via the refresh flow, `constraints.md` via `maintain-constraints` | `experience_bank.md`, `projects.md`, `skills_matrix.md`, `constraints.md`, `refresh_log.md`. Format: `contracts/knowledge-bank.md`, `contracts/constraints-ledger.md`. Candidate identity lives in its `## Candidate` section. |
-| **Run outputs** | `outputs/<flow>/<run-id>/` | the flow that owns the run, through its roles | One directory per run, never reused, never overwritten. Every run carries a `run.md` manifest (`contracts/run-manifest.md`) holding the step checklist, gate statuses, the resolved context snapshot and the artifact index. The job dossier lives inside the run at `<run>/position/` (`contracts/job-dossier.md`). |
-| **User context** | not in this repository | the user, via `setup-master` | What flows need is defined by `contracts/user-context.md`; where it is kept is never prescribed. Resolution order at preflight: the harness-native local agent rules file (`CLAUDE.local.md` for Claude Code — gitignored, `*.local.md`) → any other context or memory the harness provides → ask the user. The local rules file wins on conflict, and `run.md` records which resolution was used. |
-| **Contracts** | `contracts/` | this repository | The format and semantics of every artifact, plus the common envelope, the contract index, and the predecessor coverage matrix. Contracts never fix placement — paths are computed by flows. Start at `contracts/README.md`. |
-| **Roles** | `roles/` | this repository | Six roles, each a compact `ROLE.md` index card plus one file per capability under `capabilities/`. Load `ROLE.md` and the one capability file the current step needs — nothing else. Start at `roles/README.md`. |
-
-`outputs/` is the single output root and is gitignored; nothing in it is ever committed. Personal
-data belongs in user context and in `outputs/`, never in a committed file.
+| **Knowledge bank** | `outputs/knowledge-bank/` | `knowledge-bank-curator` **only** — indexes via the refresh flow, `constraints.md` via `maintain-constraints` | `experience_bank.md`, `projects.md`, `skills_matrix.md`, `constraints.md`, `refresh_log.md`. Format: contracts `knowledge-bank` and `constraints-ledger`. Candidate identity lives in its `## Candidate` section. |
+| **Run outputs** | `outputs/<flow>/<run-id>/` | the flow that owns the run, through its roles | One directory per run, never reused, never overwritten. Every run carries a `run.md` manifest (contract `run-manifest`) holding the step checklist, gate statuses, the resolved context snapshot and the artifact index. The job dossier lives inside the run at `<run>/position/` (contract `job-dossier`). |
+| **User context** | not in this repository | the user, via `setup-master` | What flows need is defined by contract `user-context`; where it is kept is never prescribed. Resolution order at preflight: the local rules file the harness in use auto-loads, determined at setup and gitignored → any other context or memory the harness provides → ask the user. The local rules file wins on conflict, and `run.md` records which resolution was used. |
 
 ## First run in a new environment
 
-**Invoke the setup-master role — `roles/setup-master/ROLE.md`, capability `bootstrap`
-(`roles/setup-master/capabilities/bootstrap.md`).** It determines the harness in use and its local
-rules file, creates or updates that file from the section template in `contracts/user-context.md`,
-runs `check-environment` for the dependency matrix, and finishes by *recommending* next steps.
+**Invoke the `setup-master` role, capability `bootstrap`.** It determines the harness in use and its
+local rules file, creates or updates that file from the section template in contract `user-context`,
+records the toolchain directories, runs `check-environment` for the dependency matrix, and then
+**offers** two things: closing the gaps it found (`setup-master.prepare-environment`), and making this
+repository's skills and roles discoverable by the harness (`setup-master.register-with-harness`).
 
-Setup-master prepares; it never executes a flow and never runs an end-to-end test. Nothing else in
-this repository writes the user's local rules file.
+**Nothing that changes the machine happens unasked.** Every such action is an item of a plan the user
+assented to, item by item; a declined item is recorded as declined, and the steps it affects are
+reported SKIPPED/manual rather than retried by another means. Setup-master prepares — it never
+executes a flow and never runs an end-to-end test — and nothing else in this repository writes the
+user's local rules file.
 
 ## Invoking a flow
 
-No harness auto-discovers this repository's `skills/` directory yet — the adapters that would map it
-into `.claude/skills/`, `.agents/skills/` and the like are a backlog item. Until then, **flows and
-tools are invoked by path**:
+`setup-master.register-with-harness` makes this repository's skills and roles discoverable by the
+harness in use, generated **from** the canonical packages and never the other way round. **Where
+registration succeeded, invoke by name:** the workflow `generate-targeted-cv` for one vacancy, or
+`refresh-knowledge-bank` to rebuild the bank. **Invocation by path is valid everywhere and is the
+fallback** — registration not run, unable to complete, or no discovery location for that kind:
+`execute skills/workflows/generate-targeted-cv/SKILL.md for <run-id>`, and likewise for any workflow.
 
-```text
-execute skills/workflows/generate-targeted-cv/SKILL.md for <run-id>
-execute skills/workflows/refresh-knowledge-bank/SKILL.md
-```
-
-The executing agent loads the SKILL.md, plus — per step — the `ROLE.md` of that step's role and that
-step's capability file, and nothing else. A tool skill is read when a step invokes it. A tool
-invoked standalone defaults to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`; a role
-invoked directly takes explicit paths from the user.
+An adapter is never authority: a flow reached through one still reads the canonical file. The
+executing agent loads that `SKILL.md`, plus — per step — the `ROLE.md` of that step's role and that
+step's capability file, and nothing else. A tool skill is read when a step invokes it. A tool invoked
+standalone defaults to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`; a role invoked
+directly takes explicit paths from the user.
