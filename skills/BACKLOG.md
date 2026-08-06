@@ -160,25 +160,6 @@ improvised.
   from day one: a transcript is an emphasis-and-positioning source, never candidate evidence —
   nothing said in a conversation creates a candidate fact.
 
-### harness-adapters
-
-- **Kind:** adapter
-- **Intent:** Make the canonical `skills/` tree discoverable by each harness that looks for skills in
-  its own location (`.claude/skills/`, `.agents/skills/`, and the equivalents), and generate agent
-  wrappers from the `name`/`description` frontmatter that every `ROLE.md` already carries for exactly
-  this purpose. Until this exists, a flow is invoked by path — "execute
-  `skills/workflows/<name>/SKILL.md`" — which works on every harness and is what the repository tells
-  the user to do, but it means no harness offers the skills by name.
-- **Contracts produced:** `None.`
-- **Contracts consumed:** `None.` It reads `SKILL.md` and `ROLE.md` frontmatter as metadata, not as
-  artifacts.
-- **Dependencies / notes:** the mapping mechanism is the open question — symlinks are cheapest but
-  break on some filesystems and in some clones, a generator produces duplicates that drift, and the
-  per-harness discovery paths keep changing. Whatever is chosen must keep `skills/` canonical: the
-  adapter is generated from the tree and never the other way round, or the harness copy quietly
-  becomes the real one. Per-harness settings and the local rules file stay out of scope — they are
-  the user's, and `setup-master` already owns them.
-
 ### split-legacy-constraints
 
 - **Kind:** migration
