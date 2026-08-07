@@ -35,8 +35,7 @@ Optional parameters that are not passed are treated as absent, never guessed.
 ## Authority
 
 Writes exactly one artifact per invocation, at `output_path`. It may create instances of:
-`source-audit` (its job-side inventory), `requirements-profile`, `recruiter-signals`, `fit-report`,
-`gap-report`.
+`source-audit`, `requirements-profile`, `recruiter-signals`, `fit-report`, `gap-report`.
 
 Everything else is **read-only**: the job dossier, the knowledge bank, the constraints ledger, the
 evidence map, any CV document, and every validation artifact. The analyst never edits a document it
@@ -48,8 +47,9 @@ another role's artifact — it reports findings instead.
 - **Consumes:** `job-dossier`, `transcript` (when a recruiter note points at one), `run-manifest`,
   `requirements-profile`, `recruiter-signals`, `evidence-map`, `knowledge-bank`, `cv-document`,
   `validation-report`, `external-gate-decision`, `constraints-ledger`.
-- **Produces:** `source-audit` (job-side part), `requirements-profile`, `recruiter-signals`,
-  `fit-report`, `gap-report`.
+- **Produces:** `source-audit` (whole artifact, bank stanza included — the freshness verdict is
+  transcribed from the check the flow recorded, never decided here), `requirements-profile`,
+  `recruiter-signals`, `fit-report`, `gap-report`.
 
 Placement is decided by the calling flow; the contracts above define format and semantics only.
 
@@ -59,7 +59,7 @@ Index only — the full rules of each capability live in its own file.
 
 | Capability | Purpose | Inputs → Outputs | Rules |
 |---|---|---|---|
-| `audit-sources` | Inventory and classify the run's job-side inputs, marking conflicts explicitly. | job dossier (+ any provided job-side material) → `source-audit` | [capabilities/audit-sources.md](capabilities/audit-sources.md) |
+| `audit-sources` | Inventory and classify the run's job-side inputs, mark conflicts explicitly, and transcribe the recorded bank freshness verdict into the audit's bank stanza. | job dossier (+ any provided job-side material), `run-manifest` → `source-audit` | [capabilities/audit-sources.md](capabilities/audit-sources.md) |
 | `analyze-job` | Turn the vacancy into a structured requirements profile with explicit-vs-inferred marking. | `job-dossier` → `requirements-profile` | [capabilities/analyze-job.md](capabilities/analyze-job.md) |
 | `extract-recruiter-signals` | Extract emphasis, pain points, do-not-include items and tag candidates from people-side inputs. | `job-dossier` (recruiter notes), `transcript` → `recruiter-signals` | [capabilities/extract-recruiter-signals.md](capabilities/extract-recruiter-signals.md) |
 | `score-fit` | Score candidate↔vacancy fit on fixed weights and advise on positioning. INFORMATIONAL. | `requirements-profile`, `recruiter-signals`, candidate data in a declared format → `fit-report` | [capabilities/score-fit.md](capabilities/score-fit.md) |
