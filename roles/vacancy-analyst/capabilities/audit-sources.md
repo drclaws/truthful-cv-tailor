@@ -2,10 +2,12 @@
 
 ## Purpose
 
-Build the audit trail of the run's **job-side inputs before any analysis is drafted**: what was
-provided, where each item came from, what kind of input it is, how much it can be trusted, and where
-the inputs disagree. The result is a `source-audit` instance — the artifact later steps and the
-reviewer use to check that every targeting decision traces back to something that was actually
+Build the audit trail of the run's **inputs before any analysis is drafted**: what was provided,
+where each item came from, what kind of input it is, how much it can be trusted, and where the
+inputs disagree. The job-side material is inventoried and classified here in full; the knowledge
+bank the candidate evidence comes from is recorded by version and freshness, transcribed from the
+check the flow already ran. The result is a `source-audit` instance — the artifact later steps and
+the reviewer use to check that every targeting decision traces back to something that was actually
 supplied for this run.
 
 An unsaved summary is not a source. If an input cannot be stored in the run, this capability records
@@ -30,10 +32,18 @@ it.
 |---|---|---|
 | `output_path` | `source-audit` | `complete` — every provided input inventoried; `blocked` — a required input is unreachable and the run cannot proceed without it. |
 
-The **candidate side of this artifact is not written here.** The knowledge-bank-curator contributes
-the stanza recording which knowledge-bank version the run's candidate evidence came from. This
-capability writes the job-side inventory and leaves that stanza to its owner — it never records bank
-facts, bank versions, or candidate evidence of its own.
+**One file, one writer — this capability writes the whole artifact, `## Bank stanza` included.** That
+stanza records which knowledge-bank version the run's candidate evidence came from and how fresh it
+was. The verdict behind it is not decided here: it is *produced* by
+`knowledge-bank-curator.check-freshness` and returned to its caller, the flow records it in the run
+manifest under `## Bank freshness`, and this capability **transcribes** it into the stanza,
+attributed to that check. The curator does not write into this file — two roles editing one artifact
+is exactly the ambiguity contracts exist to remove, so the produce/transcribe split is the mechanism
+that keeps one writer here, not a formality.
+
+What stays out of reach is *deciding* bank facts rather than recording them. A bank version or a
+freshness verdict is copied from the recorded check with its attribution; it is never re-derived
+from the bank itself, and no candidate claim is drawn out of bank content here.
 
 ## Procedure
 
@@ -45,8 +55,9 @@ facts, bank versions, or candidate evidence of its own.
    the item states one, and whether the original content is stored inside the run.
 3. **Classify by role in the run.** Exactly one primary kind per item: `job targeting` (the vacancy
    itself), `company context`, `recruiter signal`, `people/team context`, or `other`. Candidate
-   evidence is out of scope here — if candidate material appears among the job-side inputs, list it
-   as `candidate evidence (out of scope — curator's stanza)` and do not summarise its content.
+   evidence is not summarised here — if candidate material appears among the job-side inputs, list
+   it as `candidate evidence (not summarised here)` and leave its content alone. The run's candidate
+   evidence comes from the knowledge bank, whose state `## Bank stanza` records at step 8.
 4. **Classify by trust.** Mark each item `canonical` or `self-report` per the rules below, and state
    in one clause why.
 5. **Extract anchor snippets.** For each item that is not stored verbatim inside the run, copy the
@@ -60,7 +71,13 @@ facts, bank versions, or candidate evidence of its own.
 7. **Record gaps in the input set.** Note what a run of this kind normally has and this one does not
    (for example: no company notes, no recruiter notes, a job description with no seniority
    statement). Absence is a finding, not something to fill in.
-8. **Write the artifact** to `output_path` with the common envelope, then add
+8. **Transcribe the bank stanza.** Read `## Bank freshness` from the run manifest at
+   `run_manifest_path`. List the bank files it names as inventory entries of kind `bank file`, then
+   copy the verdict with its per-source and per-index statuses into `## Bank stanza`, attributed to
+   `knowledge-bank-curator.check-freshness`, and say whether a refresh was performed before the run
+   proceeded. Copy what was recorded — a freshness opinion formed here after the fact would not be
+   the verdict the run actually acted on.
+9. **Write the artifact** to `output_path` with the common envelope, then add
    `## Constraint proposals`.
 
 ## Rules
