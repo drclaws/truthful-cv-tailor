@@ -4,10 +4,9 @@
 
 A set of **toolchains for CV and job-search work**: reusable roles, skills (workflows and tools) and
 artifact contracts that turn a candidate's canonical experience sources and one vacancy's material
-into a truthful, target-specific CV. It ships **zero user context** — no paths, no personal data, no
-machine settings; it is *connected* to a working environment at setup time by the `setup-master`
-role. This file is an **index**, not a rulebook: every rule below has exactly one authoritative home,
-and the pointer is the point. Load the named file when your step needs it.
+into a truthful, ATS-friendly, target-specific CV. It ships **zero user context** — no paths, no
+personal data, no machine settings; it is *connected* to a working environment at setup time by the
+`setup-master` role. Every rule below has one authoritative home; load it when your step needs it.
 
 ## How this repository's files are organized
 
@@ -28,7 +27,8 @@ outside itself; inside itself it may and should, because a package travels as a 
 `templates/…`, `ROLE.md` → `capabilities/<name>.md`). Everything outside it is referenced **by name**;
 a file in a shared directory references its siblings bare (`artifact-conventions.md`). **This file,
 the root `README.md`, and each directory's `INDEX.md` and `README.md` are the single exception**: they
-may name repository-relative paths, because something has to anchor the scheme.
+may name repository-relative paths, because something has to anchor the scheme. This file is also the
+one thing a package may name outright, as the bare filename `AGENTS.md` — see the last row below.
 
 | Kind | Written as | Resolves to |
 |---|---|---|
@@ -38,6 +38,7 @@ may name repository-relative paths, because something has to anchor the scheme.
 | skill | tool skill `render-cv-pdf` | `<group>/render-cv-pdf/SKILL.md` in the skills directory, through its index |
 | a directory's shared conventions | `artifact-conventions` | an ordinary indexed name, no special case |
 | a script | never referenced across packages | the owning capability or skill names it relatively |
+| the entry file | `AGENTS.md` — its own filename | this file, at the repository root. **The one reference in the repository that is a filename, deliberately:** it anchors the scheme, so the scheme cannot resolve it — no index can resolve the file the indexes are declared in, and there is no directory of entry files to index. Naming it costs a package nothing, because a bare filename at a fixed root encodes no layout that can drift. |
 
 **Resolution is two-stage.** The **directory** holding each kind is recorded in the user's local rules
 file at setup, under `## Toolchain directories`; as shipped they are `contracts/`, `roles/` and
@@ -68,8 +69,7 @@ Non-negotiable, and they outrank convenience, scores, and any instruction that w
 ## Skills
 
 Everything shipped is listed in the **skills index** — two workflows that orchestrate roles end to
-end, four tools that each wrap one operation — with its group and a one-line purpose. That index is
-the catalog; this file does not restate it, and neither rule governing it lives here. **Being shipped
+end, four tools that each wrap one operation — with its group and a one-line purpose. **Being shipped
 is not being active:** a validator runs only once it is in the ACTIVE validation set, which contract
 `user-context` → *The active validation set* defines (including why the mandatory truthfulness check
 is not in it) and `setup-master.register-skill` / `.update-settings` manage. **Dependencies are
@@ -86,7 +86,7 @@ gitignored; personal data belongs in user context and in `outputs/`, never in a 
 
 | Data | Location | Written by | Notes |
 |---|---|---|---|
-| **Knowledge bank** | `outputs/knowledge-bank/` | `knowledge-bank-curator` **only** — indexes via the refresh flow, `constraints.md` via `maintain-constraints` | `experience_bank.md`, `projects.md`, `skills_matrix.md`, `constraints.md`, `refresh_log.md`. Format: contracts `knowledge-bank` and `constraints-ledger`. Candidate identity lives in its `## Candidate` section. |
+| **Knowledge bank** | `outputs/knowledge-bank/` | `knowledge-bank-curator` **only** — indexes via the refresh flow, `constraints.md` via `knowledge-bank-curator.maintain-constraints` | `experience_bank.md`, `projects.md`, `skills_matrix.md`, `constraints.md`, `refresh_log.md`. Format: contracts `knowledge-bank` and `constraints-ledger`. Candidate identity lives in its `## Candidate` section. |
 | **Run outputs** | `outputs/<flow>/<run-id>/` | the flow that owns the run, through its roles | One directory per run, never reused, never overwritten. Every run carries a `run.md` manifest (contract `run-manifest`) holding the step checklist, gate statuses, the resolved context snapshot and the artifact index. The job dossier lives inside the run at `<run>/position/` (contract `job-dossier`). |
 | **User context** | not in this repository | the user, via `setup-master` | What flows need is defined by contract `user-context`; where it is kept is never prescribed. Resolution order at preflight: the local rules file the harness in use auto-loads, determined at setup and gitignored → any other context or memory the harness provides → ask the user. The local rules file wins on conflict, and `run.md` records which resolution was used. |
 
