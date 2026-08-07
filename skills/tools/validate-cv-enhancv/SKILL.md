@@ -18,11 +18,11 @@ turns it into a `validation-report` and judges it in separate, later steps.
 ## What this skill is, and is not
 
 - **A procedure plus its assets, never an actor.** It defines no agent and carries no authority of
-  its own. It is executed by the reviewer (`roles/reviewer/ROLE.md`), and the reviewer's invariants
-  always apply — in particular: the document under review is never edited here, external scores are
-  never truth, and nothing this service says can justify a claim the evidence does not carry.
+  its own. It is executed by the role `reviewer`, and the reviewer's invariants always apply — in
+  particular: the document under review is never edited here, external scores are never truth, and
+  nothing this service says can justify a claim the evidence does not carry.
 - **Optional and registered.** It runs only when the user's local rules file lists it in the active
-  validation set as an `external` entry (`contracts/user-context.md`). Membership is never decided by
+  validation set as an `external` entry (contract `user-context`). Membership is never decided by
   the executing role or by this file.
 - **Gated.** External checks run only after the run's internal checks and render gates are green. A
   submission before that wastes the run and invites advice about problems that were already fixed.
@@ -33,7 +33,7 @@ turns it into a `validation-report` and judges it in separate, later steps.
 
 | Context | Who runs it | Where the outputs go |
 |---|---|---|
-| Inside a CV workflow | the reviewer, through `roles/reviewer/capabilities/run-external-checks.md` | the raw-capture paths the workflow passes |
+| Inside a CV workflow | the reviewer, through `reviewer.run-external-checks` | the raw-capture paths the workflow passes |
 | Standalone | the user, invoking the reviewer or the script directly | `outputs/validate-cv-enhancv/<run-id>/`, with a minimal `run.md` |
 
 Paths are always supplied by the caller. This skill derives no path from repository layout, and the
@@ -62,10 +62,9 @@ only deliverable this repository produces.
 | raw capture (screenshot) | full-page PNG | evidence of what was on screen, including a partial or failed run |
 | outcome | `completed` / `not-completed` / `blocked` / `skipped` | printed, and written as JSON on request |
 
-After the reviewer runs `roles/reviewer/capabilities/normalize-external-report.md` over the raw
-capture, a `validation-report` instance exists for it — advisory, never carrying a blocking verdict.
-The recommendations are then judged by
-`roles/reviewer/capabilities/gate-external-recommendations.md`.
+After the reviewer runs `reviewer.normalize-external-report` over the raw capture, a
+`validation-report` instance exists for it — advisory, never carrying a blocking verdict. The
+recommendations are then judged by `reviewer.gate-external-recommendations`.
 
 ## Service parameters
 
@@ -118,6 +117,39 @@ A run performed by hand follows the same rules.
    and was rendered from the *final* document — a deliverable older than the last content change
    blocks the step.
 4. Create nothing else and change nothing else. The step is read-only apart from its own captures.
+
+**What "bound" means here — stated as goals, because a recipe would be wrong somewhere.** Two things
+have to be true of the machine, and this file says only what must become *possible*, never which
+release makes it so:
+
+- **an interpreter that can drive a browser** — the one named by this skill's `python_interpreter`
+  setting, or the one on the executable search path when no setting names one, with the automation
+  package of the `playwright` dependency row importable *in that same interpreter*;
+- **a browser build that driver accepts** — the engine `browser_engine` names, either as a build the
+  driver manages itself or as the locally installed browser a `browser_channel` or
+  `browser_executable` setting points at.
+
+**Who may make them true: `setup-master.prepare-environment`, with the user's assent, item by
+item.** It takes the two goals above verbatim, works out the means from what this machine actually
+offers, and records what it did. It prescribes **no command sequence and no version** on purpose — a
+fixed sequence presumes a network, a package manager, a shell allowed to reach out, and a machine
+like the author's, and each of those presumptions fails somewhere. Neither this skill nor the
+reviewer executing it installs anything or improvises a procedure of its own; an unbound dependency
+is reported, not worked around.
+
+**And preparation is never enough on its own: the requirement holds on every run.** The service
+builds both the upload and the report with the page's own client-side code, so every execution of
+this entry opens a live browser window and reaches the service host over the network. There is
+nothing cached to replay and no warm state that carries from one run to the next. A session that
+cannot reach the network, or that has nowhere to put a visible window — a sandboxed or unattended
+shell is usually both — therefore cannot satisfy this entry however completely the machine was
+prepared beforehand.
+
+**In such a session the honest default is SKIPPED-manual**, and it is a designed outcome rather than
+a gap for preparation to close: record the entry with the reason, hand over the *Manual fallback*
+checklist below so the user can complete it from a session that has a display and a network, and let
+the flow continue. Never a `Fail` verdict about the CV, never a red gate, and never an attempt to
+substitute an HTTP request for the browser session.
 
 ### The precheck (gates first, submission second)
 
@@ -202,7 +234,7 @@ follow, or when the user prefers to drive the service themselves.
 
 | Symptom | What it means | What to do |
 |---|---|---|
-| The runner reports the automation stack is not bound | the browser stack is missing for the interpreter running the script | bind it as the dependency entry describes, or run the manual fallback; the entry is SKIPPED either way |
+| The runner reports the automation stack is not bound | the browser stack is missing for the interpreter running the script | close the gap through `setup-master.prepare-environment`, whose goal is the one *Environment preparation* states, or run the manual fallback; the entry is SKIPPED either way |
 | The browser build cannot be launched | the engine's build is not installed, or a recorded browser binary does not resolve | install the engine build, or correct the `browser_executable` / `browser_channel` setting recorded for this machine |
 | The upload UI never becomes ready | the page is slow, or a challenge is standing in front of it | raise the timeout, and run with a visible window so the challenge can be completed |
 | A challenge appears and the run ends | the run was headless, or nobody completed the challenge in time | re-run with a visible window and a longer manual grace period (for example 180 seconds) |
@@ -214,9 +246,9 @@ follow, or when the user prefers to drive the service themselves.
 
 ## Bundled script
 
-`skills/tools/validate-cv-enhancv/scripts/run_enhancv.py` — drives the service and writes the
-captures. It takes explicit command-line arguments only, reads no rules or context file, and derives
-no path from repository layout.
+`scripts/run_enhancv.py`, beside this file — drives the service and writes the captures. It takes
+explicit command-line arguments only, reads no rules or context file, and derives no path from
+repository layout.
 
 ```text
 run_enhancv.py --pdf <export.pdf> --raw-out <run>/external/enhancv_raw.md \
@@ -249,33 +281,33 @@ status, never a crash. Exit `2` means the command line itself was wrong; exit `1
 interrupted. The reviewer reads the outcome, and records it in its run record with the reviewer's own
 vocabulary (`executed`, `SKIPPED`, `not completed`, `blocked`).
 
-## Settings recognized in the user's context
+## User-context settings
 
 Recorded under `## Skill settings` → `### validate-cv-enhancv` in the user's local rules file (see
-`contracts/user-context.md`). All are optional; the machine-specific bindings of this skill's
+contract `user-context`). All are optional; the machine-specific bindings of this skill's
 dependencies belong here and nowhere else. Keys this file does not define are reported to the user,
 never silently ignored.
 
-| Key | Values | Default | Effect |
-|---|---|---|---|
-| `mode` | `browser`, `manual` | `browser` | `manual` forces the manual fallback without attempting automation |
-| `python_interpreter` | path or name | the caller's `python3` | the interpreter that has the automation stack installed |
-| `browser_engine` | `chromium`, `firefox`, `webkit` | `chromium` | which engine the run drives |
-| `browser_channel` | channel name | none | launch a locally installed browser channel instead of the bundled build |
-| `browser_executable` | path or name | none | launch a specific browser binary; a bare name is resolved on `PATH` |
-| `headless` | `true`, `false` | `false` | `true` only for unattended automation the user asked for |
-| `manual_wait_seconds` | integer | `120` visible / `0` headless | grace period for completing a challenge |
-| `timeout_ms` | integer | `180000` | maximum wait for the upload UI and for processing |
-| `service_url` | URL | the service URL above | override when the service moves |
-| `max_input_mb` | number | `2` | override when the service's limit changes |
+| Key | Required | Values | Default | Meaning |
+|---|---|---|---|---|
+| `mode` | optional | `browser`, `manual` | `browser` | `manual` forces the manual fallback without attempting automation |
+| `python_interpreter` | optional | path or name | the caller's `python3` | the interpreter that has the automation stack installed |
+| `browser_engine` | optional | `chromium`, `firefox`, `webkit` | `chromium` | which engine the run drives |
+| `browser_channel` | optional | channel name | none | launch a locally installed browser channel instead of the bundled build |
+| `browser_executable` | optional | path or name | none | launch a specific browser binary; a bare name is resolved on `PATH` |
+| `headless` | optional | `true`, `false` | `false` | `true` only for unattended automation the user asked for |
+| `manual_wait_seconds` | optional | integer | `120` visible / `0` headless | grace period for completing a challenge |
+| `timeout_ms` | optional | integer | `180000` | maximum wait for the upload UI and for processing |
+| `service_url` | optional | URL | the service URL above | override when the service moves |
+| `max_input_mb` | optional | number | `2` | override when the service's limit changes |
 
 ## Dependencies
 
 | Name | Kind | Needed for | Required / optional | When unbound |
 |---|---|---|---|---|
-| `python3` | tool | Running the bundled runner script. | required | The check runs manual — the reviewer follows the manual fallback and records the entry as SKIPPED-manual with those instructions. |
+| `python3` | tool | Running the bundled runner script. Probed **at the interpreter recorded as `python_interpreter`** in this skill's settings subsection when one is recorded, and on the executable search path otherwise; the evidence names which one answered. Answers to `--version`. | required | The check runs manual — the reviewer follows the manual fallback and records the entry as SKIPPED-manual with those instructions. |
 | Browser automation | capability | Driving a real browser session through the service's client-side upload and report. | required | The entry runs SKIPPED with instructions; the manual fallback in the runbook is the documented substitute, and the flow continues. |
-| `playwright` (Python package, `playwright.async_api`) | tool | The concrete binding of browser automation used by the bundled script. | required | The script reports outcome `skipped` with the binding instructions and the manual fallback; nothing is submitted and nothing crashes. |
-| A Playwright browser build — `chromium` (default), or `firefox` / `webkit` | tool | Rendering the service page and letting the user complete challenges. | required | The script reports outcome `skipped` naming the engine that could not be launched; install the engine build or record a `browser_channel` / `browser_executable` binding. |
+| `playwright` (Python package, `playwright.async_api`) | tool | The concrete binding of browser automation used by the bundled script. It is a module, not an executable, so it is probed **inside the same interpreter as the `python3` row** — the check is `<that interpreter> -c "import playwright.async_api"`, which exits 0 when the package is importable there. | required | The script reports outcome `skipped` with the binding instructions and the manual fallback; nothing is submitted and nothing crashes. |
+| A Playwright browser build — `chromium` (default), or `firefox` / `webkit` | tool | Rendering the service page and letting the user complete challenges. Not an executable on the search path either: it is probed **at the `browser_executable` recorded** in this skill's settings when one is recorded, and otherwise through the driver in the same interpreter as the two rows above; the evidence names which build answered. | required | The script reports outcome `skipped` naming the engine that could not be launched; install the engine build or record a `browser_channel` / `browser_executable` binding. |
 | Network access to the service host | capability | Reaching the checker at all. | required | The run ends `not-completed` with the diagnostic capture; the manual fallback applies from a machine that can reach the service. |
 | An interactive desktop session (a visible browser window) | capability | Completing the service's human-verification challenges, which is the default mode. | required | The run may be attempted headless (`headless: true`), but a challenge then cannot be completed and the run ends `not-completed`; the manual fallback on a machine with a display is the documented path. |

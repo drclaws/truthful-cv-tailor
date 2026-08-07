@@ -13,11 +13,11 @@ agent-content zones, build the PDF, run the mechanical gates, report.
 ## This skill is not an actor
 
 A tool skill is **procedures-plus-assets, never an agent**. This skill defines no role, holds no
-authority of its own, and decides nothing about content. It is executed by the **renderer**
-(`roles/renderer/ROLE.md`, capability `roles/renderer/capabilities/render-document.md`), and the
-renderer's invariants apply to every line of it: content is transcribed and never authored, only the
-template's delimited agent zones are edited, the template's style is never changed, the knowledge
-bank and the constraints ledger are never written, another run's output is never a style authority.
+authority of its own, and decides nothing about content. It is executed by the role `renderer`,
+capability `renderer.render-document`, and the renderer's invariants apply to every line of it:
+content is transcribed and never authored, only the template's delimited agent zones are edited, the
+template's style is never changed, the knowledge bank and the constraints ledger are never written,
+another run's output is never a style authority.
 
 Where this file and the renderer's capability describe the same step, the role states *what* the
 renderer is responsible for, and this skill states the *operation rules* — the page target, the fit
@@ -48,19 +48,19 @@ least of all the export filename.
 
 Build byproducts go to `build_dir` and are never part of the deliverable.
 
-## Settings recognized in user context
+## User-context settings
 
-Per `contracts/user-context.md`, a skill's own `SKILL.md` defines the keys of its settings
-subsection. This skill recognizes exactly one:
+Per contract `user-context`, a skill's own `SKILL.md` defines the keys of its settings subsection.
+This skill recognizes exactly one:
 
 ```markdown
 ### render-cv-pdf
 - template: ats-onepage-latex        # or a path to an external template bundle
 ```
 
-| Key | Value | Default |
-|---|---|---|
-| `template` | the name of a folder under this skill's `templates/`, or a path to an external bundle satisfying the template bundle contract below | `ats-onepage-latex` |
+| Key | Required | Values | Default | Meaning |
+|---|---|---|---|---|
+| `template` | optional | the name of a folder under this skill's `templates/`, or a path to an external bundle satisfying the template bundle contract below | `ats-onepage-latex` | Which template bundle this skill resolves and fills. |
 
 Any other key in this subsection is **reported as unrecognized** at preflight, never silently
 ignored and never guessed at. The page target is an operation rule of this skill (default: one page),
@@ -243,8 +243,9 @@ as not run with the commands to run them by hand, and the report says the render
 | Name | Kind | Needed for | Required / optional | When unbound |
 |---|---|---|---|---|
 | Typesetting toolchain named by the resolved template bundle's `runbook.md` | capability | Building a PDF from the filled template source when a bundle other than the shipped default is registered. | required | The filled typeset source is still written; the render step is reported SKIPPED with the bundle's manual build instructions, and every gate is recorded as not run. |
-| `pdflatex` (pdfTeX), with the LaTeX packages `paracol`, `fontawesome5`, `geometry`, `enumitem`, `microtype`, `needspace`, `etoolbox`, `hyperref`, `lmodern`, `babel`, `xcolor` | tool | Compiling the shipped `ats-onepage-latex` template; it uses pdfTeX primitives (`\pdfgentounicode`, `\pdfliteral`) and is not portable to XeTeX or LuaTeX unchanged. | required for the shipped template (and any bundle whose runbook names it) | As above — filled source written, render reported SKIPPED with the commands from `templates/ats-onepage-latex/runbook.md`. |
-| `pdftotext` (Poppler- or Xpdf-compatible) | tool | Gate 3 — text extraction in plain reading order and in layout-preserving mode. | required | The export is still produced; gate 3 is recorded as **not run** with the manual commands, and the render is reported not done rather than passed. |
-| `pdffonts` (Poppler- or Xpdf-compatible) | tool | Gate 4 — confirming every font in the export is embedded. | required | Gate 4 recorded as not run with the manual command; never assumed to pass. |
-| `pdfinfo` (Poppler- or Xpdf-compatible) | tool | Gate 2 — reading the export's page count against the page target. | required | Gate 2 recorded as not run; the report states that the page target could not be verified instead of claiming it was met. |
-| `python3` ≥ 3.10 | tool | Running the bundled `scripts/pdf_text_check.py`. | optional | Run the two extraction commands from the bundle's runbook by hand and read the extracts; gate 3 is still evaluable, just manually. |
+| `pdflatex` (pdfTeX) | tool | Compiling the shipped `ats-onepage-latex` template; it uses pdfTeX primitives (`\pdfgentounicode`, `\pdfliteral`) and is not portable to XeTeX or LuaTeX unchanged. | required for the shipped template (and any bundle whose runbook names it) | As above — filled source written, render reported SKIPPED with the commands from `templates/ats-onepage-latex/runbook.md`. |
+| The LaTeX packages the shipped template loads — `geometry`, `fontenc`, `inputenc`, `lmodern`, `babel`, `microtype`, `xcolor`, `enumitem`, `paracol`, `needspace`, `etoolbox`, `fontawesome5`, `hyperref` | component-set | The same compile: every one of them is loaded by the template's own preamble, so `pdflatex` alone does not make it build. Check, one command per package: `kpsewhich geometry.sty`, `kpsewhich fontenc.sty`, `kpsewhich inputenc.sty`, `kpsewhich lmodern.sty`, `kpsewhich babel.sty`, `kpsewhich microtype.sty`, `kpsewhich xcolor.sty`, `kpsewhich enumitem.sty`, `kpsewhich paracol.sty`, `kpsewhich needspace.sty`, `kpsewhich etoolbox.sty`, `kpsewhich fontawesome5.sty`, `kpsewhich hyperref.sty` — each prints a path and exits 0 when the package is present. | required for the shipped template | As above. A minimal installation typically lacks `paracol` and `fontawesome5`; the remedy is the distribution's own package manager, named in `templates/ats-onepage-latex/runbook.md`, and the packages are never dropped from the preamble to make a build succeed. |
+| `pdftotext` (Poppler- or Xpdf-compatible) | tool | Gate 3 — text extraction in plain reading order and in layout-preserving mode. Version probe argument: `-v` — these builds do not answer to `--version`. | required | The export is still produced; gate 3 is recorded as **not run** with the manual commands, and the render is reported not done rather than passed. |
+| `pdffonts` (Poppler- or Xpdf-compatible) | tool | Gate 4 — confirming every font in the export is embedded. Version probe argument: `-v`. | required | Gate 4 recorded as not run with the manual command; never assumed to pass. |
+| `pdfinfo` (Poppler- or Xpdf-compatible) | tool | Gate 2 — reading the export's page count against the page target. Version probe argument: `-v`. | required | Gate 2 recorded as not run; the report states that the page target could not be verified instead of claiming it was met. |
+| `python3` ≥ 3.10 | tool | Running the bundled `scripts/pdf_text_check.py`. Answers to `--version`. | optional | Run the two extraction commands from the bundle's runbook by hand and read the extracts; gate 3 is still evaluable, just manually. |

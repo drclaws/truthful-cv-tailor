@@ -12,9 +12,8 @@ whole procedure is a checklist a person follows, written to be executable from t
 ## What this skill is, and what it is not
 
 - **It is a procedure plus its parameters, never an actor.** It defines no agent and carries no
-  authority of its own. It is executed by the **reviewer** role
-  (`roles/reviewer/capabilities/run-external-checks.md`), and the reviewer's invariants
-  (`roles/reviewer/ROLE.md`) apply in full, always, and win over anything written here.
+  authority of its own. It is executed by `reviewer.run-external-checks`, and the invariants of the
+  role `reviewer` apply in full, always, and win over anything written here.
 - **External scores are never truth.** Everything the service reports is recorded as *that service's
   claim* — advisory input to a later decision, never a verdict about the CV and never a gate.
 - **It runs last.** An external check may start only after the run's internal checks and render gates
@@ -22,9 +21,9 @@ whole procedure is a checklist a person follows, written to be executable from t
   already been asserted and must not be used to peek at a service "just to see what it says".
 - **It never edits anything.** No edit to the CV, the rendered file, the export, the knowledge bank or
   the constraints ledger originates here. It produces one thing: a verbatim raw capture.
-- **It does not judge.** Normalization is `roles/reviewer/capabilities/normalize-external-report.md`;
-  the binding decision is `roles/reviewer/capabilities/gate-external-recommendations.md`. This skill
-  hands back raw material and stops. It never chains those steps itself.
+- **It does not judge.** Normalization is `reviewer.normalize-external-report`; the binding decision
+  is `reviewer.gate-external-recommendations`. This skill hands back raw material and stops. It
+  never chains those steps itself.
 - Repository-wide invariants (truthfulness, run isolation, tool abstraction, path/OS neutrality) apply
   as stated in `AGENTS.md`.
 
@@ -107,22 +106,22 @@ What this service is allowed to influence, and what it can never do. These are p
 
 A recommendation this service keeps pushing that the evidence does not support is a good candidate for
 a durable guardrail: it is proposed through the `## Constraint proposals` section of the reviewer's
-report, and only `curator.maintain-constraints` writes the ledger.
+report, and only `knowledge-bank-curator.maintain-constraints` writes the ledger.
 
 ## User-context settings
 
 Recognized keys for the `### validate-cv-resumly` subsection under `## Skill settings` in the user's
-local rules file (shape and resolution: `contracts/user-context.md`). Unrecognized keys are reported
-at preflight, never silently ignored.
+local rules file (shape and resolution: contract `user-context`). Unrecognized keys are reported at
+preflight, never silently ignored.
 
-| Key | Required | Default | Meaning |
-|---|---|---|---|
-| `service_url` | required | none — the repository pins no entry point | The service page where a CV is submitted for checking. Absent ⇒ ask the user at preflight; unanswered ⇒ the entry runs SKIPPED with instructions. |
-| `account` | optional | none | Which account the user signs in with, or `none` when the service can be used without signing in. **Record which account, never a sign-in secret** — this file is plaintext even though it is gitignored. Secrets stay in the browser's own credential store. |
-| `manual_wait_seconds` | optional | `120` | How long to let the service process a submission before treating a stalled page as *not completed*. Raise it on a slow connection. |
-| `capture_format` | optional | `markdown` | The form of the raw capture: a faithful text transcription of the report (`markdown`), or a saved page (`html`). |
-| `extra_captures` | optional | none | Additional verbatim captures to save alongside the text, e.g. `screenshot`. Useful when the report is partly graphical. |
-| `notes` | optional | none | Free-text local notes about this service on this machine (interface quirks, where the report opens). Honoured as guidance; never as an override of the trust policy. |
+| Key | Required | Values | Default | Meaning |
+|---|---|---|---|---|
+| `service_url` | required | URL | none — the repository pins no entry point | The service page where a CV is submitted for checking. Absent ⇒ ask the user at preflight; unanswered ⇒ the entry runs SKIPPED with instructions. |
+| `account` | optional | an account name, or `none` | none | Which account the user signs in with, or `none` when the service can be used without signing in. **Record which account, never a sign-in secret** — this file is plaintext even though it is gitignored. Secrets stay in the browser's own credential store. |
+| `manual_wait_seconds` | optional | integer seconds | `120` | How long to let the service process a submission before treating a stalled page as *not completed*. Raise it on a slow connection. |
+| `capture_format` | optional | `markdown`, `html` | `markdown` | The form of the raw capture: a faithful text transcription of the report (`markdown`), or a saved page (`html`). |
+| `extra_captures` | optional | capture kinds, e.g. `screenshot` | none | Additional verbatim captures to save alongside the text, e.g. `screenshot`. Useful when the report is partly graphical. |
+| `notes` | optional | free text | none | Free-text local notes about this service on this machine (interface quirks, where the report opens). Honoured as guidance; never as an override of the trust policy. |
 
 Example of the subsection, with placeholders only:
 
@@ -286,11 +285,12 @@ sign-in wall the user has to resolve on their own time):
 | Web browsing with file upload | capability | Reaching the service's public web interface and uploading a local PDF from the export path. | required | No browser reaching the service ⇒ **SKIPPED** with instructions: what is missing, what it is needed for, and the manual procedure to run once it is available. |
 | File writing at the paths passed | capability | Saving the raw capture at `raw_capture_path` (and the minimal `run.md` on a standalone run). | required | The operator saves the capture themselves and reports its path; the entry counts as executed only once the capture exists at the assigned path, otherwise it is **SKIPPED-manual**. |
 | Screen or page capture | capability | Saving an additional verbatim capture when `extra_captures` asks for one, or when the report is partly graphical. | optional | The text transcription alone is sufficient; record in the capture that a graphical element could not be captured verbatim. |
+| `service_url` recorded in this skill's settings subsection | setting | Knowing where to submit at all: this repository pins no entry point, so nothing else in the check can name the page. | required | Ask the user at preflight; unanswered ⇒ the entry runs **SKIPPED** with the checklist from *Manual procedure*, and the flow continues. |
 
 **No script, and therefore no script dependencies.** This skill bundles no automation, so it requires
 no language runtime, no browser-automation driver and no browser engine of its own — unlike an
 automated external validator. The only "runtime" is a person with a browser.
 
-**Not a dependency, but a precondition:** `service_url` recorded in user context (see above). A
-missing setting is resolved by asking the user at preflight; it is not an environment binding and does
-not appear in the setup-time dependency matrix.
+`service_url` is the one entry of kind `setting`: it is required, it has no default, and it is a
+value the user records rather than a binding on this machine. Its status is `recorded` or `not
+recorded` and nothing else — the value itself is the user's and is never copied into a report.

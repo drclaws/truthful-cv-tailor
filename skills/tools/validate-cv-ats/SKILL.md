@@ -12,8 +12,7 @@ language? It holds the rules of that check — what is inspected, which inputs i
 measurements it produces, which scripts it ships, and how it behaves when something is unavailable.
 
 It is a **procedure plus assets, never an actor**. This skill defines no agent and holds no authority
-of its own. It is executed by [`reviewer.run-check`](../../../roles/reviewer/capabilities/run-check.md)
-under the reviewer's invariants (see [`roles/reviewer/ROLE.md`](../../../roles/reviewer/ROLE.md)),
+of its own. It is executed by `reviewer.run-check` under the invariants of the role `reviewer`,
 which always outrank anything written here. In particular:
 
 - **This check never edits the CV.** It produces findings and required edits; applying them is the
@@ -28,9 +27,9 @@ which always outrank anything written here. In particular:
 
 This validator is **optional**, exactly like every other entry of the validation set. It is the
 shipped default for ATS-targeted CVs, but no workflow hardcodes it: it runs only while it is recorded
-in the user's active validation set (kind `internal`) per
-[`contracts/user-context.md`](../../../contracts/user-context.md). A user whose target is not an
-ATS-processed application may legitimately remove it, and nothing else has to change.
+in the user's active validation set (kind `internal`) per contract `user-context`. A user whose
+target is not an ATS-processed application may legitimately remove it, and nothing else has to
+change.
 
 The mandatory truthfulness check is a different thing entirely — `reviewer.fact-check`, invoked by
 workflows directly and never part of the registered set.
@@ -125,10 +124,9 @@ The rule set item 9 tests, and the vocabulary its findings use.
 
 **Boundary — out of scope here.** Whether a tag is *truthful* (source-backed; not misleading about
 domain, ownership, seniority or production use; safe-but-omit when it merely duplicates the body) is
-the mandatory truthfulness check's business and is defined in
-[`roles/reviewer/capabilities/fact-check.md`](../../../roles/reviewer/capabilities/fact-check.md).
-This spec judges only machine readability and coverage. If a tag looks untruthful while running this
-check, record it as a note for the fact check rather than re-deciding it here.
+the mandatory truthfulness check's business and is defined in `reviewer.fact-check`. This spec
+judges only machine readability and coverage. If a tag looks untruthful while running this check,
+record it as a note for the fact check rather than re-deciding it here.
 
 ## Measurements and report labels
 
@@ -182,7 +180,7 @@ extraction is unavailable, do not guess from the markdown — mark the rendered 
 **2. Run the static check.**
 
 ```
-python3 skills/tools/validate-cv-ats/scripts/ats_static_check.py --cv <path-to-cv.md>
+python3 scripts/ats_static_check.py --cv <path-to-cv.md>
 ```
 
 Optional: `--out <path>` to write the report instead of printing it; `--long-bullet-chars N` to
@@ -194,7 +192,7 @@ a finding by itself.
 **3. Run the keyword match.**
 
 ```
-python3 skills/tools/validate-cv-ats/scripts/keyword_match.py --job <path-to-job.md> --cv <path-to-cv.md> [--must-have <path-to-list.txt>]
+python3 scripts/keyword_match.py --job <path-to-job.md> --cv <path-to-cv.md> [--must-have <path-to-list.txt>]
 ```
 
 `--must-have` takes a plain-text file, one keyword or phrase per line (`#` comments allowed), which
@@ -243,12 +241,12 @@ derived manually, and give `ATS score` and `Keyword coverage` from the same defi
 - *The two rendered extractions disagree* — that is the columnar-render finding of item 1/9, not a
   tooling problem. Report it.
 
-## Settings
+## User-context settings
 
 This skill recognizes **no keys** under `## Skill settings` in the user's context. Its behaviour is
 fully determined by its inputs and the CLI options above. Any key recorded under a
-`### validate-cv-ats` subsection is unrecognized and is reported at preflight per
-[`contracts/user-context.md`](../../../contracts/user-context.md), never silently ignored.
+`### validate-cv-ats` subsection is unrecognized and is reported at preflight per contract
+`user-context`, never silently ignored.
 
 Registration itself (name + kind `internal`) lives in the `## Validation skills` list, not here.
 
@@ -256,6 +254,6 @@ Registration itself (name + kind `internal`) lives in the `## Validation skills`
 
 | Name | Kind | Needed for | Required / optional | When unbound |
 |---|---|---|---|---|
-| `python3` (≥ 3.10) | tool | Running the bundled `scripts/ats_static_check.py` and `scripts/keyword_match.py`. | optional | The check still runs — every item is decidable by reading. The measurements are derived manually per the runbook's manual fallback, and the report states that no script measurement was available. |
+| `python3` (≥ 3.10) | tool | Running the bundled `scripts/ats_static_check.py` and `scripts/keyword_match.py`. Answers to `--version`, so the declared minimum has a working probe. | optional | The check still runs — every item is decidable by reading. The measurements are derived manually per the runbook's manual fallback, and the report states that no script measurement was available. |
 | Rendered-document text extraction (normal and layout-preserving) | capability | Inspecting the rendered PDF: item 13, the columnar-extraction gate, and the rendered halves of items 1, 3, 5 and 9. | optional | The rendered half runs SKIPPED with instructions (bind an extraction tool, or extract the text manually and pass the two text files as inputs); the markdown half runs normally and the report is marked partial. |
 | File reading and writing within the paths passed | capability | Reading the CV, the job-side inputs and the extractions; writing the report at the path the caller passed. | required | The check cannot run at all; the reviewer reports `blocked`. |
