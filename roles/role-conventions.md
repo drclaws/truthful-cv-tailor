@@ -49,7 +49,18 @@ procedure, detailed rules, inputs and outputs by contract, failure and skip cond
 where they earn their place.
 
 Flow step tables reference `role.capability`. That name resolves to exactly one capability file, and
-the executing agent loads **`ROLE.md` plus that one file — nothing else**.
+the executing agent loads **`ROLE.md`, that capability file, and the contracts that file names in
+its Inputs and Outputs** — `artifact-conventions` among them, because every contract inherits it. An
+agent may know the contracts it is answerable for, and it has to: the common envelope, the severity
+vocabulary and each artifact's required sections are defined in the contracts and nowhere else, so a
+capability told to write its output with the common envelope can only comply by reading the contract
+that defines one.
+
+What the rule excludes is **another role's `ROLE.md`, and any second capability file** — and that
+half is the load-bearing one. An agent holding two role cards has two answers to the question of
+what it may write, and a card that has to carry every capability's detail has stopped being an index
+card. A contract costs neither: it specifies an artifact rather than granting authority, and it
+reads the same whichever role opens it.
 
 Consequence, and it is a hard rule: **cross-capability material belongs in `ROLE.md`.** Invariants,
 authority, and anything two capabilities both rely on live on the index card, so that no capability
