@@ -14,7 +14,7 @@ applied without asking; anything else becomes a question to the user.
 
 | Input | Contract / description | Required |
 |---|---|---|
-| `report_paths` | The run's report artifacts carrying `## Constraint proposals` sections — source audit, requirements profile, recruiter signals, evidence map, validation reports, gate decision, fit report, gap report, render manifest, bank update brief. | required |
+| `report_paths` | The run's report artifacts carrying `## Constraint proposals` sections — source audit, requirements profile, recruiter signals, evidence map, validation reports, gate decision, fit report, gap report, render manifest, bank update brief — and the run's deliverable document, today an instance of contract `cv-document`, which carries its proposals one heading level down, inside `## Annex: writer notes`. The document is a deliverable rather than a report, but the sole-writer rule gives every role exactly one route to the ledger, so the writing role's route is its own annex. | required |
 | `constraints_ledger` | The ledger to write. Created if it does not exist. | required |
 | `run_id` | The run whose proposals are being ingested; recorded as the origin of each entry. | required |
 | `direct_proposals` | Proposals that live in no artifact: given directly by the user, given by a role invoked outside a flow, or returned inline by a capability whose report was never written as an artifact — a build summary, a step that ended `blocked`. | optional |
