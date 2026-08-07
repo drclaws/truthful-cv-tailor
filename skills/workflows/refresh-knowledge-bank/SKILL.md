@@ -343,7 +343,7 @@ Stop and ask the user — recording the question in `run.md` `## Open questions`
 `status: blocked` — when:
 
 - no canonical sources could be resolved, or the resolved list is empty;
-- a source stays unreadable after the fallback ladder below;
+- a source stays unreadable after the fallback ladder in *Unreadable sources*;
 - a source is empty or visibly truncated;
 - sources conflict on a fact (dates, titles, employers, scale) — the curator records both readings;
   the flow does not pick one;
