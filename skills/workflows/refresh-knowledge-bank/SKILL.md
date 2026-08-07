@@ -93,7 +93,7 @@ CV flows; no validator runs here.
 
 | Directory | Holds | Rules |
 |---|---|---|
-| `<run>/work/` | Build byproducts: the raw output of the freshness script, the coverage-pass worksheet, and any source content fetched through the fallback reader because the shell could not read it. | Byproducts, not artifacts: nothing here is a contract instance, nothing here is a canonical source, and no later run may read it. Listed in the run's artifact index as byproducts. |
+| `<run>/work/` | Build byproducts: the coverage-pass worksheet, and any source content fetched through the fallback reader because the shell could not read it. | Byproducts, not artifacts: nothing here is a contract instance, nothing here is a canonical source, and no later run may read it. Listed in the run's artifact index as byproducts. |
 
 ## Inputs
 
@@ -168,9 +168,10 @@ file.
 
 ### 3. Check freshness
 
-Invoke `knowledge-bank-curator.check-freshness` with the resolved sources and the bank directory.
-Keep the script's raw output in `<run>/work/` and record the verdict, the per-source statuses and the
-per-index statuses in `run.md` `## Bank freshness`.
+Invoke `knowledge-bank-curator.check-freshness` with the resolved sources and the bank directory, and
+record the verdict, the per-source statuses and the per-index statuses in `run.md`
+`## Bank freshness`. The check returns its findings and writes nothing itself, so this record is the
+only place its result becomes durable — everything a later reader needs is in it.
 
 A `fresh` verdict on a run the user asked for is still worth reporting: it is a legitimate outcome
 ("nothing changed"), and the flow completes at step 10 without a rebuild — after recording why.
@@ -343,7 +344,7 @@ Stop and ask the user — recording the question in `run.md` `## Open questions`
 `status: blocked` — when:
 
 - no canonical sources could be resolved, or the resolved list is empty;
-- a source stays unreadable after the fallback ladder below;
+- a source stays unreadable after the fallback ladder in *Unreadable sources*;
 - a source is empty or visibly truncated;
 - sources conflict on a fact (dates, titles, employers, scale) — the curator records both readings;
   the flow does not pick one;
@@ -364,10 +365,12 @@ the user may have declined it, and the harness in use may have no discovery loca
 all — all ordinary outcomes, and then by-path is the whole of it. Point the agent at this file, whose
 location the skills index gives for the name `refresh-knowledge-bank`.
 
-An adapter is never authority. However the flow was reached, the executing agent loads this file,
-plus the role card of `knowledge-bank-curator` and the capability file of the step it is on — and
-nothing else. On a harness with subagents the steps still run in order: this flow declares no
-parallel groups, and the result must not differ between harnesses.
+An adapter is never authority. However the flow was reached, the executing agent reads this file, and
+the loading rule in `AGENTS.md` — with its role-side reasoning in `role-conventions` — governs what
+else a step's executor opens. This flow points at that rule rather than keeping its own copy: a rule
+with several homes ages at different rates, and the copy an agent happens to read is the one it
+obeys. On a harness with subagents the steps still run in order: this flow declares no parallel
+groups, and the result must not differ between harnesses.
 
 Before the first run the user's context must exist. If it does not, the correct outcome of preflight
 is a question, and the supported answer is `setup-master.bootstrap`, which creates the harness-native
