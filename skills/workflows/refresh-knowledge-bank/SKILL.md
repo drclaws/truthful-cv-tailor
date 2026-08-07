@@ -29,8 +29,9 @@ Run this flow when:
 - the bank does not exist yet (first run after `setup-master.bootstrap`);
 - a canonical experience source changed since the bank was last built;
 - new canonical sources were added to the user's context that the bank has never seen;
-- another flow's preflight got a `stale` freshness verdict — every CV flow checks freshness before
-  evidence retrieval and routes here when the bank is behind;
+- another flow's preflight found the bank unusable — every CV flow settles the bank before evidence
+  retrieval and routes here both when the verdict is `stale` and when the bank carries no
+  `## Candidate` section, which the build derives;
 - the user changed a fact at the source and wants the bank to catch up.
 
 All bank indexes are built from the same source set, so **they are always checked together**, and
@@ -94,6 +95,22 @@ CV flows; no validator runs here.
 |---|---|---|
 | `<run>/work/` | Build byproducts: the raw output of the freshness script, the coverage-pass worksheet, and any source content fetched through the fallback reader because the shell could not read it. | Byproducts, not artifacts: nothing here is a contract instance, nothing here is a canonical source, and no later run may read it. Listed in the run's artifact index as byproducts. |
 
+## Inputs
+
+What one run of this flow is given. An index, not a second home for rules: each row points at the
+section that owns it. This flow hardcodes no path and infers nothing from repository layout.
+
+| Input | Contract / description | Required |
+|---|---|---|
+| `run_id` | the refresh date, built as *Run identifier and output layout* above defines it | required |
+| user context | contract `user-context`, resolved at step 1 through the declared order. *User-context settings* below states what this flow reads from it. | required |
+| canonical experience sources | the resolved source set — files, directories, URLs, descriptions, dictated content. The **only** input to the rebuild; an empty list stops the flow with a question at step 1. | required |
+| `bank_dir` | the knowledge bank directory (contract `knowledge-bank`), passed to the curator as an explicit parameter and created at step 2 if it does not exist | required |
+| `report_paths` | reports carrying `## Constraint proposals` that were never ingested — a CV run whose closing step was interrupted, say. Passed through to step 9. | optional |
+
+The rebuild scope is **not** an input: it is decided at step 5 from the freshness verdict and the
+curator's recommended next action, never from a default and never from convenience.
+
 ## Steps
 
 `executor` is the `role.capability` that runs the step, or `flow` for orchestration the flow does
@@ -117,7 +134,7 @@ over the whole source set, and every later step depends on its outcome.
 
 ### 1. Resolve user context
 
-Resolve the canonical experience sources per `contracts/user-context.md`, in its order:
+Resolve the canonical experience sources per contract `user-context`, in its order:
 
 1. the harness-native local agent rules file;
 2. any other context or memory the harness provides;
@@ -141,7 +158,7 @@ itself. That snapshot is what makes the refresh reviewable later.
 
 ### 2. Scaffold the run and seed the manifest
 
-Create `<run>/` and `<run>/work/`, and write `run.md` per `contracts/run-manifest.md` with
+Create `<run>/` and `<run>/work/`, and write `run.md` per contract `run-manifest` with
 `status: in-progress`, `producer: flow:refresh-knowledge-bank`, the flow version, the resolved
 context snapshot, the step checklist of this table, and the gate list below. The manifest is written
 as the run proceeds — a manifest reconstructed at the end cannot support resuming or blocking.
@@ -169,6 +186,7 @@ source.
 |---|---|
 | bank missing, or any index missing | `full` |
 | an index lacks its `## Source Metadata` block | `full` |
+| the bank carries no `## Candidate` section — a legacy import, or another flow routed here because the section it needs is absent | `full`; the build derives the section, whatever the timestamps say |
 | a source the bank has never seen | `full` |
 | one changed source with a clearly bounded effect, and the curator recommends a partial refresh naming the sections | `partial`, with the sections named explicitly |
 | `fresh`, and the user asked for a refresh anyway | `full` (an explicit user request outranks the timestamps) |
@@ -222,7 +240,7 @@ to the wrong place or left an index behind:
 
 1. re-run `check-freshness` over the same sources and the rebuilt indexes; the expected verdict is
    `fresh` (or `unknown` when a non-time-checkable source is in play — never `stale`);
-2. confirm each rebuilt file against `contracts/knowledge-bank.md`: the envelope, the
+2. confirm each rebuilt file against contract `knowledge-bank`: the envelope, the
    `## Source Metadata` block, the mandatory sections of that file kind, and the closing
    `## Conservative Gap Notes`;
 3. confirm the scope: every index in scope was rewritten, and every index out of scope is unchanged.
@@ -336,26 +354,34 @@ Stop and ask the user — recording the question in `run.md` `## Open questions`
 
 ## Usage
 
-No harness auto-discovers this repository's `skills/` directory yet, so the flow is invoked by path:
+`setup-master.register-with-harness` makes this repository's skills discoverable by the harness in
+use. **Where registration succeeded, the flow is invoked by name:**
 
-> execute `skills/workflows/refresh-knowledge-bank/SKILL.md`
+> run `refresh-knowledge-bank`
 
-The executing agent loads this file, plus `roles/knowledge-bank-curator/ROLE.md` and the capability
-file of the step it is on — and nothing else. On a harness with subagents the steps still run in
-order: this flow declares no parallel groups, and the result must not differ between harnesses.
+**Invocation by path is valid everywhere and is the fallback.** Registration may never have been run,
+the user may have declined it, and the harness in use may have no discovery location for skills at
+all — all ordinary outcomes, and then by-path is the whole of it. Point the agent at this file, whose
+location the skills index gives for the name `refresh-knowledge-bank`.
+
+An adapter is never authority. However the flow was reached, the executing agent loads this file,
+plus the role card of `knowledge-bank-curator` and the capability file of the step it is on — and
+nothing else. On a harness with subagents the steps still run in order: this flow declares no
+parallel groups, and the result must not differ between harnesses.
 
 Before the first run the user's context must exist. If it does not, the correct outcome of preflight
-is a question, and the supported answer is `setup-master.bootstrap` (capability file:
-`roles/setup-master/capabilities/bootstrap.md`), which creates the harness-native local rules file
-from the template in `contracts/user-context.md`.
+is a question, and the supported answer is `setup-master.bootstrap`, which creates the harness-native
+local rules file from the section template in contract `user-context`.
 
 ## User-context settings
 
-**This skill recognizes no per-skill settings keys.** A `## Skill settings` subsection named after
-this skill in the user's local rules file has no meaning; report it as unrecognized rather than
-interpreting it.
+**This skill recognizes no per-skill settings keys**, so this section carries no key table — the
+shape `skill-conventions` prescribes for a skill with nothing to declare. A `## Skill settings`
+subsection named after this skill in the user's local rules file has no meaning; report it as
+unrecognized rather than interpreting it.
 
-What the flow does read from user context:
+The table below is **not** a key declaration. It indexes the sections of contract `user-context` this
+flow reads, and what it does with each:
 
 | Item | Contract section | Use |
 |---|---|---|
@@ -370,7 +396,7 @@ The active validation set is **not** used by this flow: no validator runs during
 |---|---|---|---|---|
 | Read access to the canonical experience sources | capability | Reading every source at the freshness check and again at build time. | required | Follow the fallback ladder in *Unreadable sources*: retry with the harness's file tools, then ask the user. A source that stays unreadable blocks the rebuild — the flow records `status: blocked` and leaves the existing bank untouched. It never builds from a partial source set. |
 | Harness-native file read tool (a reader independent of the shell) | capability | The first rung of that ladder: reaching a source the sandboxed shell cannot open, and forcing a cloud-synced placeholder to be fetched. | optional | Skip straight to asking the user, and note in `run.md` that no fallback reader was available. |
-| `python3` ≥ 3.10 | tool | Running `roles/knowledge-bank-curator/scripts/check_sources_freshness.py`, the bundled freshness check (steps 3 and 8). | optional | The curator compares timestamps and content presence with the harness's own file tools, following the same rules, and notes in `run.md` that the check was done manually. A missing script runtime never fails this flow. |
+| `python3` ≥ 3.10 | tool | Running the bundled freshness script that `knowledge-bank-curator.check-freshness` invokes, at steps 3 and 8. | optional | The curator compares timestamps and content presence with the harness's own file tools, following the same rules, and notes in `run.md` that the check was done manually. A missing script runtime never fails this flow. |
 | A question channel to the user | capability | Every escalation in this flow is a question, not a decision: empty context, unreadable sources, conflicting sources, undeliverable identity, a non-conservative constraint proposal. | required | The flow records the question in `run.md` `## Open questions`, sets `status: blocked`, and stops. It never answers its own question. |
 | Web search | capability | The curator's external validation of inferred capability and pattern names while building the skills matrix. | optional | Those entries stay marked `unverified name`; the build continues and reports the skipped sub-step. Evidence is never dropped for lack of a search tool. |
 

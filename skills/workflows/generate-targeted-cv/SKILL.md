@@ -33,8 +33,8 @@ not use; a rerun is a **new run directory**, never an edit of the old one.
 Do not run it to evaluate whether a vacancy is worth pursuing at all: `vacancy-analyst.score-fit`
 answers that on its own, against the bank, without producing a CV.
 
-Do not run it while the bank is stale. Step 2 checks; a stale verdict routes to
-`skills/workflows/refresh-knowledge-bank/SKILL.md` first, and this flow resumes afterwards.
+Do not run it while the bank is stale. Step 2 checks; a stale verdict routes to the
+`refresh-knowledge-bank` workflow first, and this flow resumes afterwards.
 
 ## Run identifier and output layout
 
@@ -163,8 +163,10 @@ How it is built, in order:
 
 Escalations belonging to this rule — all of them questions, never guesses:
 
-- **`## Candidate` is absent** (a bank imported before the section existed): ask the user for the
-  name, or run `refresh-knowledge-bank` so the curator derives it. Record the answer in `run.md`.
+- **`## Candidate` is absent** (a bank imported before the section existed): the rule is never
+  reached in that state — G2 settles it at step 2, by running `refresh-knowledge-bank` so the curator
+  derives the section. If a run somehow arrives here without one, ask the user for the name rather
+  than deriving it from anywhere else, and record the answer in `run.md`.
 - **`## Candidate` records two spellings** with the conflict marked: ask which to use. The flow never
   picks one.
 - **The rule yields a name the filesystem cannot hold**: report it and ask. Do not silently
@@ -174,6 +176,24 @@ The resolved name is passed on as a value, three times: to the render tool as `e
 gate 5 checks the produced filename against it), to any external entry whose spec declares a
 naming-pattern parameter (so the entry enforces *this* rule rather than nothing), and into `run.md`
 so the user can find the file by name.
+
+## Inputs
+
+What one run of this flow is given. An index, not a second home for rules: each row points at the
+section that owns it. Every value here is resolved or computed before step 3 and passed onward
+explicitly — this flow derives nothing from repository layout.
+
+| Input | Contract / description | Required |
+|---|---|---|
+| `run_id` | the vacancy slug, built as *Run identifier and output layout* above defines it | required |
+| job material | the vacancy's own material: at minimum a readable job description, plus any screening transcripts (contract `transcript`), people notes and company notes. It becomes the run's `job-dossier` instance at `<run>/position/`. | required |
+| user context | contract `user-context`, resolved at step 1 through the declared order. Supplies the canonical experience sources, the active validation set, the per-skill settings and the additional rules; *User-context settings* below states what this flow does with each. | required |
+| `bank_dir`, `<ledger>` | the knowledge bank directory (contract `knowledge-bank`) and its `constraints.md` (contract `constraints-ledger`), resolved at preflight. Read-only to this flow, except the ledger at step 24. | required |
+| the previous run's `position/` | on a rerun for the same vacancy: the earlier run's job dossier, **copied** into the new run rather than pointed at — see *Rerun and the dossier* at step 3. | optional |
+
+Nothing is defaulted. An input that did not resolve is a question to the user, recorded in `run.md`
+`## Open questions`; the flow never fills one in from a previous run, from a canonical source it is
+not allowed to read, or from its own recollection.
 
 ## Steps
 
@@ -185,13 +205,13 @@ passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge ban
 | # | Step | Executor | Contract | Paths passed | Group | Gate |
 |---|---|---|---|---|---|---|
 | 1 | Resolve user context | `flow` | `user-context` | — | — | G1 |
-| 2 | Check bank freshness | `knowledge-bank-curator.check-freshness` | — (verdict returned) | `sources`, `bank_dir` | — | G2 |
+| 2 | Check the bank is usable | `knowledge-bank-curator.check-freshness` | — (verdict returned) | `sources`, `bank_dir` | — | G2 |
 | 3 | Scaffold the run, seed the manifest | `flow` (`scripts/create_run.py`) | `run-manifest` | `<run>/`, `<run>/run.md`, `<run>/position/` | — | — |
 | 4 | Audit the job-side inputs | `vacancy-analyst.audit-sources` | `source-audit` | `run_id`, `job_dossier_path=<run>/position/`, `transcript_paths`, `additional_inputs`, `run_manifest_path=<run>/run.md`, `constraints_ledger_path=<ledger>`, `output_path=<run>/source_audit.md` | — | G3 |
 | 5 | Analyse the vacancy | `vacancy-analyst.analyze-job` | `requirements-profile` | `run_id`, `job_dossier_path`, `source_audit_path=<run>/source_audit.md`, `constraints_ledger_path`, `output_path=<run>/requirements_profile.md` | **A** | — |
 | 6 | Extract recruiter signals | `vacancy-analyst.extract-recruiter-signals` | `recruiter-signals` | `run_id`, `job_dossier_path`, `transcript_paths`, `people_notes`, `source_audit_path`, `constraints_ledger_path`, `output_path=<run>/recruiter_signals.md` | **A** | — |
 | 7 | Retrieve evidence (batch) | `knowledge-bank-curator.query-bank` | `evidence-map` | `bank_dir`, `requirements_profile=<run>/requirements_profile.md`, `constraints_ledger`, `recruiter_signals=<run>/recruiter_signals.md`, `in_run_proposals`, `output_path=<run>/evidence_map.md`, `run_id` | — | G4 |
-| 8 | Write the draft | `experience-writer.write-document` | `cv-document` | `document_format_contract=contracts/cv-document.md`, `evidence_source=<run>/evidence_map.md`, `requirements_source`, `signals_source`, `constraints_ledger`, `in_run_proposals`, `source_audit`, `additional_rules`, `output_path=<run>/draft_cv.md`, `run_id`, `status=draft` | — | — |
+| 8 | Write the draft | `experience-writer.write-document` | `cv-document` | `document_format_contract=cv-document`, `evidence_source=<run>/evidence_map.md`, `requirements_source`, `signals_source`, `constraints_ledger`, `in_run_proposals`, `source_audit`, `additional_rules`, `output_path=<run>/draft_cv.md`, `run_id`, `status=draft` | — | — |
 | 9 | Truthfulness check (mandatory) | `reviewer.fact-check` | `validation-report` | `document=<run>/draft_cv.md`, `knowledge_bank`, `constraints_ledger`, `evidence_map`, `source_audit`, `requirements_profile`, `recruiter_signals`, `in_run_constraint_proposals`, `report_path=<run>/fact_check.md` | **B** | G5 |
 | 10 | Registered internal checks | `reviewer.run-check` — one invocation per entry | `validation-report` | `check_spec`, `check_name`, `check_inputs` (exactly what that spec declares), `check_settings`, `run_manifest=<run>/run.md`, `report_path=<run>/checks/<validator>.md` | **B** | G6 |
 | 11 | Score the fit | `vacancy-analyst.score-fit` | `fit-report` | `run_id`, `requirements_profile_path`, `candidate_data_path=<run>/draft_cv.md`, `candidate_data_format=cv-document`, `recruiter_signals_path`, `job_dossier_path`, `constraints_ledger_path`, `tag_candidates_source=<run>/draft_cv.md`, `output_path=<run>/fit_report.md` | **B** | — |
@@ -225,7 +245,7 @@ output — that is what makes the two execution modes equivalent.
 
 ### 1. Resolve user context
 
-Resolve, per `contracts/user-context.md`, in its order: the harness-native local agent rules file →
+Resolve, per contract `user-context`, in its order: the harness-native local agent rules file →
 any other context or memory the harness provides → **ask the user**. The local rules file wins on
 conflict. Nothing is defaulted from the repository layout and nothing is inferred.
 
@@ -236,23 +256,36 @@ Validate the result per the contract's preflight rules, and in particular:
   exists. A shipped `validate-cv-*` skill missing from the set is a **warning** to the user (adding a
   validator without recording it leaves it inactive), never a silent addition;
 - every per-skill settings subsection names a skill that exists, and its keys are recognized by that
-  skill's own `SKILL.md`. Unrecognized keys are reported, never interpreted here;
-- the bank's `## Candidate` section exists — the export naming rule needs it. Absent ⇒ ask, or refresh.
+  skill's own `SKILL.md`. Unrecognized keys are reported, never interpreted here.
+
+Nothing about the **bank** is decided here. Whether it exists, whether it is current, and whether it
+carries the identity the export naming rule needs are all properties of the bank, and they are
+settled together at step 2 — which is also where the remedy for all three lives.
 
 Record in `run.md` `## User context`: which resolution supplied which values, and the resolved
 snapshot. An empty registered validation set is legitimate and is recorded as such: the mandatory
 truthfulness check still runs.
 
-### 2. Check bank freshness
+### 2. Check the bank is usable
 
 Invoke `knowledge-bank-curator.check-freshness` with the resolved sources and the bank directory.
 Record the verdict, the per-source and per-index statuses in `run.md` `## Bank freshness`.
 
 | Verdict | What the flow does |
 |---|---|
-| `fresh` | Proceed, recording the verdict. |
-| `stale` | **Stop this flow and run `refresh-knowledge-bank` first**, then resume from step 1 with the rebuilt bank. A CV built on a stale bank is a CV built on last month's truth, and nothing downstream can detect it. |
+| `fresh` | Proceed to the `## Candidate` check below. |
+| `stale` | **Stop this flow and run `refresh-knowledge-bank` first**, then resume from step 1 with the rebuilt bank. A bank that does not exist yet returns `stale`, so a first-ever run lands here — at the diagnosis, not at a downstream symptom. A CV built on a stale bank is a CV built on last month's truth, and nothing downstream can detect it. |
 | `unknown` (a source could not be read) | Ask the user before proceeding. Proceeding is allowed if the user accepts the risk; the acceptance and its reason go into `run.md`, and the source audit's bank stanza carries it. |
+
+Then confirm the bank carries a `## Candidate` section (contract `knowledge-bank`): *The export
+naming rule* above needs the candidate's identity, and that section is its only admissible source.
+**Absent ⇒ the same routing `stale` gets** — stop this flow, run `refresh-knowledge-bank` so the
+curator derives the section, and resume from step 1. It is decided here because it is a property of
+the bank, and the remedy for a bank that cannot serve this flow is stated once, in one place.
+
+Two other cases are *not* a rebuild. A section recording conflicting spellings is a question for the
+user (*The export naming rule*, *Escalation*). A section still absent after a refresh means the
+curator could not derive an identity at all, which is also a question — never a second refresh.
 
 The verdict is *produced* here and *transcribed* by the analyst into the source audit's
 `## Bank stanza` at step 4 — the flow records it in `run.md`, the analyst copies it, and the curator
@@ -314,7 +347,7 @@ not coming.
 
 ### 8. Write the draft
 
-`experience-writer.write-document`, pointed at `contracts/cv-document.md` as its format contract.
+`experience-writer.write-document`, pointed at contract `cv-document` as its format contract.
 The evidence map is the **only** admissible source of facts.
 
 **The writer's notes have a home.** `cv-document` declares `## Annex: writer notes`, so the
@@ -398,7 +431,7 @@ in full, plus the internal entries the disposition list implicates. The reports 
 
 ### 16. Render the deliverable
 
-`renderer.render-document`, executing `skills/tools/render-cv-pdf/SKILL.md` with the template
+`renderer.render-document`, executing the `render-cv-pdf` tool skill with the template
 resolved from that skill's own settings subsection in user context (its default is the shipped
 bundle). The tool owns the page target, the content-first fit policy, the gate sequence and the
 template resolution; this flow owns the paths and the export name.
@@ -534,8 +567,8 @@ A `complete` manifest with a red gate or an unresolved question is a defect.
 
 | Gate | Requires | Evidenced by |
 |---|---|---|
-| G1 context resolved | User context resolved through the declared order; the validation set well-formed; the bank's `## Candidate` section available for the naming rule. | `run.md` `## User context` |
-| G2 bank freshness decided | A verdict with per-source and per-index status. `stale` ⇒ refresh first. `unknown` ⇒ settled with the user. An undecided verdict is a red gate. | `run.md` `## Bank freshness` |
+| G1 context resolved | User context resolved through the declared order; the validation set well-formed; every per-skill settings subsection naming a skill that recognizes its keys. | `run.md` `## User context` |
+| G2 bank usable | A freshness verdict with per-source and per-index status, **and** the bank's `## Candidate` section present for the naming rule. `stale` — which is what a bank that does not exist yet returns — or `## Candidate` absent ⇒ refresh first, then resume from step 1. `unknown` ⇒ settled with the user. An undecided verdict is a red gate. | `run.md` `## Bank freshness` |
 | G3 sources audited | Every run input inventoried and classified; conflicts marked; the bank stanza written. | `<run>/source_audit.md` |
 | G4 evidence retrieved | One evidence-map entry per requirement in the profile, cited and strength-labelled, gaps marked `GAP`. | `<run>/evidence_map.md` |
 | G5 truthfulness | The mandatory `reviewer.fact-check` on the current revision of the document in play: `pass`, or `pass-after-edits` with every required edit applied and the check re-run. Never skipped, never waived. | `<run>/fact_check.md` |
@@ -569,8 +602,9 @@ Stop and ask the user — recording the question in `run.md` `## Open questions`
 
 - user context cannot be resolved, the validation set is malformed, or a per-skill setting is
   unrecognized by the skill it names;
-- the bank's `## Candidate` section is missing or records conflicting spellings, so the export name
-  cannot be derived;
+- the bank's `## Candidate` section records conflicting spellings, or is still absent after a
+  refresh, so the export name cannot be derived — a section that is merely absent is routed to
+  `refresh-knowledge-bank` at step 2 rather than escalated;
 - the freshness verdict is `unknown` and the affected source matters to this vacancy;
 - no readable job description was provided, or the job-side inputs contradict each other on something
   load-bearing and neither source is more canonical;
@@ -588,27 +622,33 @@ An unbound capability is **not** an escalation: it is a SKIPPED step with instru
 
 ## Usage
 
-No harness auto-discovers this repository's `skills/` directory yet, so the flow is invoked by path:
+`setup-master.register-with-harness` makes this repository's skills discoverable by the harness in
+use. **Where registration succeeded, the flow is invoked by name:**
 
-> execute `skills/workflows/generate-targeted-cv/SKILL.md` for `<run-id>`
+> run `generate-targeted-cv` for `<run-id>`
 
-The executing agent loads this file, plus the `ROLE.md` of the role of the current step and that
-step's capability file — and nothing else. Tool skills are read when a step invokes them.
+**Invocation by path is valid everywhere and is the fallback.** Registration may never have been run,
+the user may have declined it, and the harness in use may have no discovery location for skills at
+all — all ordinary outcomes, and then by-path is the whole of it. Point the agent at this file, whose
+location the skills index gives for the name `generate-targeted-cv`, and pass it the same `<run-id>`.
+
+An adapter is never authority. However the flow was reached, the executing agent loads this file,
+plus the `ROLE.md` of the role of the current step and that step's capability file — and nothing
+else. Tool skills are read when a step invokes them.
 
 Before the first run:
 
 1. the user's context must exist — if it does not, the correct outcome of preflight is a question,
-   and the supported answer is `setup-master.bootstrap`
-   (`roles/setup-master/capabilities/bootstrap.md`);
-2. the knowledge bank must exist and be fresh — `skills/workflows/refresh-knowledge-bank/SKILL.md`;
+   and the supported answer is `setup-master.bootstrap`;
+2. the knowledge bank must exist and be usable — `refresh-knowledge-bank`;
 3. the job dossier must exist at `<run>/position/` — created by `scripts/create_run.py` as stubs the
    user fills, or copied from the previous run of the same vacancy.
 
 A typical invocation, in the user's own words:
 
 ```text
-Run skills/workflows/generate-targeted-cv/SKILL.md for the vacancy in
-<path-to-job-material>. Use my registered validation set.
+Run generate-targeted-cv for the vacancy in <path-to-job-material>.
+Use my registered validation set.
 ```
 
 Individual pieces can also be run on their own, without this flow: a tool skill invoked standalone
@@ -618,12 +658,15 @@ resumed by reading its `run.md`, not by re-running the steps that already have a
 
 ## User-context settings
 
-**This skill recognizes no per-skill settings keys.** A `### generate-targeted-cv` subsection under
-`## Skill settings` in the user's local rules file has no meaning; report it as unrecognized rather
-than interpreting it. Every setting this run needs belongs to the skill that owns it — the render
-template to `render-cv-pdf`, a service's parameters to that validator's own subsection.
+**This skill recognizes no per-skill settings keys**, so this section carries no key table — the
+shape `skill-conventions` prescribes for a skill with nothing to declare. A `### generate-targeted-cv`
+subsection under `## Skill settings` in the user's local rules file has no meaning; report it as
+unrecognized rather than interpreting it. Every setting this run needs belongs to the skill that owns
+it — the render template to `render-cv-pdf`, a service's parameters to that validator's own
+subsection.
 
-What the flow does read from user context, per `contracts/user-context.md`:
+The table below is **not** a key declaration. It indexes the sections of contract `user-context` this
+flow reads, and what it does with each:
 
 | Item | Contract section | Use |
 |---|---|---|
@@ -641,7 +684,7 @@ skills and inherited transitively; `setup-master.check-environment` aggregates b
 | Name | Kind | Needed for | Required / optional | When unbound |
 |---|---|---|---|---|
 | File reading and writing within the paths this flow computes | capability | Creating the run directory, writing and updating `run.md` throughout the run, and reading the knowledge bank and the repository definitions the steps need. | required | Nothing can run. The flow reports `blocked` naming the path it could not reach; it never writes outside the paths it computed. |
-| A question channel to the user | capability | Every escalation in this flow is a question, not a decision: unresolvable context, a missing `## Candidate` section, the fit escalation at step 13, a `MANUAL_REVIEW`, a source conflict. | required | The flow records the question in `run.md` `## Open questions`, sets `status: blocked`, and stops. It never answers its own question. |
+| A question channel to the user | capability | Every escalation in this flow is a question, not a decision: unresolvable context, a `## Candidate` section a refresh could not supply, the fit escalation at step 13, a `MANUAL_REVIEW`, a source conflict. | required | The flow records the question in `run.md` `## Open questions`, sets `status: blocked`, and stops. It never answers its own question. |
 | `python3` ≥ 3.10 | tool | Running this skill's `scripts/create_run.py` (step 3) and the curator's bundled freshness script (step 2). | optional | Create the layout and seed `run.md` by hand from the declarations above; compare source and index timestamps with the harness's own file tools. Note in `run.md` that both were done manually. A missing script runtime never fails this flow. |
 | Concurrent step execution (subagents or an equivalent) | capability | Running the declared parallel groups A, B and C at the same time. | optional | The groups run sequentially in table order. The outcome is identical by construction — no group member reads another's output — so this only costs time. |
 | Web search | capability | The optional company and market enrichment the job-side steps (4, 5) may request. | optional | The affected entry is recorded `SKIPPED` with instructions inside the artifact that wanted it; the analysis proceeds from the provided inputs alone. Recalled knowledge is never a substitute for a lookup that did not happen. |
