@@ -38,6 +38,11 @@ not something to substitute.
 One report per registered entry, at the path the flow passed. The report names the entry it executed
 and the spec version it read, so a reader can tell which rules produced the findings.
 
+A report may additionally be marked **partial**, naming the parts of the spec that did not run and
+why — including any item whose subject does not exist yet (see *Rules*). `partial` is a property of
+the report, not a sixth status value: the five above are the whole vocabulary, because the calling
+flow routes on the status, and a status it does not know is one it cannot route.
+
 ## Procedure
 
 1. **Read the spec.** Determine, from the spec alone: what the check inspects, which inputs it
@@ -49,7 +54,9 @@ and the spec version it read, so a reader can tell which rules produced the find
    - each input is an instance of the contract the spec expects, at a compatible major version;
    - every dependency the spec declares as *required* is bound in this environment.
    A missing binding ⇒ **SKIPPED** with instructions (see Failure and skip conditions). A missing or
-   unreadable input ⇒ **blocked**, reported back to the flow.
+   unreadable input ⇒ **blocked**, reported back to the flow. An input whose subject the flow has not
+   produced yet — a rendered deliverable, before the render — is not missing in that sense: the items
+   that need it are pending, the rest of the spec runs, and the report says so (see *Rules*).
 3. **Execute the spec as written.** Perform exactly the checks it declares — no more, no fewer. Run
    any script it ships, passing values the reviewer resolved as explicit command-line arguments.
    Never invent an additional rule because it seems sensible, and never quietly drop a declared rule
@@ -68,8 +75,9 @@ and the spec version it read, so a reader can tell which rules produced the find
    consumed.
 8. **Propose constraints.** Recurring wording or structure traps this check surfaced belong under
    `## Constraint proposals`; nothing to propose ⇒ `None.`
-9. **On a re-run** after edits: re-execute the **whole** spec, not the failed portion only, overwrite
-   the report and increment `revision:`.
+9. **On a re-run** — after edits, or once a subject that did not exist yet is available: re-execute
+   the **whole** spec, not the failed portion or the pending portion only, overwrite the report and
+   increment `revision:`.
 
 ## Rules
 
@@ -87,13 +95,26 @@ and the spec version it read, so a reader can tell which rules produced the find
   definition. It is recorded as such, never presented as an independent judgement of the candidate,
   and never allowed to outrank a truthfulness finding.
 - **The spec decides what is inspected** — the markdown document, a rendered deliverable, or both.
-  The reviewer does not substitute one for the other; if the declared subject is absent, that is a
-  precondition failure.
+  The reviewer does not substitute one for the other; a declared subject that should exist by now and
+  is absent is a precondition failure. A subject the flow has not produced yet is the separate case
+  below.
+- **A subject that does not exist yet is not a failure.** A spec may declare items whose subject does
+  not exist at this point in the flow — most commonly items inspecting a rendered deliverable, run
+  before the render. Report those items as **not applicable at this stage**: not a finding, not a
+  failure and not a skip, because the spec did run and the part of it whose subject existed was
+  executed. Mark the report **partial**, name which items are pending, and re-run the whole spec once
+  the subject exists. The calling flow keeps its gate open until then — a pending item is the reason
+  that gate is still open, not a reason to fail it. The two neighbouring states would each say
+  something untrue: `blocked` would stop a flow that is proceeding exactly as designed, and `Pass`
+  would claim an inspection that has not happened.
 - **No membership decisions.** The reviewer never adds an entry the flow did not pass, never drops
   one it did, and never re-orders the registered set.
 - **Partial execution is marked.** If part of the spec could not be executed, report which parts ran
   and which did not, and why. A partial result is never presented as a complete one, and a check that
-  could not inspect part of its subject cannot return `Pass`.
+  could not read part of a subject that **should** have been readable cannot return `Pass` — an
+  unreadable file is not an inspection. That is the `blocked` and unbound-dependency case above, not
+  the case of a subject the flow has not produced yet: an item reported *not applicable at this
+  stage* leaves the verdict of the parts that did run standing, and the flow holds the gate instead.
 - **Findings are actionable.** Each one names the location in the document, what is wrong under the
   spec, and the edit required. The reviewer does not perform the edit.
 - **Isolation.** Only this run's artifacts, the knowledge bank and the repository definitions are
