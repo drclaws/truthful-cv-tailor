@@ -14,7 +14,7 @@ applied without asking; anything else becomes a question to the user.
 
 | Input | Contract / description | Required |
 |---|---|---|
-| `report_paths` | The run's report artifacts carrying `## Constraint proposals` sections — source audit, requirements profile, recruiter signals, evidence map, validation reports, gate decision, fit report, gap report, render manifest, bank update brief. | required |
+| `report_paths` | The run's report artifacts carrying `## Constraint proposals` sections — source audit, requirements profile, recruiter signals, evidence map, validation reports, gate decision, fit report, gap report, render manifest, bank update brief — and the run's deliverable document, today an instance of contract `cv-document`, which carries its proposals one heading level down, inside `## Annex: writer notes`. The document is a deliverable rather than a report, but the sole-writer rule gives every role exactly one route to the ledger, so the writing role's route is its own annex. | required |
 | `constraints_ledger` | The ledger to write. Created if it does not exist. | required |
 | `run_id` | The run whose proposals are being ingested; recorded as the origin of each entry. | required |
 | `direct_proposals` | Proposals that live in no artifact: given directly by the user, given by a role invoked outside a flow, or returned inline by a capability whose report was never written as an artifact — a build summary, a step that ended `blocked`. | optional |
@@ -113,6 +113,12 @@ CV that says slightly less than it could — recoverable, and visible in the nex
   A missing report never blocks the flow's closing step.
 - **A report has no `## Constraint proposals` section at all** — record it as a finding (every
   report-type contract requires the section, even if only to say `None.`), and continue.
+- **A deliverable document keeps its proposals one heading level down** — the exception to the rule
+  above. In a `cv-document` instance the `## Constraint proposals` item belongs to
+  `## Annex: writer notes`, so that is where it is read; its absence from the top level says nothing
+  about the document and is not a finding. When the annex itself carries no such item, the finding
+  is against the role that wrote the document rather than against the document's shape — what is
+  missing is the writer's proposals, and only the writer can supply them.
 - **The ledger does not exist** — create it per the `constraints-ledger` contract, with an envelope
   at `revision: 1`, and ingest into it.
 - **The ledger is unreadable or malformed** — stop. Do not overwrite it and do not start a new one:
