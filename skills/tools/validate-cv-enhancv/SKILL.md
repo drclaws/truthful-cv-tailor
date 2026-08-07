@@ -118,6 +118,39 @@ A run performed by hand follows the same rules.
    blocks the step.
 4. Create nothing else and change nothing else. The step is read-only apart from its own captures.
 
+**What "bound" means here — stated as goals, because a recipe would be wrong somewhere.** Two things
+have to be true of the machine, and this file says only what must become *possible*, never which
+release makes it so:
+
+- **an interpreter that can drive a browser** — the one named by this skill's `python_interpreter`
+  setting, or the one on the executable search path when no setting names one, with the automation
+  package of the `playwright` dependency row importable *in that same interpreter*;
+- **a browser build that driver accepts** — the engine `browser_engine` names, either as a build the
+  driver manages itself or as the locally installed browser a `browser_channel` or
+  `browser_executable` setting points at.
+
+**Who may make them true: `setup-master.prepare-environment`, with the user's assent, item by
+item.** It takes the two goals above verbatim, works out the means from what this machine actually
+offers, and records what it did. It prescribes **no command sequence and no version** on purpose — a
+fixed sequence presumes a network, a package manager, a shell allowed to reach out, and a machine
+like the author's, and each of those presumptions fails somewhere. Neither this skill nor the
+reviewer executing it installs anything or improvises a procedure of its own; an unbound dependency
+is reported, not worked around.
+
+**And preparation is never enough on its own: the requirement holds on every run.** The service
+builds both the upload and the report with the page's own client-side code, so every execution of
+this entry opens a live browser window and reaches the service host over the network. There is
+nothing cached to replay and no warm state that carries from one run to the next. A session that
+cannot reach the network, or that has nowhere to put a visible window — a sandboxed or unattended
+shell is usually both — therefore cannot satisfy this entry however completely the machine was
+prepared beforehand.
+
+**In such a session the honest default is SKIPPED-manual**, and it is a designed outcome rather than
+a gap for preparation to close: record the entry with the reason, hand over the *Manual fallback*
+checklist below so the user can complete it from a session that has a display and a network, and let
+the flow continue. Never a `Fail` verdict about the CV, never a red gate, and never an attempt to
+substitute an HTTP request for the browser session.
+
 ### The precheck (gates first, submission second)
 
 Nothing is sent to a third party before all of this holds:
@@ -201,7 +234,7 @@ follow, or when the user prefers to drive the service themselves.
 
 | Symptom | What it means | What to do |
 |---|---|---|
-| The runner reports the automation stack is not bound | the browser stack is missing for the interpreter running the script | bind it as the dependency entry describes, or run the manual fallback; the entry is SKIPPED either way |
+| The runner reports the automation stack is not bound | the browser stack is missing for the interpreter running the script | close the gap through `setup-master.prepare-environment`, whose goal is the one *Environment preparation* states, or run the manual fallback; the entry is SKIPPED either way |
 | The browser build cannot be launched | the engine's build is not installed, or a recorded browser binary does not resolve | install the engine build, or correct the `browser_executable` / `browser_channel` setting recorded for this machine |
 | The upload UI never becomes ready | the page is slow, or a challenge is standing in front of it | raise the timeout, and run with a visible window so the challenge can be completed |
 | A challenge appears and the run ends | the run was headless, or nobody completed the challenge in time | re-run with a visible window and a longer manual grace period (for example 180 seconds) |
