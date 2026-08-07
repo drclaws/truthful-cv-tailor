@@ -93,7 +93,7 @@ CV flows; no validator runs here.
 
 | Directory | Holds | Rules |
 |---|---|---|
-| `<run>/work/` | Build byproducts: the raw output of the freshness script, the coverage-pass worksheet, and any source content fetched through the fallback reader because the shell could not read it. | Byproducts, not artifacts: nothing here is a contract instance, nothing here is a canonical source, and no later run may read it. Listed in the run's artifact index as byproducts. |
+| `<run>/work/` | Build byproducts: the coverage-pass worksheet, and any source content fetched through the fallback reader because the shell could not read it. | Byproducts, not artifacts: nothing here is a contract instance, nothing here is a canonical source, and no later run may read it. Listed in the run's artifact index as byproducts. |
 
 ## Inputs
 
@@ -168,9 +168,10 @@ file.
 
 ### 3. Check freshness
 
-Invoke `knowledge-bank-curator.check-freshness` with the resolved sources and the bank directory.
-Keep the script's raw output in `<run>/work/` and record the verdict, the per-source statuses and the
-per-index statuses in `run.md` `## Bank freshness`.
+Invoke `knowledge-bank-curator.check-freshness` with the resolved sources and the bank directory, and
+record the verdict, the per-source statuses and the per-index statuses in `run.md`
+`## Bank freshness`. The check returns its findings and writes nothing itself, so this record is the
+only place its result becomes durable — everything a later reader needs is in it.
 
 A `fresh` verdict on a run the user asked for is still worth reporting: it is a legitimate outcome
 ("nothing changed"), and the flow completes at step 10 without a rebuild — after recording why.
