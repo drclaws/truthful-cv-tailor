@@ -152,24 +152,33 @@ labels** inside the report envelope.
 - **Weak** — the term appears, but only once, or only in a tag, or only in a list with no
   corroborating experience bullet. Weak is never rounded up to Covered.
 
-**`ATS score` formula.** Start at 100 and subtract per finding: **20** for each blocking finding,
-**8** for each major, **3** for each minor. Floor the result at 0. When part of the check could not
-run (no render, or an unbound dependency), state the score as partial and name what was not measured.
+**`ATS score` formula.** Start at 100 and subtract per finding: **20** for each `critical` finding,
+**8** for each `major`, **3** for each `minor`. Floor the result at 0. When part of the check could
+not run (no render, or an unbound dependency), state the score as partial and name what was not
+measured.
 
-**Severity classes** (mapped onto the severity levels the `validation-report` contract declares):
+**Severity classes.** These are the levels contract `validation-report` declares, used here under
+their own names. A finding this spec produces therefore travels into the report unchanged: a rename
+between the check and the envelope is exactly where a defect that must stop the run would lose the
+one level that stops it, since the verdict is derived from `critical` and from nothing else.
 
-- **Blocking** — item 1 violated; a table in the final CV; an unreadable or absent contact fact; a
+- **`critical`** — item 1 violated; a table in the final CV; an unreadable or absent contact fact; a
   scanned/image-only PDF; critical information reachable only in a header/footer or only in a tag; a
   supported must-have keyword absent (item 7).
-- **Major** — non-standard section headings; unparsable dates or job titles; an important supported
+- **`major`** — non-standard section headings; unparsable dates or job titles; an important supported
   skill missing (item 10); ambiguous seniority; a columnar render whose two extractions disagree.
-- **Minor** — keyword overuse, recruiter-readability remarks, cosmetic formatting risks with no
+- **`minor`** — keyword overuse, recruiter-readability remarks, cosmetic formatting risks with no
   extraction impact.
 
+The contract's fourth level, `observation`, is deliberately unused here: every item of this check that
+is not satisfied names an edit, and a level that requires none has nothing to carry.
+
 **No score threshold.** This spec declares no pass/fail threshold on `ATS score` — the verdict is
-derived from findings only, per the reviewer's verdict vocabulary: `Fail` when at least one blocking
-finding stands, `Pass-after-edits` when edits are required but none blocks, `Pass` when there is
-nothing to fix. A high score never converts a blocking finding into a pass.
+derived from findings only, exactly as contract `validation-report` derives it. At least one
+`critical` finding forces the verdict `Fail`; the converse also holds, so a report with no `critical`
+finding is not a `Fail`. `Pass-after-edits` is the verdict when the required edits are all `major` or
+below and the document is sound once they are applied, and `Pass` when there is nothing to fix. A high
+score never converts a `critical` finding into a pass.
 
 ## Runbook
 
@@ -237,7 +246,7 @@ derived manually, and give `ATS score` and `Keyword coverage` from the same defi
 - *`markdown_table` fires on a line with pipes* — a code fragment or a pipeline example can trigger
   it. Confirm in the document before recording a finding.
 - *`icons_or_symbols` fires on bullet markers* — check which character it matched; a decorative
-  bullet is a formatting remark, a fact carried only by an icon is a blocking finding.
+  bullet is a formatting remark, a fact carried only by an icon is a `critical` finding.
 - *The two rendered extractions disagree* — that is the columnar-render finding of item 1/9, not a
   tooling problem. Report it.
 
