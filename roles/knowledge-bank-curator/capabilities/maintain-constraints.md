@@ -113,6 +113,12 @@ CV that says slightly less than it could — recoverable, and visible in the nex
   A missing report never blocks the flow's closing step.
 - **A report has no `## Constraint proposals` section at all** — record it as a finding (every
   report-type contract requires the section, even if only to say `None.`), and continue.
+- **A deliverable document keeps its proposals one heading level down** — the exception to the rule
+  above. In a `cv-document` instance the `## Constraint proposals` item belongs to
+  `## Annex: writer notes`, so that is where it is read; its absence from the top level says nothing
+  about the document and is not a finding. When the annex itself carries no such item, the finding
+  is against the role that wrote the document rather than against the document's shape — what is
+  missing is the writer's proposals, and only the writer can supply them.
 - **The ledger does not exist** — create it per the `constraints-ledger` contract, with an envelope
   at `revision: 1`, and ingest into it.
 - **The ledger is unreadable or malformed** — stop. Do not overwrite it and do not start a new one:
