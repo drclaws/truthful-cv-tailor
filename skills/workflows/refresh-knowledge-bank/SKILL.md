@@ -364,10 +364,12 @@ the user may have declined it, and the harness in use may have no discovery loca
 all — all ordinary outcomes, and then by-path is the whole of it. Point the agent at this file, whose
 location the skills index gives for the name `refresh-knowledge-bank`.
 
-An adapter is never authority. However the flow was reached, the executing agent loads this file,
-plus the role card of `knowledge-bank-curator` and the capability file of the step it is on — and
-nothing else. On a harness with subagents the steps still run in order: this flow declares no
-parallel groups, and the result must not differ between harnesses.
+An adapter is never authority. However the flow was reached, the executing agent reads this file, and
+the loading rule in `AGENTS.md` — with its role-side reasoning in `role-conventions` — governs what
+else a step's executor opens. This flow points at that rule rather than keeping its own copy: a rule
+with several homes ages at different rates, and the copy an agent happens to read is the one it
+obeys. On a harness with subagents the steps still run in order: this flow declares no parallel
+groups, and the result must not differ between harnesses.
 
 Before the first run the user's context must exist. If it does not, the correct outcome of preflight
 is a question, and the supported answer is `setup-master.bootstrap`, which creates the harness-native
