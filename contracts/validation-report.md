@@ -88,6 +88,12 @@ In a report with status `advisory`, severities describe what the external servic
 They classify; they do not block. Only the `external-gate-decision` decides what an external finding
 causes.
 
+An item of a check's specification whose **subject does not exist yet** — most often an item
+inspecting a rendered deliverable, in a report written before the render — is not a finding at any of
+these levels, and no severity is invented for it. It is reported as *not applicable at this stage* per
+`reviewer.run-check`, which marks the report partial and names the pending items. The levels above
+classify what was inspected; they say nothing about what is still to come.
+
 ### `## Scores` (optional)
 
 Whatever the check produces, each score named with its scale. **Scores are never a verdict**, and
