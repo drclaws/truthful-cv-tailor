@@ -106,15 +106,15 @@ user's local rules file.
 
 ## Invoking a flow
 
-`setup-master.register-with-harness` makes this repository's skills and roles discoverable by the
-harness in use, generated **from** the canonical packages and never the other way round. **Where
-registration succeeded, invoke by name:** the workflow `generate-targeted-cv` for one vacancy, or
-`refresh-knowledge-bank` to rebuild the bank. **Invocation by path is valid everywhere and is the
-fallback** — registration not run, unable to complete, or no discovery location for that kind:
-`execute skills/workflows/generate-targeted-cv/SKILL.md for <run-id>`, and likewise for any workflow.
+`setup-master.register-with-harness` generates the harness's adapters **from** the canonical packages
+and never the other way round. **Where registration succeeded, invoke by name:** the workflow
+`generate-targeted-cv` for one vacancy, or `refresh-knowledge-bank` to rebuild the bank. **Invocation
+by path is valid everywhere and is the fallback** — registration not run, unable to complete, or no
+discovery location for that kind: `execute skills/workflows/<workflow>/SKILL.md for <run-id>`.
 
-An adapter is never authority: a flow reached through one still reads the canonical file. The
-executing agent loads that `SKILL.md`, plus — per step — the `ROLE.md` of that step's role and that
-step's capability file, and nothing else. A tool skill is read when a step invokes it. A tool invoked
-standalone defaults to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`; a role invoked
-directly takes explicit paths from the user.
+An adapter is never authority: a flow reached through one reads the canonical file. The executing
+agent loads that `SKILL.md`, plus per step the step's `ROLE.md` and capability file, the contracts its
+Inputs and Outputs name, and the `artifact-conventions` they all inherit. A tool skill is read when a
+step invokes it; standalone it defaults to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`,
+and a role invoked directly takes explicit paths from the user. No step loads **a second role card or
+a second capability file**, which keeps a role card an index card and its authority boundary legible.
