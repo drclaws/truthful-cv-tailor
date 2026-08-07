@@ -31,6 +31,21 @@ read it that way, and update a row whenever a rule moves.
 A rule may legitimately appear in two homes when both a contract and a role need it — the contract is
 then the normative home and the role's copy is operational guidance. A rule may never have **no** home.
 
+**How this file cites things — it is not uniform, and that is deliberate.** A sweep that finds one
+column disagreeing with another should read this paragraph before "fixing" either.
+
+- **The left column is history, quoted as it was.** Predecessor paths, filenames and section names
+  are reproduced verbatim and are never corrected, never renamed, and never resolved — they exist to
+  identify which old rule a row is about. A dead path in the left column is the point of the column.
+- **The right column is the present, and it must be true today.** It deliberately names files by
+  repository-relative path rather than by name: this is a map, and a map points at a location, often
+  at a section finer than any name resolves to. That is why this file is exempt from the by-name
+  reference rule. But any *name* it does use — a contract name, a `role.capability` — is a live
+  reference and **must resolve now**. When a rule moves, the row moves with it.
+- **The status column is history too.** Its `Tn` markers are the tasks of the build plan that created
+  this structure; that plan is finished and the markers are a record of who landed a row, not a live
+  to-do list. Nothing here is waiting on a task.
+
 ## `AGENTS.md`
 
 | Predecessor rule or section | Designated home | Status |
@@ -237,7 +252,7 @@ then the normative home and the role's copy is operational guidance. A rule may 
 | Report shape: accepted, rewrite-required, gaps to document, rejected, manual review, final recommendation Proceed / Revise / Do not send | `contracts/external-gate-decision.md` → sections | T2 |
 | Fact validation overrides external advice; no unsupported skills, tools, metrics, domain experience or ownership; keyword suggestions only where the experience is supported; formatting suggestions usually safe | `contracts/external-gate-decision.md` → rules | T2 |
 | Never accept a suggestion that would restyle the template to fit content; apply the content-first fit rule | `contracts/external-gate-decision.md` → rules; `contracts/cv-document.md` → length and compression | T2 |
-| Persistent conservative constraints may be recorded without user approval | **Deliberate delta:** the gate no longer writes the ledger. It emits `## Constraint proposals`, ingested by `curator.maintain-constraints` at flow close | T2 |
+| Persistent conservative constraints may be recorded without user approval | **Deliberate delta:** the gate no longer writes the ledger. It emits `## Constraint proposals`, ingested by `knowledge-bank-curator.maintain-constraints` at flow close | T2 |
 | The gating procedure | `roles/reviewer/capabilities/gate-external-recommendations.md` | → T3d |
 
 ## Other predecessor assets
@@ -266,6 +281,6 @@ Rules that were **not** ported, each by an explicit design decision rather than 
 |---|---|
 | Optional secondary document export alongside the PDF | Dropped. The PDF is the only final deliverable; no contract carries a second export format. |
 | Position match validation as a mandatory gate | The fit report is informational and gates nothing; the workflow declares an escalation rule that reads it. |
-| The external gate writing the constraints file directly | Replaced by the sole-writer rule: the gate proposes, `curator.maintain-constraints` ingests. |
+| The external gate writing the constraints file directly | Replaced by the sole-writer rule: the gate proposes, `knowledge-bank-curator.maintain-constraints` ingests. |
 | A "suggested CV usage" block inside the evidence map | Split by design: placement → `cv-document`, tag verification → `fit-report`. The evidence map stays neutral. |
 | Numeric artifact prefixes (`00_`–`10_`) fixing the pipeline order | Replaced by contract-named artifacts plus the run manifest's step checklist and artifact index. |
