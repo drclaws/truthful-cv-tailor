@@ -22,7 +22,7 @@ it.
 | `job_dossier_path` | Directory of job-side inputs — contract `job-dossier` (job description, recruiter notes, company notes). | required |
 | `additional_inputs` | Any further job-side material provided for this run: pasted text, exported pages, connector-provided content, notes about interviewers or team members. Each entry as `path-or-description — what it is`. | optional |
 | `transcript_paths` | Meeting transcripts a recruiter note points at — contract `transcript`. | optional |
-| `run_manifest_path` | The run manifest — contract `run-manifest`; read to record the user-context resolution the run used. | optional |
+| `run_manifest_path` | The run manifest — contract `run-manifest`; read to record the user-context resolution the run used, and read again for `## Bank freshness` — the verdict with its per-source and per-index statuses that this capability transcribes into `## Bank stanza`. | optional |
 | `constraints_ledger_path` | Contract `constraints-ledger`; read so that known guardrails are honoured while summarising. | optional |
 | `output_path` | Where to write the audit. | required |
 
@@ -128,6 +128,12 @@ only; `None.` when there are none.
 - **Individual item unreadable.** Record the item with `unreadable` and its reason; continue with
   the rest. One bad item never blocks the audit.
 - **Empty optional input.** Recorded as provided-but-empty, not dropped.
+- **No freshness verdict to transcribe.** If no run manifest was passed, or the one passed carries
+  no `## Bank freshness`, still write `## Bank stanza`: name the bank files the run used and record
+  the verdict as `not recorded for this run`, with the reason, then report it to the flow. The
+  stanza is written either way, because a consumer reading it needs to see that the check is missing
+  rather than find no stanza at all — but the verdict itself is copied or it is absent, never
+  reconstructed here.
 - **Contract version mismatch** on an input artifact: record it as a finding in the audit and report
   it to the flow rather than reinterpreting the artifact.
 - **Unbound optional tool need:** the affected entry is `SKIPPED` with instructions; the artifact
