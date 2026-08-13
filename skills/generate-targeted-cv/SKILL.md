@@ -43,12 +43,13 @@ collapsed to single hyphens, derived from the job dossier's own wording. A rerun
 … — a run directory is never reused and never overwritten.
 
 ```
-outputs/generate-targeted-cv/<run-id>/     # this run; nothing outside it is written by this flow
-outputs/knowledge-bank/                    # THE BANK — read-only here, except the ledger at step 24
+<output-root>/generate-targeted-cv/<run-id>/   # this run; nothing outside it is written by this flow
+<output-root>/knowledge-bank/                  # THE BANK — read-only here, except the ledger at step 24
 ```
 
-Every path below is **computed by this flow and passed to roles and tools as an explicit
-parameter**. Contracts fix no placement; the three declarations that follow are this flow's.
+`<output-root>` is the directory the request supplied — `## Inputs` below has the row. Every path
+under it is **computed by this flow and passed to roles and tools as an explicit parameter**.
+Contracts fix no placement; the three declarations that follow are this flow's.
 
 ### Fixed artifacts
 
@@ -114,7 +115,7 @@ With one internal and two external entries registered. A different registered se
 different file set, and only the fixed artifacts above are guaranteed.
 
 ```
-outputs/generate-targeted-cv/<run-id>/
+<output-root>/generate-targeted-cv/<run-id>/
 ├── run.md
 ├── position/
 ├── source_audit.md
@@ -185,10 +186,11 @@ explicitly — this flow derives nothing from repository layout.
 
 | Input | Contract / description | Required |
 |---|---|---|
+| `output_root` | the directory this engine writes into: this run's directory is `<output-root>/generate-targeted-cv/<run-id>/`, and the knowledge bank is `<output-root>/knowledge-bank/` unless `bank_dir` is passed separately. Supplied with the request, never inside this package, never defaulted — the rule and its reasons are `engine-conventions` → *Where a run writes*. | required |
 | `run_id` | the vacancy slug, built as *Run identifier and output layout* above defines it | required |
 | job material | the vacancy's own material: at minimum a readable job description, plus any screening transcripts (contract `transcript`), people notes and company notes. It becomes the run's `job-dossier` instance at `<run>/position/`. | required |
 | user context | contract `user-context`, resolved at step 1 through the declared order. Supplies the canonical experience sources, the active validation set, the per-skill settings and the additional rules; *User-context settings* below states what this flow does with each. | required |
-| `bank_dir`, `<ledger>` | the knowledge bank directory (contract `knowledge-bank`) and its `constraints.md` (contract `constraints-ledger`), resolved at preflight. Read-only to this flow, except the ledger at step 24. | required |
+| `bank_dir`, `<ledger>` | the knowledge bank directory (contract `knowledge-bank`) and its `constraints.md` (contract `constraints-ledger`), resolved at preflight; `bank_dir` defaults to `<output-root>/knowledge-bank/` and `<ledger>` to the `constraints.md` inside it when neither is passed separately — derived from a value the request supplied, never from where these files sit. Read-only to this flow, except the ledger at step 24. | required |
 | the previous run's `position/` | on a rerun for the same vacancy: the earlier run's job dossier, **copied** into the new run rather than pointed at — see *Rerun and the dossier* at step 3. | optional |
 
 Nothing is defaulted. An input that did not resolve is a question to the user, recorded in `run.md`
@@ -280,6 +282,7 @@ carries the identity the export naming rule needs are all properties of the bank
 settled together at step 2 — which is also where the remedy for all three lives.
 
 Record in `run.md` `## User context`: which resolution supplied which values, and the resolved
+snapshot — the `output_root` this run was given included, as contract `run-manifest` requires of that
 snapshot. An empty registered validation set is legitimate and is recorded as such: the mandatory
 truthfulness check still runs.
 
@@ -674,10 +677,12 @@ Run generate-targeted-cv for the vacancy in <path-to-job-material>.
 Use my registered validation set.
 ```
 
-Individual pieces can also be run on their own, without this flow: a tool invoked standalone defaults
-to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`, and a role invoked directly takes
-explicit paths from the user. That is a different thing from resuming this flow — a run is
-resumed by reading its `run.md`, not by re-running the steps that already have artifacts.
+Individual pieces can also be run on their own, without this flow: a tool invoked standalone takes
+its output paths from whoever invoked it, exactly as a role invoked directly does
+(`role-conventions` → *Interaction model*, where all paths are mandatory parameters). Neither has a
+location of its own to fall back on, so an invocation that named none is a question before anything
+is written. That is a different thing from resuming this flow — a run is resumed by reading its
+`run.md`, not by re-running the steps that already have artifacts.
 
 ## User-context settings
 

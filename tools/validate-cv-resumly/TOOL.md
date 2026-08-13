@@ -55,9 +55,11 @@ This tool derives no path from repository layout and computes no filenames.
 
 **Placement.** Invoked from a workflow, the capture goes to the path pattern the workflow assigned
 (the CV workflow's pattern for external raw captures is `<run>/external/<validator>_raw.<ext>`, and
-the normalized report that follows it `<run>/external/<validator>_report.md`). Invoked standalone, the
-default is `outputs/validate-cv-resumly/<run-id>/` with a minimal `run.md`. Either way the caller
-passes the path; the values above are defaults, not assumptions.
+the normalized report that follows it `<run>/external/<validator>_report.md` — quoted to show the
+shape, not applied here). Invoked standalone, the user is the caller and the directory is theirs to
+name, with a minimal `run.md` under it; this tool holds no location of its own, so an invocation that
+named none is a question to ask before the capture is taken. Either way the path arrives from the
+caller, and nothing here is derived from where these files happen to sit.
 
 ## Service parameters
 
