@@ -19,7 +19,7 @@ did.
 ## Scope rules
 
 - **Contracts describe artifacts, not procedures.** How an artifact is produced belongs to a role
-  capability (`<role>.<capability>`) or to a tool skill.
+  capability (`<role>.<capability>`) or to a tool.
 - **Contracts are tool-agnostic and path-agnostic.** No concrete tool names, no external absolute
   paths, no OS specifics. Examples use placeholders such as `<run>/`, `<source-path>`, `<Name>`.
 - **Contracts carry no user context.** What the engine needs from the user is described by the

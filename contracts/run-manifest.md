@@ -50,10 +50,13 @@ Two things, both required:
 1. **Resolution used** — which mechanism supplied the user context: the harness-native local rules
    file, other harness-provided context or memory, or values the user was asked for during preflight.
    When several contributed, each is named with what it supplied.
-2. **Resolved snapshot** — the values the run actually used: the canonical experience sources, the
-   active validation set with each entry's kind, the per-skill settings in force, and any additional
-   rules the flow was told to honour. Recorded because free-form context can change between runs;
-   the snapshot is what makes a run reproducible and reviewable.
+2. **Resolved snapshot** — the values the run actually used: the resolved package root and the
+   resolved output root, the canonical experience sources, the active validation set with each
+   entry's kind, the per-skill settings in force, and any additional rules the flow was told to
+   honour. Recorded because free-form context can change between runs; the snapshot is what makes a
+   run reproducible and reviewable. The two roots belong here for the same reason and one more:
+   neither is derivable from the run afterwards, so without them a reader cannot tell which copy of
+   the definitions the run obeyed, nor that its results went where the user meant them to.
 
 Values the flow validated and questions it had to ask the user are recorded here too, with the
 answers received.
