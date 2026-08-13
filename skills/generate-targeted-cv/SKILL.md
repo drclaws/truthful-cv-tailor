@@ -197,8 +197,8 @@ not allowed to read, or from its own recollection.
 
 ## Steps
 
-`executor` is the `role.capability` that runs the step, `tool:<name>` for a tool skill executed by
-its owning role, or `flow` for orchestration the flow does itself. Every path a role receives is
+`executor` is the `role.capability` that runs the step, `tool:<name>` for a tool executed by its
+owning role, or `flow` for orchestration the flow does itself. Every path a role receives is
 passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge bank directory and its
 `constraints.md`, resolved at preflight.
 
@@ -448,10 +448,10 @@ in full, plus the internal entries the disposition list implicates. The reports 
 
 ### 16. Render the deliverable
 
-`renderer.render-document`, executing the `render-cv-pdf` tool skill with the template
-resolved from that skill's own settings subsection in user context (its default is the shipped
-bundle). The tool owns the page target, the content-first fit policy, the gate sequence and the
-template resolution; this flow owns the paths and the export name.
+`renderer.render-document`, executing the tool `render-cv-pdf` with the template resolved from that
+tool's own settings subsection in user context (its default is the shipped bundle). The tool owns the
+page target, the content-first fit policy, the gate sequence and the template resolution; this flow
+owns the paths and the export name.
 
 **The renderer may refuse, and that is correct.** It does not render a document that contradicts an
 accompanying validation report, and it does not quietly prefer one over the other — it stops and
@@ -644,10 +644,12 @@ use. **Where registration succeeded, the flow is invoked by name:**
 
 > run `generate-targeted-cv` for `<run-id>`
 
-**Invocation by path is valid everywhere and is the fallback.** Registration may never have been run,
-the user may have declined it, and the harness in use may have no discovery location for skills at
-all — all ordinary outcomes, and then by-path is the whole of it. Point the agent at this file, whose
-location the skills index gives for the name `generate-targeted-cv`, and pass it the same `<run-id>`.
+**By-path invocation is valid wherever the user has these files at a path they can name** — which is
+the case when this engine is cloned. Point the agent at this file, whose location the skills index
+gives for the name `generate-targeted-cv`, and pass it the same `<run-id>`. Once this engine is
+installed as a package, the public skills are invocable by name and that is the supported route: an
+installed package sits at a location the user never chose and that moves whenever the package is
+updated, so a path to it is not a thing to hand out.
 
 An adapter is never authority. However the flow was reached, the executing agent reads this file, and
 the loading rule in `engine-conventions` — with its role-side reasoning in `role-conventions` —
@@ -671,9 +673,9 @@ Run generate-targeted-cv for the vacancy in <path-to-job-material>.
 Use my registered validation set.
 ```
 
-Individual pieces can also be run on their own, without this flow: a tool skill invoked standalone
-defaults to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`, and a role invoked directly
-takes explicit paths from the user. That is a different thing from resuming this flow — a run is
+Individual pieces can also be run on their own, without this flow: a tool invoked standalone defaults
+to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`, and a role invoked directly takes
+explicit paths from the user. That is a different thing from resuming this flow — a run is
 resumed by reading its `run.md`, not by re-running the steps that already have artifacts.
 
 ## User-context settings

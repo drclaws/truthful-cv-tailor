@@ -377,10 +377,12 @@ use. **Where registration succeeded, the flow is invoked by name:**
 
 > run `refresh-knowledge-bank`
 
-**Invocation by path is valid everywhere and is the fallback.** Registration may never have been run,
-the user may have declined it, and the harness in use may have no discovery location for skills at
-all — all ordinary outcomes, and then by-path is the whole of it. Point the agent at this file, whose
-location the skills index gives for the name `refresh-knowledge-bank`.
+**By-path invocation is valid wherever the user has these files at a path they can name** — which is
+the case when this engine is cloned. Point the agent at this file, whose location the skills index
+gives for the name `refresh-knowledge-bank`. Once this engine is installed as a package, the public
+skills are invocable by name and that is the supported route: an installed package sits at a location
+the user never chose and that moves whenever the package is updated, so a path to it is not a thing
+to hand out.
 
 An adapter is never authority. However the flow was reached, the executing agent reads this file, and
 the loading rule in `engine-conventions` — with its role-side reasoning in `role-conventions` —
