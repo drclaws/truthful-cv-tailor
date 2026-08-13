@@ -26,8 +26,8 @@ directory that already holds a run is refused: a rerun gets its own run id.
 Exit codes: 0 success (warnings are printed, not fatal), 1 nothing was created
 (refused or unwritable), 2 a usage error in the arguments.
 
-    create_run.py --run-dir outputs/generate-targeted-cv/<run-id> \
-        --run-id <run-id> --bank-dir outputs/knowledge-bank \
+    create_run.py --run-dir <output-root>/generate-targeted-cv/<run-id> \
+        --run-id <run-id> --bank-dir <output-root>/knowledge-bank \
         --export-name <FirstNameSurname>.pdf \
         --validator "<name>:internal" --step "Resolve user context|flow"
 """
