@@ -24,10 +24,10 @@ Three guarantees shape everything in here:
    invoke the setup-master role, capability bootstrap (roles/setup-master/ROLE.md)
 
 2. Build the knowledge bank from your experience sources:
-   execute skills/workflows/refresh-knowledge-bank/SKILL.md
+   execute skills/refresh-knowledge-bank/SKILL.md
 
 3. Produce a CV for one vacancy:
-   execute skills/workflows/generate-targeted-cv/SKILL.md for <run-id>
+   execute skills/generate-targeted-cv/SKILL.md for <run-id>
 ```
 
 Step 3 wants a job dossier — at minimum a job description — under the run's `position/` directory;
@@ -132,11 +132,15 @@ roles/<role>/scripts/*.py                    Role-owned helpers, explicit CLI ar
 skills/README.md                             What a skill is; orientation, points at the index
 skills/INDEX.md                              Name -> file for every skill and document here
 skills/skill-conventions.md                  House rules every skill package follows
-skills/workflows/<flow>/SKILL.md             End-to-end flows
-skills/tools/<tool>/SKILL.md                 Single-operation skills, incl. the validators
-skills/<group>/<name>/scripts/*.py           Skill-owned helpers, explicit CLI arguments only
-skills/tools/render-cv-pdf/templates/        Shipped CV template bundles (default: ats-onepage-latex)
+skills/<skill>/SKILL.md                      End-to-end flows; the public surface, one level deep
+skills/<skill>/scripts/*.py                  Skill-owned helpers, explicit CLI arguments only
 skills/BACKLOG.md                            Deferred work; entries have NO authority
+tools/README.md                              What a tool is; orientation, points at the index
+tools/INDEX.md                               Name -> file for every tool and document here
+tools/tool-conventions.md                    House rules every tool package follows
+tools/<tool>/TOOL.md                         Single-operation packages, incl. the validators; internal
+tools/<tool>/scripts/*.py                    Tool-owned helpers, explicit CLI arguments only
+tools/render-cv-pdf/templates/               Shipped CV template bundles (default: ats-onepage-latex)
 outputs/knowledge-bank/                      The knowledge bank (gitignored)
 outputs/<flow>/<run-id>/                     One directory per run (gitignored)
 ```
