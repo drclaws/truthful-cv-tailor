@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the Enhancv Resume Checker through a real browser and save a raw capture.
 
-The rules of this check live in the SKILL.md next to this script; the script only
+The rules of this check live in the TOOL.md next to this script; the script only
 executes them. Every path is an explicit command-line argument resolved by the
 caller: nothing is derived from repository layout, and no rules, context or
 configuration file is ever read here.
@@ -447,7 +447,7 @@ def check_artifacts(paths, markers, scan_markers):
 
 
 def manual_fallback_instructions(url, pdf, out):
-    """The short form of the manual procedure; the full one is in SKILL.md."""
+    """The short form of the manual procedure; the full one is in TOOL.md."""
     return [
         f"Open {url} in a normal browser session.",
         f"Upload {pdf} yourself and complete any captcha or security check.",
@@ -455,7 +455,7 @@ def manual_fallback_instructions(url, pdf, out):
         f"next to it.",
         "Hand the capture back to the reviewer for normalization; record the "
         "entry as SKIPPED-manual, or as executed if you completed it now.",
-        "See the runbook section of this skill's SKILL.md for the full procedure.",
+        "See the runbook section of this tool's TOOL.md for the full procedure.",
     ]
 
 

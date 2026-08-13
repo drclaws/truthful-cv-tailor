@@ -2,11 +2,11 @@
 """Check that an exported CV PDF still extracts as text.
 
 Runs the text-extraction half of the render gate sequence of the `render-cv-pdf`
-tool skill: extract the PDF twice — plain reading order and layout-preserving —
+tool: extract the PDF twice — plain reading order and layout-preserving —
 and report whether the required headings and contact signals survived in both.
 
 Everything the script checks is passed as an EXPLICIT ARGUMENT. It reads no
-SKILL.md, no template policy, no user context and no rules file, and it assumes
+TOOL.md, no template policy, no user context and no rules file, and it assumes
 no repository layout: the agent resolves the values and hands them over.
 
 The extraction binary is discovered on PATH with `shutil.which` — no hardcoded

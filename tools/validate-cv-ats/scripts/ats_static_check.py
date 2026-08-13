@@ -5,7 +5,7 @@ Reads one plain-text or markdown document and reports machine-checkable signals:
 which standard headings are present, whether contact facts exist as text, which
 formatting-risk patterns appear, bullet statistics, and a crude 0-100 score.
 
-The output is EVIDENCE for the ATS check spec (../SKILL.md), never a verdict: a
+The output is EVIDENCE for the ATS check spec (../TOOL.md), never a verdict: a
 pattern hit is a pointer to inspect, and the score is a measurement under this
 script's own formula.
 
