@@ -20,18 +20,16 @@ It is invoked by the user, or offered by `bootstrap` at the end of a first setup
 
 ## Inputs
 
-- `skills_root` — path to the directory holding the shipped skills — required. Every skill package
-  under it is registered; the directory is enumerated, never filtered.
-- `local_rules_file` — path to the harness-native local rules file — required. It supplies the
-  recorded toolchain directories — including where the role packages live — and it receives the
-  registration record. Where a directory is not recorded yet, it is *proposed* from `repo_root` and
-  confirmed by the user before anything is registered from it; an unconfirmed proposal is not used.
-- `repo_root` — path to the repository being connected — required, to tell whether these toolchains
-  stand on their own or are attached to another project (which decides where registration may write),
-  and to confirm that anything created inside the repository is ignored by version control.
-- `user_context_contract` — path to the `user-context` contract file — required when the registration
-  record does not exist in the local rules file yet: its shape comes from the contract's section
-  template, never invented here.
+- `package_root` — the resolved root of this package — required. What registration covers is the
+  public skills, which are the immediate children of the skills directory inside it; that directory
+  is enumerated, never filtered. Contract `user-context` is read from it as well, when the
+  registration record does not exist in the local rules file yet: the record's shape comes from that
+  contract's section template and is never invented here.
+- `local_rules_file` — path to the harness-native local rules file — required. It receives the
+  registration record.
+- `project_root` — the user's working project, or none — required, because it decides where
+  registration may write and lets anything created inside that project be checked against its ignore
+  rules.
 - `request` — register, re-register (reconcile), or remove a previous registration — required.
 
 ## Outputs

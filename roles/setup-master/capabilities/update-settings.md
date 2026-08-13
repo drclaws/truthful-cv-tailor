@@ -15,10 +15,10 @@ to check the effect of a change.
 - `local_rules_file` — path to the existing harness-native local rules file — required.
 - `request` — what the user wants changed: which section, which entry, and the new value (or the
   request to review a section before deciding) — required.
-- `user_context_contract` — path to the `user-context` contract file — required, as the authority on
-  what each section means and which sections exist.
-- `skills_root` — path to this repository's shipped skills — required when the change touches a skill
-  entry or a per-skill setting, to read that skill's `SKILL.md` for the keys it recognizes.
+- `package_root` — the resolved root of this package — required. Contract `user-context` is read from
+  it, as the authority on what each section means and which sections exist; and when the change
+  touches a validation-set entry or a per-package setting, the declaring package's own definition
+  file is read from it for the keys that package recognizes.
 
 ## Outputs
 

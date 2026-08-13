@@ -17,15 +17,16 @@ to decide something for itself is a place where two matrices diverge.
 
 ## Inputs
 
-- `skills_root` — path to the directory holding this repository's shipped skills (workflows and
-  tools) — required.
+- `package_root` — the resolved root of this package — required. Two fixed directories inside it hold
+  everything this package declares: the public skills, and the tools. Contract `user-context` is read
+  from it as well, when the environment record has to be interpreted — it is the authority on what
+  that record is and is not.
 - `local_rules_file` — path to the harness-native local rules file — optional, and it carries three
-  distinct things this capability reads: the **active validation set** (including skills kept outside
-  this repository, with their locations), the **per-skill bindings** the user recorded, and the
+  distinct things this capability reads: the **active validation set** (including checks kept outside
+  this package, with their locations), the **per-package bindings** the user recorded, and the
   **environment record** — dated evidence of what setup already prepared and how it was verified.
-  Without it only the shipped skills are covered, nothing is instantiated, and the report says so.
-- `user_context_contract` — path to the `user-context` contract file — optional; the authority on
-  what the environment record is and is not, when the record has to be interpreted.
+  Without it only this package's own skills and tools are covered, nothing is instantiated, and the
+  report says so.
 - `scripts/check_environment.py` — this role's bundled probe script, resolved beside `ROLE.md`.
 
 ## Outputs

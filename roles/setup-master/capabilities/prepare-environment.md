@@ -22,14 +22,13 @@ It is invoked by the user, or offered by `bootstrap` once the dependency matrix 
   them" is a valid answer; "none" ends the capability with a report and no action.
 - `local_rules_file` — path to the harness-native local rules file — required. It holds any binding
   the user already recorded, and it receives the environment record.
-- `skills_root` — path to the directory holding the shipped skills — required, to read the declaring
-  skill's `## Dependencies` entry and its runbook, which are the only source of the goal.
-- `repo_root` — path to the repository being connected — required, to tell whether the toolchains
-  stand on their own or are attached to another project, and to confirm that anything created inside
-  the repository is ignored by version control.
-- `user_context_contract` — path to the `user-context` contract file — required when the record
-  section does not exist in the local rules file yet: its shape is taken from the contract's section
-  template, never invented here.
+- `package_root` — the resolved root of this package — required, to read the declaring package's
+  `## Dependencies` entry and its runbook, which are the only source of the goal; and to read
+  contract `user-context` when the record section does not exist in the local rules file yet, since
+  its shape is taken from that contract's section template and is never invented here.
+- `project_root` — the user's working project, or none — required, because it decides where a
+  prepared thing may live and lets anything created inside that project be checked against its
+  ignore rules.
 
 ## Outputs
 

@@ -13,14 +13,13 @@ not install anything, does not bind any dependency, and never runs the skill.
 ## Inputs
 
 - `local_rules_file` — path to the existing harness-native local rules file — required.
-- `skill_identity` — required: the skill's **name**; **where it lives** (inside `skills_root`, or a
-  path/description in the user's environment); and, when the skill itself does not declare it, its
-  **kind** — `internal` (runs in the pre-render check group) or `external` (runs only after the
-  internal and render gates pass).
-- `skills_root` — path to this repository's shipped skills — required when the skill lives here, to
-  read its `SKILL.md`.
-- `user_context_contract` — path to the `user-context` contract file — required, as the authority on
-  what a validation-set entry must carry.
+- `skill_identity` — required: the check's **name**; **where it lives** (a tool package inside this
+  package, or a path/description in the user's environment); and, when the check itself does not
+  declare it, its **kind** — `internal` (runs in the pre-render check group) or `external` (runs only
+  after the internal and render gates pass).
+- `package_root` — the resolved root of this package — required. Contract `user-context` is read from
+  it, as the authority on what a validation-set entry must carry; and a check that ships here is read
+  from the tools directory inside it.
 
 ## Outputs
 

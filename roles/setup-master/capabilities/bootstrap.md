@@ -17,13 +17,12 @@ typically once per environment.
 
 ## Inputs
 
-- `user_context_contract` — path to the `user-context` contract file — required. It is the authority
-  on what flows need, on the resolution order, and it holds the **section template**, which this file
-  deliberately does not duplicate.
-- `skills_root` — path to the directory holding this repository's shipped skills — required, to
-  enumerate the `validate-cv-*` skills that can be offered for the active set.
-- `repo_root` — path to the repository being connected — required, to verify the local rules file is
-  ignored by version control.
+- `package_root` — the resolved root of this package — required. Two things inside it are read:
+  contract `user-context`, the authority on what flows need and on the resolution order, and the home
+  of the **section template**, which this file deliberately does not duplicate; and the tools
+  directory, to enumerate the `validate-cv-*` tools that can be offered for the active set.
+- `project_root` — the user's working project, or none — required as an answer even when the answer
+  is *none*, to verify the local rules file is ignored by version control.
 - `local_rules_file` — path and name of the target file — optional on this capability: when it is not
   given, it is determined with the user in step 1 and confirmed before any write.
 

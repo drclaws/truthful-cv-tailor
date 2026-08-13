@@ -27,17 +27,24 @@ Nothing is defaulted from repository layout. The only path this role resolves on
 | Parameter | Meaning | Used by |
 |---|---|---|
 | `local_rules_file` | Path and name of the harness-native local rules file to read and write. In `bootstrap` it may instead be *determined together with the user* and confirmed before any write. | all capabilities |
-| `user_context_contract` | Path to the `user-context` contract file — the authority on what is needed and the home of the section template. | `bootstrap`, `update-settings`, `register-skill`, `prepare-environment`, `register-with-harness` |
-| `skills_root` | Path to the directory holding this repository's shipped skills (workflows and tools), used to enumerate skills and read their `## Dependencies` sections. | `bootstrap`, `register-skill`, `check-environment`, `prepare-environment`, `register-with-harness` |
-| `repo_root` | Path to the repository whose toolchains are being connected; used to check that the local rules file is ignored by version control, and to tell whether the toolchains stand on their own or are attached to another project. | `bootstrap`, `prepare-environment`, `register-with-harness` |
-| `request` | What the user wants: first-time setup, a setting to change, a skill to register, an environment report, a gap to close, or discoverability in the harness. | all capabilities |
+| `package_root` | The resolved root of this package on this machine. The contracts, the role packages, the tools and the public skills sit at fixed locations inside it, and each kind's index turns a name into a file. The caller passes it: a setup flow resolves it once at the start of the run, a user invoking this role directly states it. | all capabilities |
+| `project_root` | The user's working project, or none. Used to check that the local rules file is ignored by version control, and to decide where an assented item may write. | `bootstrap`, `prepare-environment`, `register-with-harness` |
+| `request` | What the user wants: setup, a setting to change, a check to register, an environment report, a gap to close, or discoverability in the harness. | all capabilities |
 
-Locations of skills kept **outside** the repository are not parameters: they are read from the
+Locations of checks kept **outside** this package are not parameters: they are read from the
 `## Validation skills` entries and per-skill settings already recorded in `local_rules_file`.
 
-A directory this role has to **record** — where the contracts, the roles or the skills of the
-repository being connected live — is *proposed* from `repo_root` and confirmed by the user before it
-is written. Proposing and confirming is not defaulting: an unconfirmed proposal is never recorded.
+**Why one root, and why the project is separate.** This role used to take a path for the contracts, a
+path for the roles and a path for the skills, and to record all three in the user's file. It no
+longer does either. This package travels as one unit, so where each kind sits *inside* it is fixed
+and is nothing the user chooses: one root is passed in, and every name resolves from it through that
+kind's index. Nothing is defaulted by that — the one value that genuinely differs between machines is
+still supplied by the caller — and the user's file stays free of in-package locations, which are not
+settings and would only become a second thing to keep in step with the tree. `project_root` is the
+other half of the same distinction: this package is never the user's repository, so the check that
+the local rules file is ignored by version control has to run where that file actually lives, and
+where a prepared thing may be written is the project's question, not this package's. Having no
+project is a valid answer; a capability that then needs a location asks for one.
 
 ## Authority
 
@@ -117,25 +124,25 @@ they were, and none of them can be lifted by any assent.
 ## Consumes / Produces
 
 - **Consumes:** `user-context` (the contract itself — what flows need, the resolution order, and the
-  section template) and the `## Dependencies` sections of shipped and registered skills (a skill
-  construct, not a contract).
+  section template) and the `## Dependencies` sections of this package's skills and tools and of the
+  registered checks (a package construct, not a contract).
 - **Produces:** an instance of `user-context` in the user's local rules file — the one contract that
-  carries no envelope, because the file is the user's own. That instance also carries the recorded
-  toolchain directories, the environment record and the harness-registration record, which are this
-  role's own sections of it. Plus an interactive dependency-matrix report that is never written to
-  disk, and — for assented items only — what those items created in the user's environment, which is
-  not an artifact of this repository and is never tracked by it.
+  carries no envelope, because the file is the user's own. That instance also carries the environment
+  record and the harness-registration record, which are this role's own sections of it. Plus an
+  interactive dependency-matrix report that is never written to disk, and — for assented items only —
+  what those items created in the user's environment, which is not an artifact of this package and is
+  never tracked by it.
 
 ## Capabilities
 
 | Capability | Purpose | Inputs → outputs |
 |---|---|---|
-| [`bootstrap`](capabilities/bootstrap.md) | First run: identify the harness, create or merge its local rules file from the contract's section template, record where the definitions live, trigger `check-environment`, offer the two acting capabilities below, and recommend next steps. | harness + `user_context_contract` + `skills_root` + `repo_root` → `local_rules_file` + interactive report |
+| [`bootstrap`](capabilities/bootstrap.md) | Connect this package to a project, and bring an already-connected one forward: identify the harness, create or merge its local rules file from the contract's section template, trigger `check-environment`, offer the two acting capabilities below, and recommend next steps. | harness + `package_root` + `project_root` → `local_rules_file` + interactive report |
 | [`update-settings`](capabilities/update-settings.md) | Revisit or modify any already recorded setting. | `local_rules_file` + the requested change → updated `local_rules_file` + before/after summary |
-| [`register-skill`](capabilities/register-skill.md) | Record a user skill — from this repository or from the user's own environment — in the active set, with its kind and, when out-of-repo, its location. | skill identity + `local_rules_file` → updated `local_rules_file` |
-| [`check-environment`](capabilities/check-environment.md) | Aggregate the `## Dependencies` of shipped and registered skills transitively, probe them, and report the dependency matrix. | `skills_root` + `local_rules_file` → interactive dependency matrix |
+| [`register-skill`](capabilities/register-skill.md) | Record a check — one shipped in this package, or one the user keeps in their own environment — in the active set, with its kind and, when it lives outside this package, its location. | check identity + `local_rules_file` → updated `local_rules_file` |
+| [`check-environment`](capabilities/check-environment.md) | Aggregate the `## Dependencies` of this package's skills and tools and of the registered checks, transitively, probe them, and report the dependency matrix. | `package_root` + `local_rules_file` → interactive dependency matrix |
 | [`prepare-environment`](capabilities/prepare-environment.md) | Close gaps the matrix reported, by means determined for the environment actually present and only on what the user agreed to; verify each item and record it. Concluding that a gap cannot be closed here is a valid outcome. | dependency matrix + chosen gaps + `local_rules_file` → prepared items + environment record + interactive report |
-| [`register-with-harness`](capabilities/register-with-harness.md) | Make the shipped skills and roles discoverable to the harness in use, generated from the canonical packages and never the other way round; report whatever could not be registered, with the manual steps. | `skills_root` + `repo_root` + `local_rules_file` → discovery entries + registration record + interactive report |
+| [`register-with-harness`](capabilities/register-with-harness.md) | Make this package's public skills discoverable to the harness in use, generated from the canonical packages and never the other way round; report whatever could not be registered, with the manual steps. | `package_root` + `project_root` + `local_rules_file` → discovery entries + registration record + interactive report |
 
 ## Tool requirements
 
