@@ -55,7 +55,7 @@ validation report.
 ## Tool requirements
 
 Abstract needs only — the concrete engine, binaries and versions are named by the `## Dependencies`
-section of the render tool skill that invokes this role, never here.
+section of the render tool that invokes this role, never here.
 
 - a typesetting toolchain able to produce a PDF from a marked-up source (required);
 - text extraction from a PDF, in reading order and in a layout-preserving mode (required);
