@@ -3,20 +3,25 @@ name: validate-cv-enhancv
 description: External, advisory CV check performed by the Enhancv Resume Checker web service. Submits the final PDF deliverable through a real browser session and saves the service's report verbatim as a raw capture for the reviewer to normalize. Gated behind the internal and render gates; never edits the CV.
 ---
 
-# Tool skill: validate-cv-enhancv — external resume check via the Enhancv Resume Checker
+# Tool: validate-cv-enhancv — external resume check via the Enhancv Resume Checker
 
 ## Purpose
 
 Obtains a third party's opinion of the finished CV: the Enhancv Resume Checker parses the submitted
-PDF, reports how well a machine reads it, and offers suggestions. This skill holds the rules of that
+PDF, reports how well a machine reads it, and offers suggestions. This tool holds the rules of that
 one operation — what may be submitted, how the service is driven, what is captured, and what the
 capture may and may not be used for.
 
-The result of this skill is **raw material, not a verdict**. The capture is handed back; the reviewer
+The result of this tool is **raw material, not a verdict**. The capture is handed back; the reviewer
 turns it into a `validation-report` and judges it in separate, later steps.
 
-## What this skill is, and is not
+## What this tool is, and is not
 
+- **A tool, and an internal one.** It is reached by name and in one way only:
+  `reviewer.run-external-checks` is handed this file as the spec to execute. It is registered with no
+  harness, discovered by none and never offered in a selection surface — a submission to a third
+  party is the last step of a run whose gates are already green, and a request landing here directly
+  would arrive with none of that established.
 - **A procedure plus its assets, never an actor.** It defines no agent and carries no authority of
   its own. It is executed by the role `reviewer`, and the reviewer's invariants always apply — in
   particular: the document under review is never edited here, external scores are never truth, and
@@ -36,7 +41,7 @@ turns it into a `validation-report` and judges it in separate, later steps.
 | Inside a CV workflow | the reviewer, through `reviewer.run-external-checks` | the raw-capture paths the workflow passes |
 | Standalone | the user, invoking the reviewer or the script directly | `outputs/validate-cv-enhancv/<run-id>/`, with a minimal `run.md` |
 
-Paths are always supplied by the caller. This skill derives no path from repository layout, and the
+Paths are always supplied by the caller. This tool derives no path from repository layout, and the
 export filename it receives is the caller's, produced by the calling workflow's naming rule.
 
 ## Inputs
@@ -110,7 +115,7 @@ A run performed by hand follows the same rules.
 
 1. Confirm the dependencies declared below are bound. A required one that is not bound ⇒ the entry is
    **SKIPPED with instructions**; that is a recorded outcome, never a failure of the run.
-2. Resolve this skill's settings from the user's local rules file (`## Skill settings` →
+2. Resolve this tool's settings from the user's local rules file (`## Skill settings` →
    `### validate-cv-enhancv`) and pass them to the script as explicit arguments. The script never
    reads the rules file itself.
 3. Confirm the deliverable exists at the export path the flow produced, is a PDF, is at most 2 MB,
@@ -122,7 +127,7 @@ A run performed by hand follows the same rules.
 have to be true of the machine, and this file says only what must become *possible*, never which
 release makes it so:
 
-- **an interpreter that can drive a browser** — the one named by this skill's `python_interpreter`
+- **an interpreter that can drive a browser** — the one named by this tool's `python_interpreter`
   setting, or the one on the executable search path when no setting names one, with the automation
   package of the `playwright` dependency row importable *in that same interpreter*;
 - **a browser build that driver accepts** — the engine `browser_engine` names, either as a build the
@@ -133,7 +138,7 @@ release makes it so:
 item.** It takes the two goals above verbatim, works out the means from what this machine actually
 offers, and records what it did. It prescribes **no command sequence and no version** on purpose — a
 fixed sequence presumes a network, a package manager, a shell allowed to reach out, and a machine
-like the author's, and each of those presumptions fails somewhere. Neither this skill nor the
+like the author's, and each of those presumptions fails somewhere. Neither this tool nor the
 reviewer executing it installs anything or improvises a procedure of its own; an unbound dependency
 is reported, not worked around.
 
@@ -242,7 +247,7 @@ follow, or when the user prefers to drive the service themselves.
 | The capture contains a cookie wall, an error page or a login prompt | the submission never reached the report | record it as an unusable capture with the evidence; do not reconstruct what the report "would have" said |
 | The capture is missing most of the expected checks | partial capture | mark it partial, say what is missing, and let the normalization treat it as a fragment |
 | The input is rejected as too large | the file exceeds the 2 MB service limit | do not shrink the CV's content to fit — report it to the flow; the deliverable is the renderer's output, not this step's |
-| A local policy forbids Chromium-based browsers | the default engine is not acceptable here | record `browser_engine: firefox` (or `webkit`) in this skill's settings |
+| A local policy forbids Chromium-based browsers | the default engine is not acceptable here | record `browser_engine: firefox` (or `webkit`) in this tool's settings |
 
 ## Bundled script
 
@@ -284,7 +289,7 @@ vocabulary (`executed`, `SKIPPED`, `not completed`, `blocked`).
 ## User-context settings
 
 Recorded under `## Skill settings` → `### validate-cv-enhancv` in the user's local rules file (see
-contract `user-context`). All are optional; the machine-specific bindings of this skill's
+contract `user-context`). All are optional; the machine-specific bindings of this tool's
 dependencies belong here and nowhere else. Keys this file does not define are reported to the user,
 never silently ignored.
 
@@ -305,9 +310,9 @@ never silently ignored.
 
 | Name | Kind | Needed for | Required / optional | When unbound |
 |---|---|---|---|---|
-| `python3` | tool | Running the bundled runner script. Probed **at the interpreter recorded as `python_interpreter`** in this skill's settings subsection when one is recorded, and on the executable search path otherwise; the evidence names which one answered. Answers to `--version`. | required | The check runs manual — the reviewer follows the manual fallback and records the entry as SKIPPED-manual with those instructions. |
+| `python3` | tool | Running the bundled runner script. Probed **at the interpreter recorded as `python_interpreter`** in this tool's settings subsection when one is recorded, and on the executable search path otherwise; the evidence names which one answered. Answers to `--version`. | required | The check runs manual — the reviewer follows the manual fallback and records the entry as SKIPPED-manual with those instructions. |
 | Browser automation | capability | Driving a real browser session through the service's client-side upload and report. | required | The entry runs SKIPPED with instructions; the manual fallback in the runbook is the documented substitute, and the flow continues. |
 | `playwright` (Python package, `playwright.async_api`) | tool | The concrete binding of browser automation used by the bundled script. It is a module, not an executable, so it is probed **inside the same interpreter as the `python3` row** — the check is `<that interpreter> -c "import playwright.async_api"`, which exits 0 when the package is importable there. | required | The script reports outcome `skipped` with the binding instructions and the manual fallback; nothing is submitted and nothing crashes. |
-| A Playwright browser build — `chromium` (default), or `firefox` / `webkit` | tool | Rendering the service page and letting the user complete challenges. Not an executable on the search path either: it is probed **at the `browser_executable` recorded** in this skill's settings when one is recorded, and otherwise through the driver in the same interpreter as the two rows above; the evidence names which build answered. | required | The script reports outcome `skipped` naming the engine that could not be launched; install the engine build or record a `browser_channel` / `browser_executable` binding. |
+| A Playwright browser build — `chromium` (default), or `firefox` / `webkit` | tool | Rendering the service page and letting the user complete challenges. Not an executable on the search path either: it is probed **at the `browser_executable` recorded** in this tool's settings when one is recorded, and otherwise through the driver in the same interpreter as the two rows above; the evidence names which build answered. | required | The script reports outcome `skipped` naming the engine that could not be launched; install the engine build or record a `browser_channel` / `browser_executable` binding. |
 | Network access to the service host | capability | Reaching the checker at all. | required | The run ends `not-completed` with the diagnostic capture; the manual fallback applies from a machine that can reach the service. |
 | An interactive desktop session (a visible browser window) | capability | Completing the service's human-verification challenges, which is the default mode. | required | The run may be attempted headless (`headless: true`), but a challenge then cannot be completed and the run ends `not-completed`; the manual fallback on a machine with a display is the documented path. |

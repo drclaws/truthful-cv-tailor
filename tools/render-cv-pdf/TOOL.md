@@ -3,24 +3,30 @@ name: render-cv-pdf
 description: Renders a final CV document into the delivered PDF using the resolved template bundle, runs the mechanical render gates (compile twice, text extraction, fonts, page target, export naming), and reports overflow back to the caller instead of restyling the template.
 ---
 
-# Tool skill: render-cv-pdf
+# Tool: render-cv-pdf
 
 Turns a finished CV document into the file the user sends out: fill the resolved template's
 agent-content zones, build the PDF, run the mechanical gates, report.
 
-**PDF is the only deliverable.** No other export format is produced by this skill, deliberately.
+**PDF is the only deliverable.** No other export format is produced by this tool, deliberately.
 
-## This skill is not an actor
+## What this tool is
 
-A tool skill is **procedures-plus-assets, never an agent**. This skill defines no role, holds no
-authority of its own, and decides nothing about content. It is executed by the role `renderer`,
-capability `renderer.render-document`, and the renderer's invariants apply to every line of it:
-content is transcribed and never authored, only the template's delimited agent zones are edited, the
-template's style is never changed, the knowledge bank and the constraints ledger are never written,
-another run's output is never a style authority.
+**A tool, and an internal one.** It is reached by name — from a flow step naming `tool:render-cv-pdf`,
+or from a user naming it directly with explicit paths — and by nothing else: it is registered with no
+harness, discovered by none, and never offered in a selection surface. A render is the step of a run
+whose checks have already been cleared, so a request that landed here directly would arrive without
+them; `tool-conventions` states that reasoning once, for every tool in this package.
+
+**Procedures-plus-assets, never an agent.** This tool defines no role, holds no authority of its own,
+and decides nothing about content. It is executed by the role `renderer`, capability
+`renderer.render-document`, and the renderer's invariants apply to every line of it: content is
+transcribed and never authored, only the template's delimited agent zones are edited, the template's
+style is never changed, the knowledge bank and the constraints ledger are never written, another
+run's output is never a style authority.
 
 Where this file and the renderer's capability describe the same step, the role states *what* the
-renderer is responsible for, and this skill states the *operation rules* — the page target, the fit
+renderer is responsible for, and this file states the *operation rules* — the page target, the fit
 policy, the gate sequence, the export naming check, and how a template is resolved. Where a rule
 here would contradict the role, the role wins and the contradiction is a defect to report.
 
@@ -50,8 +56,8 @@ Build byproducts go to `build_dir` and are never part of the deliverable.
 
 ## User-context settings
 
-Per contract `user-context`, a skill's own `SKILL.md` defines the keys of its settings subsection.
-This skill recognizes exactly one:
+Per contract `user-context`, a package's own definition file defines the keys of its settings
+subsection. This tool recognizes exactly one:
 
 ```markdown
 ### render-cv-pdf
@@ -60,17 +66,17 @@ This skill recognizes exactly one:
 
 | Key | Required | Values | Default | Meaning |
 |---|---|---|---|---|
-| `template` | optional | the name of a folder under this skill's `templates/`, or a path to an external bundle satisfying the template bundle contract below | `ats-onepage-latex` | Which template bundle this skill resolves and fills. |
+| `template` | optional | the name of a folder under this tool's `templates/`, or a path to an external bundle satisfying the template bundle contract below | `ats-onepage-latex` | Which template bundle this tool resolves and fills. |
 
 Any other key in this subsection is **reported as unrecognized** at preflight, never silently
-ignored and never guessed at. The page target is an operation rule of this skill (default: one page),
+ignored and never guessed at. The page target is an operation rule of this tool (default: one page),
 not a user-context key; a caller that needs a different target passes `page_target` explicitly.
 
 ## Template resolution
 
 1. Take the `template` value the caller resolved from user context. If there is none, use
    `ats-onepage-latex` — the shipped default, and the only bundle this repository ships.
-2. A value **without a path separator** names a folder under this skill's `templates/`. Resolve it
+2. A value **without a path separator** names a folder under this tool's `templates/`. Resolve it
    there; if that folder does not exist, stop and ask — do not fall back to the default silently,
    because the user asked for something specific.
 3. A value **with a path separator** is a path to an external bundle. Resolve it as given (relative
@@ -81,15 +87,15 @@ not a user-context key; a caller that needs a different target passes `page_targ
 5. Record the bundle's **name and version** in the render report — the `render-manifest` contract
    requires them, and a rerun must be attributable to a specific template.
 
-**Which bundle to register is the user's decision**, recorded in this skill's settings subsection in
+**Which bundle to register is the user's decision**, recorded in this tool's settings subsection in
 user context — for instance a simpler or stricter bundle when the target system demands one. This
-skill never switches bundle on its own, and a bundle is **never** changed to make content fit: that
+tool never switches bundle on its own, and a bundle is **never** changed to make content fit: that
 is an overflow, and overflow goes back to the caller as content to revise.
 
 ## Template bundle contract
 
 Any bundle — shipped or the user's own — satisfies this contract. It is what makes a user-supplied
-template usable without changing this skill.
+template usable without changing this tool.
 
 Required files, at the root of the bundle folder:
 
@@ -109,9 +115,9 @@ Rules a bundle must obey:
 - **ATS-safe by construction.** Every fact it renders is ordinary visible text; no fact is carried
   only by an image, an icon, a colour, a table, or alternate text.
 - **It governs the *how*, never the *what*.** A bundle's policy may not relax the truthfulness
-  invariants, the document contract, this skill's operation rules, or the renderer's authority. A
+  invariants, the document contract, this tool's operation rules, or the renderer's authority. A
   bundle that tries to is rejected and reported.
-- **Concrete tool names belong to its `runbook.md`**, and any tool it requires beyond this skill's
+- **Concrete tool names belong to its `runbook.md`**, and any tool it requires beyond this tool's
   `## Dependencies` must be declared there so `setup-master.check-environment` can be told about it.
 
 A bundle may ship extra assets (scripts, fonts it is licensed to redistribute, sample fills). They
@@ -135,7 +141,7 @@ When validated content does not fit the target, the fit problem is a **content**
 - **Never silently cut.** The renderer does not decide on its own which validated content to drop.
 - **Report the overflow to the caller** — what overflowed and by roughly how much — so the document
   can go back for content revision by the writer, under the reviewer's checks. That is the whole of
-  this skill's authority over a fit problem.
+  this tool's authority over a fit problem.
 
 The tactics the caller applies to validated **Experience** content, in the order they cost least:
 
@@ -167,7 +173,7 @@ a run with any gate red is reported as not done, never as a success.
 | 5 | **Export naming** | the exported filename matches the naming rule the calling flow passed | do not rename by invention; ask the caller |
 
 The concrete commands live in the resolved bundle's `runbook.md`; the general half of the procedure
-is in this skill's runbook below. Gates 3 and 4 also feed the bundle's own composition gate — for
+is in this tool's runbook below. Gates 3 and 4 also feed the bundle's own composition gate — for
 the shipped template, the column gate in
 [`templates/ats-onepage-latex/policy.md`](templates/ats-onepage-latex/policy.md).
 
@@ -178,8 +184,8 @@ did not run would have passed.
 
 ## Export naming
 
-The naming **rule** belongs to the calling flow, never to this skill, never to a contract, and never
-to user context. This skill only:
+The naming **rule** belongs to the calling flow, never to this tool, never to a contract, and never
+to user context. This tool only:
 
 - applies the filename or rule the caller passed;
 - checks the produced filename against it (gate 5);

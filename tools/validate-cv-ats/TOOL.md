@@ -5,15 +5,21 @@ description: ATS structural check spec — verifies that a CV stays machine-read
 
 # Tool: validate-cv-ats — the ATS structural check
 
-## What this skill is
+## What this tool is
 
 The **spec of one check**: does this CV survive machine parsing, and does it carry the vacancy's
 language? It holds the rules of that check — what is inspected, which inputs it needs, which
 measurements it produces, which scripts it ships, and how it behaves when something is unavailable.
 
-It is a **procedure plus assets, never an actor**. This skill defines no agent and holds no authority
-of its own. It is executed by `reviewer.run-check` under the invariants of the role `reviewer`,
-which always outrank anything written here. In particular:
+**A tool, and an internal one.** It is reached by name and in one way only: `reviewer.run-check` is
+handed this file as the spec to execute. It is registered with no harness, discovered by none and
+never offered in a selection surface — whether this check runs at all is decided by its membership of
+the user's validation set, recorded in the user's own file, and never by a request landing on it
+directly and skipping the flow that was supposed to order the checks.
+
+It is a **procedure plus assets, never an actor**. This tool defines no agent and holds no authority
+of its own. It is executed under the invariants of the role `reviewer`, which always outrank anything
+written here. In particular:
 
 - **This check never edits the CV.** It produces findings and required edits; applying them is the
   writer's work.
@@ -36,7 +42,7 @@ workflows directly and never part of the registered set.
 
 ## Inputs
 
-Every path is passed in explicitly by the caller; this skill derives none from repository layout.
+Every path is passed in explicitly by the caller; this tool derives none from repository layout.
 
 | Input | Contract / description | Required |
 |---|---|---|
@@ -252,7 +258,7 @@ derived manually, and give `ATS score` and `Keyword coverage` from the same defi
 
 ## User-context settings
 
-This skill recognizes **no keys** under `## Skill settings` in the user's context. Its behaviour is
+This tool recognizes **no keys** under `## Skill settings` in the user's context. Its behaviour is
 fully determined by its inputs and the CLI options above. Any key recorded under a
 `### validate-cv-ats` subsection is unrecognized and is reported at preflight per contract
 `user-context`, never silently ignored.

@@ -69,7 +69,7 @@ lists what must survive in both.
 mapping `\pdfgentounicode=1` produces). `pdfinfo` reports `Pages:` — the page target check reads it.
 
 The bundled script `../../scripts/pdf_text_check.py` runs the two extractions and reports the
-required headings and contact signals in one pass; see the skill's runbook for its arguments and
+required headings and contact signals in one pass; see the tool's runbook for its arguments and
 exit codes. It complements these commands, it does not replace reading the extracts.
 
 ## Troubleshooting

@@ -10,7 +10,7 @@ Scope, so that nothing is stated twice:
 
 - **This file governs the HOW** — the mechanics of filling *this* template.
 - **The operation rules** — the page target, the content-first fit policy, the gate sequence, export
-  naming, template resolution — live in the owning skill, `../../TOOL.md`.
+  naming, template resolution — live in the owning tool, `../../TOOL.md`.
 - **The document-level rules** — which sections a CV has, in which order, how the header title is
   chosen, what may be claimed at all — belong to the `cv-document` contract. This file never restates
   them and never competes with them: if a rule here seems to contradict the document contract, stop
