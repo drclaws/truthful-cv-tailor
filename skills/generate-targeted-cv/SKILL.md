@@ -204,6 +204,7 @@ passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge ban
 
 | # | Step | Executor | Contract | Paths passed | Group | Gate |
 |---|---|---|---|---|---|---|
+| 0 | Resolve this package's root, then load `engine-conventions` | `flow` | — | — | — | — |
 | 1 | Resolve user context | `flow` | `user-context` | — | — | G1 |
 | 2 | Check the bank is usable | `knowledge-bank-curator.check-freshness` | — (verdict returned) | `sources`, `bank_dir` | — | G2 |
 | 3 | Scaffold the run, seed the manifest | `flow` (`scripts/create_run.py`) | `run-manifest` | `<run>/`, `<run>/run.md`, `<run>/position/` | — | — |
@@ -242,6 +243,22 @@ passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge ban
 A harness with subagents runs a group concurrently; a single-context harness runs the same steps in
 table order. **The result must not differ.** Nothing inside a group may read another group member's
 output — that is what makes the two execution modes equivalent.
+
+### 0. Resolve this package's root, then load the engine's conventions
+
+This file was presented from `<package root>/skills/generate-targeted-cv/`. The package root is two
+levels above that directory; resolve it to an absolute path from the location the harness supplied
+with this file. Then read `engine-conventions` — the invariants, the reference grammar, the anchor
+rule, the loading rule and the rule about where a run writes — from the contracts directory at that
+root, before doing anything else. If the location was not supplied, or the file cannot be read, do
+not proceed: report which of the two happened, and ask.
+
+Every public skill of this package carries that paragraph, and the duplication is deliberate: an
+entry point cannot read the engine's conventions to learn how to find the engine's conventions, so
+something has to anchor the scheme. The rule itself — where the base comes from, why the absolute
+result is what gets read, what a refusal to read it means, and what to do when no base was supplied —
+lives once, in `engine-conventions`, and this step never becomes a second copy of it. Do not tidy the
+step away as a duplicate.
 
 ### 1. Resolve user context
 
