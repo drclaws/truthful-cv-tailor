@@ -36,8 +36,7 @@ it is referred to by name.
 - **The same text runs on any harness.** A harness with subagents may run the flow's declared
   parallel groups concurrently; a single-context harness follows the same steps sequentially. The
   result must not differ.
-- **The user may invoke a role directly**, passing explicit paths. That is the normal way to use
-  `setup-master`.
+- **The user may invoke a role directly**, passing explicit paths.
 
 ## Progressive disclosure
 
@@ -68,9 +67,13 @@ file ever requires another capability file to be loaded to be correct.
 
 ## Role card template
 
-Every `ROLE.md` follows this shape. YAML frontmatter carries `name` and `description` so that a
-harness adapter can generate an agent wrapper from it. The directory name of the package and the
-frontmatter `name` are the same string.
+Every `ROLE.md` follows this shape. YAML frontmatter carries `name` and `description`, and the
+`name` is the point of it: it is the identity everything outside the package uses for this role — a
+flow's step table naming `role.capability`, and the index that resolves that name to this directory.
+The directory name of the package and the frontmatter `name` are therefore **the same string**. When
+they differ the package is resolvable under one of the two names and invisible under the other, and
+nothing announces the disagreement; a machine-checkable rule is what makes that failure impossible
+rather than merely unlikely.
 
 ```markdown
 ---
@@ -100,8 +103,8 @@ INDEX ONLY. One line per capability: purpose, inputs → outputs, and a link to
 
 ## Tool requirements
 ABSTRACT capability needs only — "browser automation", "LaTeX + poppler toolchain", "web search
-(optional)". Concrete tool names never appear here; they appear only in skill `## Dependencies`
-sections.
+(optional)". Concrete tool names never appear here; they appear only in the `## Dependencies` section
+of the skill or tool that declares them.
 
 ## Invariants
 Pointers to the repository-wide invariants, plus the hard rules specific to this role.
@@ -138,11 +141,12 @@ unavailable optional capability is reported as SKIPPED with instructions — it 
 ## Tool abstraction
 
 Roles declare **abstract capability needs** only. Concrete bindings — which browser driver, which
-LaTeX distribution, which service reaches a professional network — live in skills (each `SKILL.md`'s
-`## Dependencies` section and runbook) and in the user's harness configuration.
+LaTeX distribution, which service reaches a professional network — live in the package that declares
+them, a skill or a tool, in its `## Dependencies` section and runbook, and in the user's harness
+configuration.
 
-Roles therefore do **not** carry a `## Dependencies` section; that section is a skill construct,
-aggregated at setup time by `setup-master.check-environment`.
+Roles therefore do **not** carry a `## Dependencies` section: it belongs to the packages that name
+concrete tooling, and it is aggregated at setup time by `setup-master.check-environment`.
 
 Availability is checked at setup time and again at run time. A step whose capability is not bound is
 marked SKIPPED or manual, with instructions — it does not fail the flow.
@@ -163,8 +167,8 @@ tool paths, no OS-specific assumptions.
 
 ### Reading a script's outcome
 
-This applies to **every bundled script**, role-owned and skill-owned alike, and it exists because the
-scripts do not all answer in the same way.
+This applies to **every bundled script**, whichever package owns it — a role, a skill or a tool —
+and it exists because the scripts do not all answer in the same way.
 
 - **The printed report is always authoritative.** Every script writes its findings to stdout or to
   the path it was given; that text is what the calling agent reads and what goes into the artifact.
@@ -183,5 +187,6 @@ scripts do not all answer in the same way.
     `1` fail, `2` usage error, `3` skipped, `4` error).
 - **Never assume which convention a script follows.** The list above is the summary; the scripts that
   encode a verdict also state their codes in their module docstring and in `--help`. A non-zero exit
-  is never by itself a reason to fail a step — read the report, then apply the owning skill's or
-  capability's failure-and-skip rules. A script added later declares its convention the same way.
+  is never by itself a reason to fail a step — read the report, then apply the failure-and-skip rules
+  of the tool, skill or capability that owns it. A script added later declares its convention the
+  same way.

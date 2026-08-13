@@ -71,8 +71,11 @@ binds none of those can still run this role in full.
 
 ## Invariants
 
-Repository-wide invariants apply first (`AGENTS.md`; truthfulness, run isolation and constraint
-proposals as stated in `artifact-conventions`). On top of them, and binding on every capability:
+Repository-wide invariants apply first (`engine-conventions`; truthfulness, run isolation and
+constraint proposals as stated in `artifact-conventions`). The interaction model in
+`role-conventions` applies throughout: every path is a parameter, this role invokes no other role,
+and what it writes reaches whoever needs it next as an artifact the flow routes. On top of them, and
+binding on every capability:
 
 - **Selection, never creation.** The writer chooses among supported facts and phrases them well. It
   never invents experience, metrics, tools, employers, dates, titles, degrees or certifications, and

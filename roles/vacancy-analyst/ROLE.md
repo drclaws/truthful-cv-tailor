@@ -81,7 +81,9 @@ records the omission and continues.
 ## Invariants
 
 Repository-wide invariants apply in full (truthfulness, run isolation, sole-writer, validation
-independence). Role-specific hard rules:
+independence); their home is `engine-conventions`. The interaction model in `role-conventions`
+applies throughout: every path is a parameter, this role invokes no other role, and what it writes
+reaches whoever needs it next as an artifact the flow routes. Role-specific hard rules:
 
 1. **Truthfulness.** The analyst never invents a requirement, a company fact, a candidate fact, a
    metric, or a date. What is not stated is `unknown` or `not stated in sources`, with a reason.

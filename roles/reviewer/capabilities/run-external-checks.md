@@ -17,7 +17,7 @@ touches the document.
 
 | Parameter | Contract / description | Required |
 |---|---|---|
-| `external_entries` | the EXTERNAL entries of the user's registered validation set, each with its name, the path to its spec (`SKILL.md`), and any per-skill settings recorded for it | required |
+| `external_entries` | the EXTERNAL entries of the user's registered validation set, each with its name, the path to its spec, and any per-skill settings recorded for it | required |
 | `deliverable` | the final rendered deliverable to submit, at the export path and name the calling flow's naming rule produced | required |
 | `document` | the final document the deliverable was rendered from — read only to confirm the two match | required |
 | `job_inputs` | the job-side inputs an entry's spec may require (job description from the job dossier, requirements profile) | as declared by each entry |

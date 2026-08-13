@@ -39,8 +39,8 @@ was not passed, it asks rather than guessing.
 3. **Copy, then fill.** Write the template source to `source_out` and work only there. Fill only the
    delimited agent-content zones, transcribing content from the document.
 4. **Apply the fill rules** below (escaping, aliases, empty sections, optional fields, metadata).
-5. **Build and export** by the operation rules of the calling render tool skill — the compile
-   sequence, the page target, and the gate order are that skill's, not this role's.
+5. **Build and export** by the operation rules of the calling render tool — the compile
+   sequence, the page target, and the gate order are that tool's, not this role's.
 6. **Run the mechanical gates** and record every result, red ones included.
 7. **On a red gate, stop and report.** Never resolve a gate failure by changing the template's style
    or by silently cutting validated content — see *Failure and skip conditions*.
@@ -117,4 +117,4 @@ Any of these red means the render is not done: the report says so and the caller
 | Document is not `status: final`, or contradicts an accompanying validation report | Do not render. Report the conflict and ask the caller — resolving it is the writer's and the reviewer's work, not the renderer's. The renderer never resolves such a disagreement in the document's favour: a validation report outranks the text it examined, so rendering the contradicted version is always wrong, and the renderer's own move is to stop rather than to apply the report itself. |
 | The export filename or naming rule was not passed | Do not invent one. Ask the caller. |
 | Supported content has no agent zone in the template, or the template's policy contradicts the caller's settings | Stop and ask; do not improvise a zone and do not override the template. |
-| A required toolchain capability is unbound (no typesetting toolchain, no text extraction, no font inspection) | Do not fail the flow. Produce what is possible — normally the filled typeset source — and report the step as SKIPPED with the manual instructions from the render tool skill's runbook, stating which gates could not be run. |
+| A required toolchain capability is unbound (no typesetting toolchain, no text extraction, no font inspection) | Do not fail the flow. Produce what is possible — normally the filled typeset source — and report the step as SKIPPED with the manual instructions from the render tool's runbook, stating which gates could not be run. |
