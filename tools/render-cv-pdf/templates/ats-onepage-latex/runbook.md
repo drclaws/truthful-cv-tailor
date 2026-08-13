@@ -2,7 +2,7 @@
 
 The **toolchain half** of this bundle: which engine builds it, the exact commands, and what to do
 when one of them fails. The order in which these commands sit inside the render operation — and what
-each gate means — is in `../../SKILL.md`; this file only says how to invoke them for *this* template.
+each gate means — is in `../../TOOL.md`; this file only says how to invoke them for *this* template.
 
 Placeholders: `<source>` is the filled `.tex` the renderer wrote, `<export>` the exported PDF,
 `<build-dir>` the directory that may hold build byproducts. All of them are passed in by the caller;
@@ -79,7 +79,7 @@ exit codes. It complements these commands, it does not replace reading the extra
 | `! LaTeX Error: File 'paracol.sty' not found` (or `fontawesome5.sty`) | Incomplete TeX installation. Install the package through the distribution's package manager; do not remove the package from the preamble. |
 | `! Undefined control sequence. \pdfgentounicode` or `\pdfliteral` | The build is not running on pdfTeX. Use `pdflatex`; see *Engine*. |
 | `! Missing $ inserted`, `! Illegal parameter number`, unexpected `%` swallowing a line | Unescaped text in a zone. Apply the escaping table in `policy.md` — `%`, `&`, `_`, `#`, `$`, `{`, `}`, `\`. |
-| Content spills onto a second page | A content problem, never a style problem. Do not touch geometry, font size or spacing: report the overflow per the content-first fit policy in `../../SKILL.md`. |
+| Content spills onto a second page | A content problem, never a style problem. Do not touch geometry, font size or spacing: report the overflow per the content-first fit policy in `../../TOOL.md`. |
 | One column runs long while the other ends early | `paracol` does not balance for you. Rebalance by *placing* sections per `policy.md`, not by restyling; if the supported content genuinely does not fit the composition, report it. |
 | `pdffonts` shows `emb no` | A font is referenced but not embedded — usually a locally substituted font. Rebuild with the standard `lmodern` setup the preamble declares, then re-check. |
 | Extraction shows interleaved columns or drops signal-column text | The column gate failed. Report it with both extracts as evidence, and state the recommended remedy from `policy.md` (simplify the layout / single-column fallback) for the caller to decide. |
