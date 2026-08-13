@@ -6,7 +6,7 @@ keyword sets of a requirements profile) with the text of a candidate document,
 and reports coverage, missing terms, weakly covered terms and possible
 repetition. An optional must-have list is checked separately, phrase by phrase.
 
-The output is EVIDENCE for the ATS check spec (../SKILL.md), never a verdict, and
+The output is EVIDENCE for the ATS check spec (../TOOL.md), never a verdict, and
 never a licence to add a keyword the candidate's evidence does not support: an
 uncovered term is either a real edit or a gap, and only the reviewing agent can
 tell them apart.

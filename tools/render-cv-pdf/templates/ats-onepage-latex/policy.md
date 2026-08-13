@@ -10,7 +10,7 @@ Scope, so that nothing is stated twice:
 
 - **This file governs the HOW** — the mechanics of filling *this* template.
 - **The operation rules** — the page target, the content-first fit policy, the gate sequence, export
-  naming, template resolution — live in the owning skill, `../../SKILL.md`.
+  naming, template resolution — live in the owning skill, `../../TOOL.md`.
 - **The document-level rules** — which sections a CV has, in which order, how the header title is
   chosen, what may be claimed at all — belong to the `cv-document` contract. This file never restates
   them and never competes with them: if a rule here seems to contradict the document contract, stop
@@ -198,7 +198,7 @@ least of all to make a CV fit.
 
 When validated content overflows the page target, the fit problem is a **content** problem and it
 goes back to the caller. The tactics for resolving it, and the rule that the tool reports rather than
-cuts, live in `../../SKILL.md` (*Content-first fit policy*). Nothing in this file authorises a style
+cuts, live in `../../TOOL.md` (*Content-first fit policy*). Nothing in this file authorises a style
 change, and no template fallback is selected to squeeze content onto the page.
 
 ## Column gate
@@ -216,7 +216,7 @@ produced, and before it is handed over:
    truthfulness check and the registered internal checks run again.
 
 The concrete commands are in `runbook.md`; the gate's place in the overall sequence is in
-`../../SKILL.md`.
+`../../TOOL.md`.
 
 **When the gate fails**, it is a red gate: report it, with the evidence, and hand back to the caller
 — exactly as `renderer.render-document` requires. The remedy this template recommends, and which the
