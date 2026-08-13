@@ -80,9 +80,12 @@ not a user-context key; a caller that needs a different target passes `page_targ
 2. A value **without a path separator** names a folder under this tool's `templates/`. Resolve it
    there; if that folder does not exist, stop and ask — do not fall back to the default silently,
    because the user asked for something specific.
-3. A value **with a path separator** is a path to an external bundle. Resolve it as given (relative
-   values are relative to the repository root unless the caller says otherwise). An external bundle
-   that is missing or unreadable is reported to the caller; it is not replaced by the default.
+3. A value **with a path separator** is a path to an external bundle, and it lives wherever the user
+   keeps it — outside this package, which ships exactly one bundle. Resolve it as given: an absolute
+   path is the reliable form and is what to ask for, because a relative one can only be resolved
+   against the location the caller happens to be working in, which is neither this package nor
+   anything this tool can establish. An external bundle that is missing or unreadable is reported to
+   the caller; it is not replaced by the default.
 4. Validate the resolved bundle against the template bundle contract below before using it. A bundle
    that does not satisfy it is reported, not repaired.
 5. Record the bundle's **name and version** in the render report — the `render-manifest` contract
