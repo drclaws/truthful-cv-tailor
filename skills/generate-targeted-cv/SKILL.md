@@ -450,8 +450,9 @@ in full, plus the internal entries the disposition list implicates. The reports 
 
 `renderer.render-document`, executing the tool `render-cv-pdf` with the template resolved from that
 tool's own settings subsection in user context (its default is the shipped bundle). The tool owns the
-page target, the content-first fit policy, the gate sequence and the template resolution; this flow
-owns the paths and the export name.
+page target, the gate sequence, the template resolution and how an overflow is reported; what to do
+about an overflow is the content-first fit policy of the document contract's family, not the tool's;
+this flow owns the paths and the export name.
 
 **The renderer may refuse, and that is correct.** It does not render a document that contradicts an
 accompanying validation report, and it does not quietly prefer one over the other — it stops and

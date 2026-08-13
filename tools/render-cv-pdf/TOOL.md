@@ -26,9 +26,10 @@ style is never changed, the knowledge bank and the constraints ledger are never 
 run's output is never a style authority.
 
 Where this file and the renderer's capability describe the same step, the role states *what* the
-renderer is responsible for, and this file states the *operation rules* — the page target, the fit
-policy, the gate sequence, the export naming check, and how a template is resolved. Where a rule
-here would contradict the role, the role wins and the contradiction is a defect to report.
+renderer is responsible for, and this file states the *operation rules* — the page target, how an
+overflow is reported, the gate sequence, the export naming check, and how a template is resolved.
+Where a rule here would contradict the role, the role wins and the contradiction is a defect to
+report.
 
 ## Inputs
 
@@ -128,36 +129,33 @@ The shipped default is `templates/ats-onepage-latex/`:
 [`policy.md`](templates/ats-onepage-latex/policy.md),
 [`runbook.md`](templates/ats-onepage-latex/runbook.md).
 
-## Page target and the content-first fit policy
+## Page target, and what an overflow is
 
-**The target is one page** unless the caller passed a different `page_target`. The target is measured
-on the **export**, not estimated from the source.
+**The target is one page** unless the caller passed a different `page_target`. **This tool declares
+the target and measures it on the export**, never estimating it from the source: a page count read
+off the typeset source is a guess about the file that is actually sent, and gate 2 checks the file
+itself.
 
-When validated content does not fit the target, the fit problem is a **content** problem:
+**What happens when validated content does not fit is not this tool's rule to state.** The document
+it renders is a `cv-document`, which is a **deliverable-document contract**, so the
+**content-first fit policy** of that family in `artifact-conventions` governs it: the
+evidence-carrying section is compressed first and gradually, space that later edits free is refilled,
+and restyling the delivered result — or reaching for another template to squeeze the same content in
+— is out of bounds, because a fit problem is a content problem. That policy is stated once there and
+is not restated here. It is also not a rendering rule: it holds for a deliverable that is pasted into
+a web form and never rendered at all, which is why it does not belong to a render tool.
 
-- **Never restyle to fit.** Geometry, margins, font sizes, spacing, colours, column widths, section
-  styling and visual components stay exactly as the bundle defines them. Selecting a different
-  template to squeeze content in is the same violation by another route.
-- **Never silently cut.** The renderer does not decide on its own which validated content to drop.
-- **Report the overflow to the caller** — what overflowed and by roughly how much — so the document
-  can go back for content revision by the writer, under the reviewer's checks. That is the whole of
-  this tool's authority over a fit problem.
+What is this tool's, and is stated here, is what it does with an overflow:
 
-The tactics the caller applies to validated **Experience** content, in the order they cost least:
-
-1. merge overlapping bullets;
-2. shorten wording while preserving concrete scope, impact, tools and seniority;
-3. remove lower-value or less job-relevant details;
-4. keep the strongest supported evidence for the target role.
-
-**Compress gradually.** The goal is a complete, recruiter-readable one-page CV, not the shortest
-possible CV. And the rule runs both ways: **if edits create extra room, reuse it** for the most
-valuable supported Experience detail that improves target fit — provided the result still fits and
-still passes validation.
-
-Every content change after a render re-opens the checks it could invalidate: the mandatory
-truthfulness check and the affected registered internal checks run again, and the document is
-re-rendered.
+- **Report it to the caller** — what overflowed and by roughly how much — so the document can go back
+  for content revision by the writer, under the reviewer's checks. **That is the whole of this tool's
+  authority over a fit problem**: it decides nothing about content, so it neither drops validated
+  content on its own nor switches to a bundle that would hide the overflow.
+- **Never restyle to fit.** The bundle's style is fixed by the bundle (for the shipped default, its
+  `policy.md` says so in its own words), and this tool has no authority to change it in any case.
+- Every content change after a render re-opens the checks it could invalidate: the mandatory
+  truthfulness check and the affected registered internal checks run again, and the document is
+  re-rendered.
 
 ## Gate sequence
 
@@ -167,7 +165,7 @@ a run with any gate red is reported as not done, never as a success.
 | # | Gate | Green when | Red means |
 |---|---|---|---|
 | 1 | **Compile twice** | the source builds twice in a row with no error, so cross-references, column breaks and PDF metadata have settled | a build error, or content still moving between the two runs. Fix the fill or the escaping — never the style |
-| 2 | **Page target** | the export's page count is at most `page_target` | overflow: stop before handing over and apply the content-first fit policy above |
+| 2 | **Page target** | the export's page count is at most `page_target` | overflow: stop before handing over, and report it to the caller as *Page target, and what an overflow is* above requires |
 | 3 | **Text extraction, both modes** | extracting in plain reading order **and** in layout-preserving mode still yields the section headings, the contact details, the role titles, the dates and the bullets, with **no cross-column interleaving** and no side content lost; and no `TODO`, `PLACEHOLDER` or template sample text appears in either extract | the layout defeats parsing. Report it with both extracts as evidence and the bundle's recommended remedy; the caller decides |
 | 4 | **Fonts embedded** | every font in the export is embedded (and Unicode-mapped, where the engine offers it) | the file will not render or extract reliably elsewhere; rebuild per the bundle's runbook |
 | 5 | **Export naming** | the exported filename matches the naming rule the calling flow passed | do not rename by invention; ask the caller |
@@ -238,7 +236,7 @@ as not run with the commands to run them by hand, and the report says the render
 | Symptom | What it means here |
 |---|---|
 | Build errors that vanish when a font size or margin is changed | Out of scope by construction. The fix is content or escaping, never style. |
-| The export needs two pages | Gate 2 red — apply the content-first fit policy and report the overflow; do not shrink anything. |
+| The export needs two pages | Gate 2 red — report the overflow to the caller, who resolves it under the content-first fit policy the document's contract family declares; do not shrink anything here. |
 | Extraction loses side-column text | Gate 3 red — report with both extracts; the remedy the bundle recommends (for the shipped template: simplify the layout, single-column fallback) is the caller's decision. |
 | The document holds supported content the bundle has no zone for | Stop and ask. Never improvise a zone. |
 | The bundle's policy contradicts the settings the caller passed | Stop and ask. Never override the bundle and never override the caller. |
