@@ -2,21 +2,21 @@
 """Probe the concrete dependencies named on the command line.
 
 Used by `setup-master.check-environment`. The agent aggregates the `## Dependencies`
-sections of the shipped and registered skills and passes the concrete tool names,
-minimum versions and locations here as EXPLICIT ARGUMENTS.
+sections of this package's skills and tools and of the registered checks, and passes
+the concrete tool names, minimum versions and locations here as EXPLICIT ARGUMENTS.
 
-This script never discovers work for itself: it does not read SKILL.md files, user
-context, rules files, contracts, or any repository file. It checks exactly what it is
+This script never discovers work for itself: it does not read a package's definition
+file, user context, rules files, contracts, or any file of this package. It checks exactly what it is
 told to check and reports a status for each item.
 
 A missing tool is a reported status, never a crash: the exit code is 0 whenever the
 arguments were valid, so the caller reads the report rather than the exit code.
 
-Examples (the names are illustrations of what a skill might declare):
+Examples (the names are illustrations of what a package might declare):
 
     check_environment.py --tool python3@3.10 --tool pdflatex --json
     check_environment.py --tool pdftotext --version-arg pdftotext=-v
-    check_environment.py --path ./some/registered/skill --no-version-probe
+    check_environment.py --path ./some/registered/check --no-version-probe
 """
 
 from __future__ import annotations

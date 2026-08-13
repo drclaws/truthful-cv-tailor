@@ -144,7 +144,7 @@ to decide something for itself is a place where two matrices diverge.
 
    **`tool` — the bundled script.** Pass the concrete names, and any minimum versions, that you
    aggregated, as explicit arguments. The script checks exactly what it is told to check: it never
-   reads a `SKILL.md`, a rules file, or any other file to discover work.
+   reads a package's definition file, a rules file, or any other file to discover work.
 
    ```text
    check_environment.py --tool <name> --tool <name>@<min-version> --path <location> --json

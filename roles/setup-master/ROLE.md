@@ -9,13 +9,15 @@ description: Connects the toolchains in this repository to the user's working en
 
 Prepares the environment so that a user request can be served: it determines which local rules file
 the harness in use auto-loads, records the user's context in it (experience sources, the active
-validation set, per-skill settings, and where each kind of definition lives), registers user skills,
-reports which declared dependencies are bound on this machine, and — **only on the user's assent,
-item by item** — closes the gaps it found and makes the toolchains discoverable to the harness in
-use. It is invoked directly by the user, not by a flow.
+validation set, per-package settings and the user's own rules), registers the checks the user wants
+run, reports which declared dependencies are bound on this machine, and — **only on the user's
+assent, item by item** — closes the gaps it found and makes this package's public skills reachable in
+the harness in use.
 
-It **prepares and never executes**: it runs no workflow, no tool skill, and no other role's
-capability, and it never performs an end-to-end test to "see whether things work". Changing the
+It is the machinery behind skill `connect-environment`, which is the front door; a user may also
+invoke it directly, passing explicit paths. No other role invokes it, and it invokes no other role.
+
+It **prepares and never executes**: it runs no workflow, no tool, and no other role's capability, and it never performs an end-to-end test to "see whether things work". Changing the
 user's machine is possible only through the plan defined in `## Authority` below; nothing is ever
 changed silently or unasked. When preparation is done it recommends the next step and stops.
 
@@ -148,12 +150,12 @@ they were, and none of them can be lifted by any assent.
 
 Abstract needs only:
 
-- **File access in the user's environment** — to read the contract and the skills, and to write the
-  local rules file.
+- **File access in the user's environment** — to read this package's own files and to write the local
+  rules file.
 - **Script execution** — the ability to run this role's bundled `scripts/check_environment.py`. If it
   cannot be run, `check-environment` degrades to asking the user instead of failing.
 - **Process and binary discovery on the user's machine** — what the bundled script performs, to see
-  whether a concrete tool a skill declared is present.
+  whether a concrete tool a package declared is present.
 - **Version-control ignore inspection** — to confirm the local rules file will not be committed, and
   that anything an assented item creates inside the repository is ignored too.
 - **Interactive dialogue with the user** — this role is conversational by design, and it is how
@@ -164,9 +166,9 @@ Abstract needs only:
   gaps.
 - **A bounded verification** — the ability to perform one small action showing that a thing just
   prepared answers. Without it, an item is reported as created but unverified.
-- **Creating something the harness discovers** — a file, or a link to a directory, at a location the
-  harness in use reads. Where the harness offers no such location, registration reports that it
-  cannot be completed instead of finding another way.
+- **Creating something the harness loads** — a directory, or a link to one, at a location the harness
+  in use reads. Where the harness offers no such location, registration reports that it cannot be
+  completed instead of finding another way.
 - *(optional)* **Harness introspection** — to identify the harness in use, to establish how it
   presents content to an agent, and to probe whether an abstract capability (browser automation, web
   search, a network service) is bound; without it, the role asks the user and records the answer as
@@ -176,9 +178,11 @@ Abstract needs only:
 
 ## Invariants
 
-Beyond the repository-wide invariants in `AGENTS.md`:
+The engine-wide invariants in `engine-conventions` apply in full, and so does the interaction model
+in `role-conventions` — which matters more here than in most role cards, because this role is the one
+a user is most likely to reach directly and it still takes every path as a parameter. On top of them:
 
-- **Prepare, never execute.** *Execute* means: run a workflow, run a tool skill, run another role's
+- **Prepare, never execute.** *Execute* means: run a workflow, run a tool, run another role's
   capability, or touch the user's real CV, vacancy or knowledge-bank data. None of that happens here,
   not even to verify a setup; recommendations are text. A **verification probe** is not execution:
   the smallest single action showing that the thing just created answers — an interpreter reporting
@@ -192,17 +196,18 @@ Beyond the repository-wide invariants in `AGENTS.md`:
   user confirmation of that specific change.
 - **The local rules file must be ignored by version control** before anything personal is written
   into it — it holds real paths and personal data.
-- **Never guess a user value.** Paths, sources, skill kinds and settings are asked for, never
-  inferred from the machine or from a plausible default. Unknown stays unknown.
+- **Never guess a user value.** Paths, sources, check kinds, settings, and which of several possible
+  means to use are asked for, never inferred from the machine or from a plausible default. Unknown
+  stays unknown.
 - **No central config.** The role invents no configuration file, no registry and no schema of its
-  own; the local rules file and each skill's own `SKILL.md` are the only authorities.
-- **Concrete tool names come only from skills.** They are read from `## Dependencies` entries and
-  echoed in reports; the role never adds a requirement of its own. The **goal** of any preparation is
-  quoted from the declaring skill; the **means** is worked out for the environment actually present
-  and is never written into a file of this repository. No file of this role carries an installation
-  recipe, an OS-specific step or a release number: instructions handed to a user are quoted from the
-  declaring skill's runbook, and what a toolchain resolves to at preparation time is what gets
-  installed.
+  own; the local rules file and each package's own definition file are the only authorities.
+- **Concrete tool names come only from the packages that declare them.** They are read from
+  `## Dependencies` entries and echoed in reports; the role never adds a requirement of its own. The
+  **goal** of any preparation is quoted from the declaring package; the **means** is worked out for
+  the environment actually present and is never written into a file of this repository. No file of
+  this role carries an installation recipe, an OS-specific step or a release number: instructions
+  handed to a user are quoted from the declaring package's runbook, and what a toolchain resolves to
+  at preparation time is what gets installed.
 - **Real absolute paths live only in the user's local file** — never in a file tracked by this
   repository.
 - **Not-yet-built things are recorded as `planned`.** A planned entry is inert: flows must not run
@@ -217,8 +222,8 @@ Stop and ask the user when:
 - the harness in use cannot be identified, or its native local rules file name/format is unclear;
 - the intended local rules file is **not** ignored by version control;
 - merging would change or remove content the user already wrote, or two sections disagree;
-- an experience source, a skill, or a settings key is ambiguous, unrecognized, or cannot be found;
-- a skill's `## Dependencies` entry is missing fields or contradicts another entry;
+- an experience source, a check, or a settings key is ambiguous, unrecognized, or cannot be found;
+- a package's `## Dependencies` entry is missing fields or contradicts another entry;
 - the user asks this role to run a flow, refresh the bank, or test the pipeline — say that this role
   prepares only, and name the flow they should invoke instead.
 
@@ -228,8 +233,8 @@ Stop an action that is already planned or under way when:
   `## Authority` requires of it;
 - what an item would touch turns out to be a file tracked by this repository, a harness configuration
   file, or a path outside the boundary the capability works under;
-- where a prepared thing should live is ambiguous — the toolchains are attached to another project,
-  or the user has not said where; that project owns its environment, so ask and record the answer;
+- where a prepared thing should live is ambiguous — it belongs to the user's own project, or the user
+  has not said where; that project owns its environment, so ask and record the answer;
 - an item behaves differently from what it announced — a different location, something else changed
   as a side effect — report before continuing rather than after finishing;
 - a verification fails, or cannot be run at all, after an item was executed: report what exists and
