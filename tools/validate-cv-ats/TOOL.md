@@ -1,6 +1,6 @@
 ---
 name: validate-cv-ats
-description: ATS structural check spec — verifies that a CV stays machine-readable for applicant tracking systems and that it covers the vacancy's keywords, and reports a 0-100 measurement with keyword coverage and formatting risks. Internal validator, executed by the reviewer.
+description: The spec of one check, and an internal tool — does this CV survive machine parsing by an applicant tracking system, and does it carry the vacancy's language. It holds what is inspected, the inputs the check needs, the 0 to 100 measurement and the keyword-coverage and formatting-risk findings it produces, and the scripts it ships. It is reached in one way only, by reviewer.run-check being handed this file as the spec to execute; nothing discovers it and it is never offered in a selection surface. It is a procedure plus assets, never an actor — executed under the reviewer's invariants, it never edits the CV, its number is a measurement rather than a judgement of the candidate and never outranks a truthfulness finding, and a keyword the evidence does not support is reported as a gap instead of an edit. Optional, like every entry of the validation set, and it runs only while the user's own file records it.
 ---
 
 # Tool: validate-cv-ats — the ATS structural check

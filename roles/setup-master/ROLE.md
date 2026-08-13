@@ -1,6 +1,6 @@
 ---
 name: setup-master
-description: Connects the toolchains in this repository to the user's working environment; prepares, never executes flows.
+description: An internal role of this package, registered with no harness and reached by name from the skill connect-environment, which is its front door, or by a user naming it with explicit paths — the machinery of setup. It determines the local rules file the harness in use auto-loads, records the user's own context in it, registers the checks the user wants run, reports which declared dependencies are bound on this machine, and, only on the user's assent and item by item, closes the gaps it found and makes this package's public skills reachable. It prepares and never executes — no workflow, no tool, no other role's capability, and no end-to-end test to see whether things work. It writes only the user's local rules file on its own initiative, it never edits a harness's own configuration file, and a piece of setup that would require one is reported as unable to complete with the manual steps.
 ---
 
 # Role: Setup-master — connects the toolchains to the user's environment

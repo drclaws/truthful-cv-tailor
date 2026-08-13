@@ -1,6 +1,6 @@
 ---
 name: render-cv-pdf
-description: Renders a final CV document into the delivered PDF using the resolved template bundle, runs the mechanical render gates (compile twice, text extraction, fonts, page target, export naming), and reports overflow back to the caller instead of restyling the template.
+description: The rendering operation of this package, and an internal tool — reached by name from a workflow step, or by a user naming it with explicit paths, and never offered in a selection surface. It fills the resolved template bundle's agent-content zones from a final CV document and writes the typeset source; where the bundle's typesetting toolchain and PDF inspectors are bound it also builds the PDF and runs the mechanical render gates (compile twice, page target, text extraction in both modes, embedded fonts, export naming), and where they are not it reports the render skipped with the bundle's own manual instructions and every gate recorded not run. It is procedures and assets, never an actor — the role renderer executes it and the renderer's invariants govern it, so it authors no content, never touches the template's style to make content fit, and reports an overflow back to its caller instead.
 ---
 
 # Tool: render-cv-pdf

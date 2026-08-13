@@ -1,6 +1,6 @@
 ---
 name: validate-cv-enhancv
-description: External, advisory CV check performed by the Enhancv Resume Checker web service. Submits the final PDF deliverable through a real browser session and saves the service's report verbatim as a raw capture for the reviewer to normalize. Gated behind the internal and render gates; never edits the CV.
+description: The spec of one external check, and an internal tool — a third party's opinion of the finished PDF, obtained from the Enhancv Resume Checker web service by driving it through a real browser session and saving its report verbatim as a raw capture. It is reached in one way only, by reviewer.run-external-checks being handed this file as the spec to execute; nothing discovers it and it is never offered in a selection surface. It runs only while the user's own file records it as an external entry, only after the run's internal and render gates are green, and only where browser automation is bound — unbound, the entry is reported skipped with its manual fallback. It is a procedure plus assets, never an actor — it hands back raw material and stops, since normalizing the capture and gating its advice are the reviewer's later steps, it edits nothing, and the service's score is that service's claim about a file, advisory in both directions and never truth.
 ---
 
 # Tool: validate-cv-enhancv — external resume check via the Enhancv Resume Checker

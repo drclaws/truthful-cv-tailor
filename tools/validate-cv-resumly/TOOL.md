@@ -1,6 +1,6 @@
 ---
 name: validate-cv-resumly
-description: External, manual-mode CV check on the Resumly service. A person submits the final rendered PDF together with the job description, saves the service's report verbatim as a raw capture, and hands it back; the reviewer normalizes and gates it. Advisory only — this tool never edits the CV and its scores are never truth.
+description: The spec of one external check in manual mode, and an internal tool — a third party's opinion of the finished PDF and the vacancy text, obtained from the Resumly service by a person who submits them by hand and saves the report verbatim as a raw capture. It ships no automation, so its whole procedure is a checklist executable from this file alone, and its binding is a person with a browser. It is reached in one way only, by reviewer.run-external-checks being handed this file as the spec to execute; nothing discovers it and it is never offered in a selection surface. It runs only while the user's own file records it as an external entry, and only after the run's internal and render gates are green. It is a procedure plus its parameters, never an actor — it produces one raw capture and stops, since normalizing and gating are the reviewer's later steps, it edits nothing at all, and the service's scores are that service's claims, advisory and never truth.
 ---
 
 # Tool: validate-cv-resumly
