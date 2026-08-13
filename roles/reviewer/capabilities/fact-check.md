@@ -7,9 +7,9 @@ evidence, it classifies every meaningful claim in that document by how well the 
 and produces a `validation-report` with findings, required edits and a verdict.
 
 This capability is **not part of the registered validation set**. It is the reviewer's own capability
-and every CV workflow invokes it directly and unconditionally, because the truthfulness invariant
-forbids finalizing a document nobody has checked. It cannot be disabled, deselected or SKIPPED; if it
-cannot run, the flow is blocked rather than continued.
+and every workflow that produces a candidate document invokes it directly and unconditionally,
+because the truthfulness invariant forbids finalizing a document nobody has checked. It cannot be
+disabled, deselected or SKIPPED; if it cannot run, the flow is blocked rather than continued.
 
 It is also the common truthfulness layer for every other operation in this role: whenever a document
 changes — after an edit, after a render that altered content, after any accepted external
