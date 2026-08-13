@@ -2,7 +2,8 @@
 
 The rules **every** contract in this directory inherits: what a contract may and may not describe,
 how an artifact instance is named, the common envelope every instance opens with, and the
-artifact-wide rules on truthfulness, run isolation, constraint proposals and versioning.
+artifact-wide rules on truthfulness, run isolation, constraint proposals and versioning — followed
+by the rules that bind a **named family** of contracts rather than all of them.
 
 This is an ordinary document of the contracts directory, listed in the index like any contract. Refer
 to it by the name `artifact-conventions` from outside the directory, and as the bare sibling filename
@@ -113,6 +114,73 @@ A report with nothing to propose still carries the section, with the single line
 `cv-document` — the last one inside its writer annex. The document is a deliverable rather than a
 report, but it is the writing role's only artifact, and the sole-writer rule gives every role exactly
 one route to the constraints ledger.
+
+## Deliverable-document contracts
+
+**Deliverable-document contracts** — those describing an artifact a person sends or publishes:
+`cv-document`, and `profile-document` when it exists. Each declares its own sections, its own
+target, its own header shapes and its own surface-specific rules; what every such document shares is
+stated here once and inherited — **presentation neutrality** and the **content-first fit policy**.
+
+**Why a named family rather than a rule for every contract.** These rules were first written for the
+CV and read like CV rules, but not one of them is about a CV: they are about a document that a
+machine reads as a flat stream of text and a stranger skims in seconds. They hold unchanged for a
+professional-network profile, which has no renderer at all. Applied to *every* contract they would
+be wrong — an `evidence-map` **is** a table — so the subset is named, exactly as the report-type
+family above is named. The wording below therefore names no particular surface: **the target the
+caller declares**, not the page target; **a downstream surface**, not the renderer.
+
+### Presentation neutrality
+
+The document stays plain, linear and machine-readable, because it is read twice: once by a machine
+that sees only the text stream in reading order, and once by a person scanning for a few seconds.
+Anything carrying meaning outside that text stream is lost to the first reader and easily missed by
+the second.
+
+- **No tables in the document's content.** Extraction interleaves and reorders cells, so a fact that
+  only the table's geometry explains reaches the reader scrambled, or not at all.
+- **No images, graphics, skill bars or rating marks.** They carry no extractable text, and a bar or
+  a star count asserts a level of proficiency that no source states.
+- **No fact carried only by an icon, a colour, an alignment or a position.** Every fact has to
+  survive being read as plain text in reading order. An icon that is the only thing saying "this is
+  a phone number", or a date recognisable only by where it sits, is a fact the reader never receives.
+- **No critical information placed only in a running header or footer.** Repeating furniture is
+  routinely dropped, duplicated or hoisted out of order by extraction, and human readers skip it.
+- **Simple bullets, and the declared section names used exactly as declared** — no invented, clever
+  or renamed headings. Headings are the reader's index and the parser's segmentation, and a renamed
+  one defeats both. Which sections exist, and in what order, stays each contract's own business.
+- **An optional section with no supported content is omitted entirely**, never kept as an empty
+  heading. An empty heading reads as something the candidate lacks, rather than as a section that
+  did not apply.
+- **Escaping belongs to the downstream surface.** Characters that a renderer, a markup dialect or a
+  web form has to escape are written naturally here. Escaping is the consuming surface's job, never
+  a reason to distort, drop or reword the document's text.
+
+Presentation choices made downstream — columns, decorative icons, typography — belong to the surface
+and are governed by the surface's own rules. They are permitted only while the delivered result's
+text still extracts readably, and are never introduced into the document itself.
+
+### The content-first fit policy
+
+Every deliverable has a limit: a page count, a field length, a screen of text. **The target is
+declared by the caller** — the flow, the render operation, or the platform whose form the text is
+pasted into — and never by the document contract, which fixes no page or word count of its own. What
+is fixed here is what happens when the content exceeds that target.
+
+1. **The evidence-carrying section is compressed first.** Merge overlapping items, shorten wording
+   while preserving concrete scope, impact, tooling and seniority, then drop the lowest-value
+   detail, keeping the strongest supported evidence for this target. Each contract names which of
+   its own sections that is.
+2. **Compress gradually.** The goal is a complete, readable document that fits — not the shortest
+   possible document. Nothing is cut harder than the target requires.
+3. **Freed space is refilled.** The rule runs both ways: when a later edit opens room, it goes to
+   the highest-value supported material that improves fit against the same target.
+4. **A presentational change is never the answer.** Restyling the delivered result — geometry,
+   margins, type sizes, spacing, colours, column widths, section styling — to make content fit is
+   out of bounds, and a deliverable document never proposes one. Reaching instead for a different
+   template or a different surface to squeeze the same content in is the same violation by another
+   route. **A fit problem is a content problem**, and it is solved by revising validated content
+   under the checks that validated it.
 
 ## Contract versioning
 
