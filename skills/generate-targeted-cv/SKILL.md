@@ -43,12 +43,13 @@ collapsed to single hyphens, derived from the job dossier's own wording. A rerun
 … — a run directory is never reused and never overwritten.
 
 ```
-outputs/generate-targeted-cv/<run-id>/     # this run; nothing outside it is written by this flow
-outputs/knowledge-bank/                    # THE BANK — read-only here, except the ledger at step 24
+<output-root>/generate-targeted-cv/<run-id>/   # this run; nothing outside it is written by this flow
+<output-root>/knowledge-bank/                  # THE BANK — read-only here, except the ledger at step 24
 ```
 
-Every path below is **computed by this flow and passed to roles and tools as an explicit
-parameter**. Contracts fix no placement; the three declarations that follow are this flow's.
+`<output-root>` is the directory the request supplied — `## Inputs` below has the row. Every path
+under it is **computed by this flow and passed to roles and tools as an explicit parameter**.
+Contracts fix no placement; the three declarations that follow are this flow's.
 
 ### Fixed artifacts
 
@@ -114,7 +115,7 @@ With one internal and two external entries registered. A different registered se
 different file set, and only the fixed artifacts above are guaranteed.
 
 ```
-outputs/generate-targeted-cv/<run-id>/
+<output-root>/generate-targeted-cv/<run-id>/
 ├── run.md
 ├── position/
 ├── source_audit.md

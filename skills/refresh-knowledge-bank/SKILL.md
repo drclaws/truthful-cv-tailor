@@ -49,12 +49,13 @@ derived indexes never override a canonical source.
 runs are never overwritten.
 
 ```
-outputs/refresh-knowledge-bank/<run-id>/     # the run report of THIS flow
-outputs/knowledge-bank/                      # THE BANK — written by the curator, outlives runs
+<output-root>/refresh-knowledge-bank/<run-id>/   # the run report of THIS flow
+<output-root>/knowledge-bank/                    # THE BANK — written by the curator, outlives runs
 ```
 
-The bank directory is passed to the curator as an explicit parameter, like every other path. The
-paths above are this flow's declaration of where it puts things; contracts fix no placement.
+`<output-root>` is the directory the request supplied — `## Inputs` below has the row. The bank
+directory is passed to the curator as an explicit parameter, like every other path. The paths above
+are this flow's declaration of where it puts things; contracts fix no placement.
 
 ### Fixed artifacts
 
