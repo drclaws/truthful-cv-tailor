@@ -10,6 +10,7 @@ directly; locations are written from the package root.
 
 | Name | File | Purpose in one line |
 |---|---|---|
+| `connect-environment` | `skills/connect-environment/SKILL.md` | Connects this package to a machine and to one project: the harness in use and the local rules file it auto-loads, what the flows need from the user, the dependency matrix, and — only on the user's assent, item by item — closing the gaps it found and making these skills discoverable. |
 | `generate-targeted-cv` | `skills/generate-targeted-cv/SKILL.md` | Produces the truthful, target-specific CV for one vacancy: job-side analysis, cited evidence retrieval, writing, checking, rendering, external checks, gap report, bank update brief, ledger close. |
 | `refresh-knowledge-bank` | `skills/refresh-knowledge-bank/SKILL.md` | Rebuilds the knowledge bank from the canonical experience sources, with the curator's self-check and coverage gates, source metadata, and the refresh log. |
 
