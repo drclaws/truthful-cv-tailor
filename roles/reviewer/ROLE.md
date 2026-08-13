@@ -59,14 +59,15 @@ of its reports; the curator is the only writer of the ledger.
 | Capability | Purpose | Inputs → Outputs |
 |---|---|---|
 | [`fact-check`](capabilities/fact-check.md) | The universal truthfulness check — the mandatory one, invoked directly by workflows and never part of the registered validation set. | document + evidence sources → `validation-report` |
-| [`run-check`](capabilities/run-check.md) | Executes one registered validator tool's spec under the reviewer's invariants; generic over validators. | check spec + the inputs that spec declares → `validation-report` |
+| [`run-check`](capabilities/run-check.md) | Executes one registered validator's spec under the reviewer's invariants; generic over validators. | check spec + the inputs that spec declares → `validation-report` |
 | [`run-external-checks`](capabilities/run-external-checks.md) | Gated: runs the EXTERNAL entries of the registered validation set after internal and render gates pass; unbound entries are SKIPPED with instructions. | external entries + final deliverable → raw captures + a run record |
 | [`normalize-external-report`](capabilities/normalize-external-report.md) | Turns one service's raw output into the uniform report envelope, preserving meaning. | raw capture → `validation-report` (advisory) |
 | [`gate-external-recommendations`](capabilities/gate-external-recommendations.md) | Judges each external recommendation (APPLY / APPLY_WITH_REWRITE / GAP_ONLY / REJECT / MANUAL_REVIEW) and issues the final recommendation. | normalized reports + fact check + evidence → `external-gate-decision` |
 
 ## Tool requirements
 
-Abstract needs only; concrete bindings live in skills and in the user's environment.
+Abstract needs only; concrete bindings live in the package that declares them — a skill or a tool —
+and in the user's environment.
 
 - **File reading and writing** within the paths passed — required.
 - **Rendered-document text extraction** — required only for a check whose spec inspects a rendered
