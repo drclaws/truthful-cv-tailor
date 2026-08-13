@@ -1,7 +1,9 @@
 # Skills backlog
 
-The **deferred-work ledger**: planned but NOT yet done work on this repository — workflows, tools,
-roles, harness adapters, and one-off migrations. It exists so that a decision already taken ("we
+The **deferred-work ledger**: planned but NOT yet done work of every kind — skills, tools, roles,
+harness adapters, and one-off migrations. It lives in this directory but is not limited to it; two
+of its entries are tools, which belong to a different directory entirely. It exists so that a
+decision already taken ("we
 will need a scouting flow, and it will consume the requirements-profile contract") is written down
 once, instead of being rediscovered or silently reinvented later.
 
