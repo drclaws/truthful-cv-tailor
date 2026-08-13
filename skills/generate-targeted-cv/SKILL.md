@@ -197,13 +197,14 @@ not allowed to read, or from its own recollection.
 
 ## Steps
 
-`executor` is the `role.capability` that runs the step, `tool:<name>` for a tool skill executed by
-its owning role, or `flow` for orchestration the flow does itself. Every path a role receives is
+`executor` is the `role.capability` that runs the step, `tool:<name>` for a tool executed by its
+owning role, or `flow` for orchestration the flow does itself. Every path a role receives is
 passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge bank directory and its
 `constraints.md`, resolved at preflight.
 
 | # | Step | Executor | Contract | Paths passed | Group | Gate |
 |---|---|---|---|---|---|---|
+| 0 | Resolve this package's root, then load `engine-conventions` | `flow` | — | — | — | — |
 | 1 | Resolve user context | `flow` | `user-context` | — | — | G1 |
 | 2 | Check the bank is usable | `knowledge-bank-curator.check-freshness` | — (verdict returned) | `sources`, `bank_dir` | — | G2 |
 | 3 | Scaffold the run, seed the manifest | `flow` (`scripts/create_run.py`) | `run-manifest` | `<run>/`, `<run>/run.md`, `<run>/position/` | — | — |
@@ -242,6 +243,22 @@ passed explicitly by the flow; `<bank-dir>` and `<ledger>` are the knowledge ban
 A harness with subagents runs a group concurrently; a single-context harness runs the same steps in
 table order. **The result must not differ.** Nothing inside a group may read another group member's
 output — that is what makes the two execution modes equivalent.
+
+### 0. Resolve this package's root, then load the engine's conventions
+
+This file was presented from `<package root>/skills/generate-targeted-cv/`. The package root is two
+levels above that directory; resolve it to an absolute path from the location the harness supplied
+with this file. Then read `engine-conventions` — the invariants, the reference grammar, the anchor
+rule, the loading rule and the rule about where a run writes — from the contracts directory at that
+root, before doing anything else. If the location was not supplied, or the file cannot be read, do
+not proceed: report which of the two happened, and ask.
+
+Every public skill of this package carries that paragraph, and the duplication is deliberate: an
+entry point cannot read the engine's conventions to learn how to find the engine's conventions, so
+something has to anchor the scheme. The rule itself — where the base comes from, why the absolute
+result is what gets read, what a refusal to read it means, and what to do when no base was supplied —
+lives once, in `engine-conventions`, and this step never becomes a second copy of it. Do not tidy the
+step away as a duplicate.
 
 ### 1. Resolve user context
 
@@ -431,10 +448,11 @@ in full, plus the internal entries the disposition list implicates. The reports 
 
 ### 16. Render the deliverable
 
-`renderer.render-document`, executing the `render-cv-pdf` tool skill with the template
-resolved from that skill's own settings subsection in user context (its default is the shipped
-bundle). The tool owns the page target, the content-first fit policy, the gate sequence and the
-template resolution; this flow owns the paths and the export name.
+`renderer.render-document`, executing the tool `render-cv-pdf` with the template resolved from that
+tool's own settings subsection in user context (its default is the shipped bundle). The tool owns the
+page target, the gate sequence, the template resolution and how an overflow is reported; what to do
+about an overflow is the content-first fit policy of the document contract's family, not the tool's;
+this flow owns the paths and the export name.
 
 **The renderer may refuse, and that is correct.** It does not render a document that contradicts an
 accompanying validation report, and it does not quietly prefer one over the other — it stops and
@@ -627,13 +645,16 @@ use. **Where registration succeeded, the flow is invoked by name:**
 
 > run `generate-targeted-cv` for `<run-id>`
 
-**Invocation by path is valid everywhere and is the fallback.** Registration may never have been run,
-the user may have declined it, and the harness in use may have no discovery location for skills at
-all — all ordinary outcomes, and then by-path is the whole of it. Point the agent at this file, whose
-location the skills index gives for the name `generate-targeted-cv`, and pass it the same `<run-id>`.
+**By-path invocation is valid wherever the user has these files at a path they can name** — which is
+the case when this engine is cloned. Point the agent at this file, whose location the skills index
+gives for the name `generate-targeted-cv`, and pass it the same `<run-id>`. Once this engine is
+installed as a package, the public skills are invocable by name and that is the supported route: an
+installed package sits at a location the user never chose and that moves whenever the package is
+updated, so a path to it is not a thing to hand out.
 
 An adapter is never authority. However the flow was reached, the executing agent reads this file, and
-the loading rule in `AGENTS.md` — with its role-side reasoning in `role-conventions` — governs what
+the loading rule in `engine-conventions` — with its role-side reasoning in `role-conventions` —
+governs what
 else a step's executor opens. This flow points at that rule rather than keeping its own copy: a rule
 with several homes ages at different rates, and the copy an agent happens to read is the one it
 obeys.
@@ -653,9 +674,9 @@ Run generate-targeted-cv for the vacancy in <path-to-job-material>.
 Use my registered validation set.
 ```
 
-Individual pieces can also be run on their own, without this flow: a tool skill invoked standalone
-defaults to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`, and a role invoked directly
-takes explicit paths from the user. That is a different thing from resuming this flow — a run is
+Individual pieces can also be run on their own, without this flow: a tool invoked standalone defaults
+to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`, and a role invoked directly takes
+explicit paths from the user. That is a different thing from resuming this flow — a run is
 resumed by reading its `run.md`, not by re-running the steps that already have artifacts.
 
 ## User-context settings

@@ -1,52 +1,57 @@
 ---
 name: validate-cv-resumly
-description: External, manual-mode CV check on the Resumly service. A person submits the final rendered PDF together with the job description, saves the service's report verbatim as a raw capture, and hands it back; the reviewer normalizes and gates it. Advisory only — this skill never edits the CV and its scores are never truth.
+description: External, manual-mode CV check on the Resumly service. A person submits the final rendered PDF together with the job description, saves the service's report verbatim as a raw capture, and hands it back; the reviewer normalizes and gates it. Advisory only — this tool never edits the CV and its scores are never truth.
 ---
 
-# Tool skill: validate-cv-resumly
+# Tool: validate-cv-resumly
 
 An **external** validation spec: the check is performed by a third-party web service, not by rules in
-this repository. The service is driven **by hand** — this skill ships no automation script, so its
+this repository. The service is driven **by hand** — this tool ships no automation script, so its
 whole procedure is a checklist a person follows, written to be executable from this file alone.
 
-## What this skill is, and what it is not
+## What this tool is, and what it is not
 
+- **It is a tool, and an internal one.** It is reached by name and in one way only:
+  `reviewer.run-external-checks` is handed this file as the spec to execute. It is registered with no
+  harness, discovered by none and never offered in a selection surface — a submission to a third
+  party is the last step of a run whose gates are already green, and a request landing here directly
+  would arrive with none of that established.
 - **It is a procedure plus its parameters, never an actor.** It defines no agent and carries no
   authority of its own. It is executed by `reviewer.run-external-checks`, and the invariants of the
   role `reviewer` apply in full, always, and win over anything written here.
 - **External scores are never truth.** Everything the service reports is recorded as *that service's
   claim* — advisory input to a later decision, never a verdict about the CV and never a gate.
 - **It runs last.** An external check may start only after the run's internal checks and render gates
-  are green. Asserting that gate is the reviewer's job, not this skill's; this skill assumes it has
+  are green. Asserting that gate is the reviewer's job, not this tool's; this tool assumes it has
   already been asserted and must not be used to peek at a service "just to see what it says".
 - **It never edits anything.** No edit to the CV, the rendered file, the export, the knowledge bank or
   the constraints ledger originates here. It produces one thing: a verbatim raw capture.
 - **It does not judge.** Normalization is `reviewer.normalize-external-report`; the binding decision
-  is `reviewer.gate-external-recommendations`. This skill hands back raw material and stops. It
+  is `reviewer.gate-external-recommendations`. This tool hands back raw material and stops. It
   never chains those steps itself.
 - Repository-wide invariants (truthfulness, run isolation, tool abstraction, path/OS neutrality) apply
-  as stated in `AGENTS.md`.
+  as stated in `engine-conventions`.
 
 ## Inputs
 
-Every path is **passed in by the caller** — a workflow step, or the user invoking the skill directly.
-This skill derives no path from repository layout and computes no filenames.
+Every path is **passed in by the caller** — a workflow step, or the user naming this tool directly.
+This tool derives no path from repository layout and computes no filenames.
 
 | Parameter | Contract / description | Required |
 |---|---|---|
-| `deliverable` | the final rendered CV as **PDF**, at the export path and under the export name the caller produced. This skill neither renames it nor derives its name: the naming rule belongs to the calling workflow. | required |
+| `deliverable` | the final rendered CV as **PDF**, at the export path and under the export name the caller produced. This tool neither renames it nor derives its name: the naming rule belongs to the calling workflow. | required |
 | `document` | the final CV markdown (`cv-document`, `status: final`) the deliverable was rendered from — read only to confirm the two match and to locate what a suggestion refers to. | required |
 | `job_description` | the vacancy text from the run's job dossier (`job-dossier`), or the `requirements-profile` when the dossier text is unavailable. **This service requires a job description**: several of its checks are match-based and are meaningless without one. | required |
 | `raw_capture_path` | where to save the verbatim capture of the service's report. Assigned by the caller. | required |
-| `settings` | the recognized keys recorded for this skill in the user's context (below). | required (`service_url`); the rest optional |
+| `settings` | the recognized keys recorded for this tool in the user's context (below). | required (`service_url`); the rest optional |
 
 ## Outputs
 
 | Output | Contract | Notes |
 |---|---|---|
-| raw capture at `raw_capture_path` | **not a contract instance** — verbatim service output | The only artifact this skill produces. Saved exactly as the service presented it; never edited, trimmed, summarized or corrected afterwards. |
-| *(later, not by this skill)* normalized report | `validation-report`, advisory status | Written by `reviewer.normalize-external-report` from the raw capture. It never carries a blocking verdict. |
-| *(later, not by this skill)* gate decision | `external-gate-decision` | Written by `reviewer.gate-external-recommendations` once every external report of the run is normalized. |
+| raw capture at `raw_capture_path` | **not a contract instance** — verbatim service output | The only artifact this tool produces. Saved exactly as the service presented it; never edited, trimmed, summarized or corrected afterwards. |
+| *(later, not by this tool)* normalized report | `validation-report`, advisory status | Written by `reviewer.normalize-external-report` from the raw capture. It never carries a blocking verdict. |
+| *(later, not by this tool)* gate decision | `external-gate-decision` | Written by `reviewer.gate-external-recommendations` once every external report of the run is normalized. |
 
 **Placement.** Invoked from a workflow, the capture goes to the path pattern the workflow assigned
 (the CV workflow's pattern for external raw captures is `<run>/external/<validator>_raw.<ext>`, and
@@ -60,11 +65,11 @@ passes the path; the values above are defaults, not assumptions.
 |---|---|
 | Service | Resumly — an external CV / ATS checker, reached through its public web interface. |
 | Entry point | **Not pinned by this repository.** The user records it as `service_url` (below), because service entry points move and a stale URL committed here would be a silent trap. |
-| Mode | **Manual only.** No automation script ships with this skill; a person performs every step. |
+| Mode | **Manual only.** No automation script ships with this tool; a person performs every step. |
 | Accepted input | **PDF only.** See *Limitations* — this system produces no other final format. |
 | Job description | Required (pasted or uploaded as the service's interface asks). |
-| Size limit | None declared by this skill. If the service rejects the file for size, that is a *not completed* outcome to record and report, never a reason to re-render differently on this skill's initiative. |
-| Session | The user's own browser session. No credentials of any kind are stored in this repository or in this skill. |
+| Size limit | None declared by this tool. If the service rejects the file for size, that is a *not completed* outcome to record and report, never a reason to re-render differently on this tool's initiative. |
+| Session | The user's own browser session. No credentials of any kind are stored in this repository or in this tool. |
 
 ### Checks expected from this service
 
@@ -169,7 +174,7 @@ Performed by a person, start to finish. Follow the steps in order; each one name
    the service's own words. Do not correct, re-order, translate, summarize or improve anything — a
    capture is evidence of what the service said. Note explicitly which of the *checks expected* are
    absent, and mark anything truncated or purely graphical. Save any `extra_captures` alongside it.
-   *Produces: the raw capture — the only artifact of this skill.*
+   *Produces: the raw capture — the only artifact of this tool.*
 9. **Record the outcome** for the reviewer's run record: `executed` with the capture paths;
    **SKIPPED-manual** with the reason and this checklist; or **not completed** with what was attempted
    and what was observed to fail. A service that failed is never a defect of the CV.
@@ -200,7 +205,7 @@ Capture completeness: complete | partial — <what is missing and why>
 ### Environment preparation
 
 - A normal, visible browser session driven by a person. Nothing headless, nothing unattended: this
-  skill has no automation to run unattended.
+  tool has no automation to run unattended.
 - The recorded `service_url`, and the recorded `account` if the service requires signing in. Sign-in
   secrets live in the browser's own credential store — never in this repository, never in the user's
   rules file, never in the capture.
@@ -213,10 +218,10 @@ Capture completeness: complete | partial — <what is missing and why>
 - One submission per check. Re-submitting the same PDF to compare scores tells nothing: the numbers
   are a third party's measurement, not a measurement of truth.
 - Submit the deliverable unchanged. If it looks wrong (stale, misnamed, not the final render), stop and
-  report it — repairing it is the caller's business, not this skill's.
+  report it — repairing it is the caller's business, not this tool's.
 - Keep the job description as the vacancy states it. Do not trim it to improve a match score.
 - Anything the interface offers beyond checking — auto-rewrite, "fix my CV", template conversion,
-  applying suggestions in place — is **out of scope and must not be used**. This skill collects a
+  applying suggestions in place — is **out of scope and must not be used**. This tool collects a
   report; it never lets a service touch the document.
 
 ### Waiting and human challenges
@@ -231,7 +236,7 @@ Capture completeness: complete | partial — <what is missing and why>
 
 ### Manual fallback
 
-This skill is already the manual path — its fallback is **asynchronous completion**, used when the
+This tool is already the manual path — its fallback is **asynchronous completion**, used when the
 person cannot finish during the current session (no interactive user, the service is unreachable, a
 sign-in wall the user has to resolve on their own time):
 
@@ -255,7 +260,7 @@ sign-in wall the user has to resolve on their own time):
 | A human challenge loops | Complete it in the visible window; after two honest attempts, **not completed**. |
 | The report is partly graphical (gauges, charts) | Transcribe the numbers and labels as text, save a `screenshot` under `extra_captures`, and mark the capture `partial` with what could not be captured verbatim. |
 | The report contradicts an internal check | Capture it exactly as it is. Contradictions are resolved by the gating step against evidence — never by editing the capture and never by re-submitting until the service agrees. |
-| The entry point 404s or the interface was redesigned | Update `service_url` through `setup-master.update-settings`. If the service is gone, report that: never substitute a different service under this skill's name. |
+| The entry point 404s or the interface was redesigned | Update `service_url` through `setup-master.update-settings`. If the service is gone, report that: never substitute a different service under this tool's name. |
 | The service is down | **Not completed**, with the observation. External checks are advisory; a run is finished without them. |
 
 ## Limitations
@@ -285,9 +290,9 @@ sign-in wall the user has to resolve on their own time):
 | Web browsing with file upload | capability | Reaching the service's public web interface and uploading a local PDF from the export path. | required | No browser reaching the service ⇒ **SKIPPED** with instructions: what is missing, what it is needed for, and the manual procedure to run once it is available. |
 | File writing at the paths passed | capability | Saving the raw capture at `raw_capture_path` (and the minimal `run.md` on a standalone run). | required | The operator saves the capture themselves and reports its path; the entry counts as executed only once the capture exists at the assigned path, otherwise it is **SKIPPED-manual**. |
 | Screen or page capture | capability | Saving an additional verbatim capture when `extra_captures` asks for one, or when the report is partly graphical. | optional | The text transcription alone is sufficient; record in the capture that a graphical element could not be captured verbatim. |
-| `service_url` recorded in this skill's settings subsection | setting | Knowing where to submit at all: this repository pins no entry point, so nothing else in the check can name the page. | required | Ask the user at preflight; unanswered ⇒ the entry runs **SKIPPED** with the checklist from *Manual procedure*, and the flow continues. |
+| `service_url` recorded in this tool's settings subsection | setting | Knowing where to submit at all: this repository pins no entry point, so nothing else in the check can name the page. | required | Ask the user at preflight; unanswered ⇒ the entry runs **SKIPPED** with the checklist from *Manual procedure*, and the flow continues. |
 
-**No script, and therefore no script dependencies.** This skill bundles no automation, so it requires
+**No script, and therefore no script dependencies.** This tool bundles no automation, so it requires
 no language runtime, no browser-automation driver and no browser engine of its own — unlike an
 automated external validator. The only "runtime" is a person with a browser.
 

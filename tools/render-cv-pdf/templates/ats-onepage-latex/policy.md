@@ -9,11 +9,13 @@ layout, and what this template's fixed style means for a render that does not fi
 Scope, so that nothing is stated twice:
 
 - **This file governs the HOW** — the mechanics of filling *this* template.
-- **The operation rules** — the page target, the content-first fit policy, the gate sequence, export
-  naming, template resolution — live in the owning skill, `../../TOOL.md`.
+- **The operation rules** — the page target, how an overflow is reported, the gate sequence, export
+  naming, template resolution — live in the owning tool, `../../TOOL.md`.
 - **The document-level rules** — which sections a CV has, in which order, how the header title is
-  chosen, what may be claimed at all — belong to the `cv-document` contract. This file never restates
-  them and never competes with them: if a rule here seems to contradict the document contract, stop
+  chosen, what may be claimed at all, and the content-first fit policy that decides what happens when
+  the content does not fit — belong to the `cv-document` contract and the deliverable-document family
+  it inherits from. This file never restates them and never competes with them: if a rule here seems
+  to contradict the document contract, stop
   and ask; do not choose.
 - **The invariants of the actor** filling the template are the renderer's — role `renderer`,
   capability `renderer.render-document`. Content is transcribed, never authored.
@@ -197,9 +199,10 @@ colours, column widths, `\columnratio`, `\linespread`, section styling, or any v
 least of all to make a CV fit.
 
 When validated content overflows the page target, the fit problem is a **content** problem and it
-goes back to the caller. The tactics for resolving it, and the rule that the tool reports rather than
-cuts, live in `../../TOOL.md` (*Content-first fit policy*). Nothing in this file authorises a style
-change, and no template fallback is selected to squeeze content onto the page.
+goes back to the caller. The rule that the tool reports the overflow rather than cutting is in
+`../../TOOL.md`; the tactics for resolving it are the content-first fit policy of the `cv-document`
+contract's family. Nothing in this file authorises a style change, and no template fallback is
+selected to squeeze content onto the page.
 
 ## Column gate
 
