@@ -39,10 +39,12 @@ turns it into a `validation-report` and judges it in separate, later steps.
 | Context | Who runs it | Where the outputs go |
 |---|---|---|
 | Inside a CV workflow | the reviewer, through `reviewer.run-external-checks` | the raw-capture paths the workflow passes |
-| Standalone | the user, invoking the reviewer or the script directly | `outputs/validate-cv-enhancv/<run-id>/`, with a minimal `run.md` |
+| Standalone | the user, invoking the reviewer or the script directly | the directory the user names, with a minimal `run.md` under it |
 
-Paths are always supplied by the caller. This tool derives no path from repository layout, and the
-export filename it receives is the caller's, produced by the calling workflow's naming rule.
+Paths are always supplied by the caller — the user is the caller too, at a standalone invocation.
+This tool derives no path from repository layout and keeps no location of its own to fall back on:
+asked to run with none named, it asks for one and captures nothing until the answer arrives. The
+export filename it receives is likewise the caller's, produced by the calling workflow's naming rule.
 
 ## Inputs
 

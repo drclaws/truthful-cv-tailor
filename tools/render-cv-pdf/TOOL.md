@@ -196,10 +196,13 @@ to user context. This tool only:
 
 - **Invoked from a workflow step:** every path is passed by the workflow; write exactly there and
   nowhere else.
-- **Invoked standalone by the user:** default to `outputs/render-cv-pdf/<run-id>/` with a minimal
-  `run.md` (`run-manifest`) recording the inputs, the resolved template and the gate results, plus
-  `render/` for the typeset source and build byproducts and `exports/` for the deliverable. The user
-  may override any of these by passing explicit paths.
+- **Invoked standalone by the user:** the user is the caller, and the paths are theirs to give. This
+  tool holds no location of its own, because the only one it could name is inside this package —
+  which is replaced wholesale when the package is updated, so a deliverable written there is written
+  to be lost. Given no output directory, ask for one and render nothing until the answer arrives;
+  then write, under it, a minimal `run.md` (`run-manifest`) recording the inputs, the resolved
+  template and the gate results, plus `render/` for the typeset source and build byproducts and
+  `exports/` for the deliverable.
 
 ## Runbook
 

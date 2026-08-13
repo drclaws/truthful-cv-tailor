@@ -677,10 +677,12 @@ Run generate-targeted-cv for the vacancy in <path-to-job-material>.
 Use my registered validation set.
 ```
 
-Individual pieces can also be run on their own, without this flow: a tool invoked standalone defaults
-to `outputs/<tool-name>/<run-id>/` with a minimal `run.md`, and a role invoked directly takes
-explicit paths from the user. That is a different thing from resuming this flow — a run is
-resumed by reading its `run.md`, not by re-running the steps that already have artifacts.
+Individual pieces can also be run on their own, without this flow: a tool invoked standalone takes
+its output paths from whoever invoked it, exactly as a role invoked directly does
+(`role-conventions` → *Interaction model*, where all paths are mandatory parameters). Neither has a
+location of its own to fall back on, so an invocation that named none is a question before anything
+is written. That is a different thing from resuming this flow — a run is resumed by reading its
+`run.md`, not by re-running the steps that already have artifacts.
 
 ## User-context settings
 
