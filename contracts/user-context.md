@@ -1,10 +1,10 @@
 # Contract: user-context
 
-Version: 1.1
+Version: 2.0
 
-Defines **what** the flows in this repository need from the user, and **nothing about where the user
-keeps it**. The repository ships zero user context: it is a set of toolchains that are connected to
-a working environment at setup time.
+Defines **what** the flows in this package need from the user, and **nothing about where the user
+keeps it**. The package ships zero user context: it is a set of toolchains that are connected to a
+working environment at setup time.
 
 Unlike every other contract, `user-context` does not describe a produced artifact and therefore
 **carries no envelope** — the user's context lives in a free-form, harness-native file that the user
@@ -12,8 +12,13 @@ owns. What follows is the required information, how flows resolve it, and a copy
 
 ## What flows need
 
-Sections 1–5 are what a flow resolves at preflight. Sections 6 and 7 are setup's own records, kept in
+Sections 1–4 are what a flow resolves at preflight. Sections 5 and 6 are setup's own records, kept in
 the same file because it is the user's file: a flow neither reads them nor acts on them.
+
+**Nothing here records where this package's own files live.** The contracts, the roles, the tools and
+the public skills travel inside one package and sit at fixed places inside it, so a location the user
+has no say in is not a setting: recording one would only create a second thing to keep in step with
+the tree. What the user's file holds is what is genuinely theirs.
 
 ### 1. Canonical experience sources (required)
 
@@ -26,14 +31,14 @@ curator derives it from these sources into the knowledge bank's `## Candidate` s
 
 ### 2. The active validation set (optional entries, required section)
 
-The list of validation skills the user wants run, each with:
+The list of checks the user wants run, each with:
 
-- **name** — the skill name (e.g. a `validate-cv-*` skill shipped in this repository, or a skill the
-  user keeps in their own environment);
+- **name** — the name of the check: a `validate-cv-*` **tool** shipped in this package, or a
+  validator the user keeps in their own environment, in whatever form that environment holds it;
 - **kind** — `internal` (runs in the pre-render check group) or `external` (runs only after internal
   and render gates pass);
-- **location** — omitted for skills shipped in this repository; a path or description for skills
-  that live outside it.
+- **location** — omitted for a tool shipped in this package, which resolves through the tools index;
+  a path or description for anything outside it.
 
 This set contains **optional validators only**. The mandatory truthfulness check is
 `reviewer.fact-check`, a role capability that every CV flow invokes regardless of this list; it is
@@ -45,10 +50,10 @@ recorded outcome, never a flow failure.
 
 ### 3. Per-skill settings (optional)
 
-Settings are recorded **per entity — one subsection per skill**. The recognized keys of a subsection
-are defined by that skill's own `SKILL.md`; this contract defines only the shape. Machine-specific
-bindings of a skill's external dependencies belong under the skill they serve, never in a shared
-lump.
+Settings are recorded **per entity — one subsection per skill or tool**. The recognized keys of a
+subsection are defined by the package that declares them, in its own definition file; this contract
+defines only the shape. Machine-specific bindings of a package's external dependencies belong under
+the package they serve, never in a shared lump.
 
 ### 4. Additional rules (optional)
 
@@ -56,18 +61,7 @@ Free text the flows must honour: personal preferences, wording rules, things to 
 and apply it; it never overrides the hard invariants (truthfulness, run isolation, sole-writer,
 validation independence).
 
-### 5. Toolchain directories (recorded at setup; needed wherever a name must be resolved)
-
-The rules and cards of these toolchains refer to contracts, roles and skills **by name**. This
-section records, for this machine, the directory that holds each of those three kinds, so that a name
-can be turned into a file. It is a *location for names* and nothing more: each directory carries its
-own index of what it holds, and a name absent from that index is an unresolved reference — reported,
-never guessed into a path.
-
-It is written by `setup-master.bootstrap` and revisited by `setup-master.update-settings`. It confers
-no authority: nothing runs, and nothing becomes active, because it appears here.
-
-### 6. Environment record (optional; written by setup-master)
+### 5. Environment record (optional; written by setup-master)
 
 A dated record of what setup prepared or bound on this machine and how that was verified — for each
 entry: what it is, where it resolved to, which capability prepared it and when, and the verification
@@ -75,23 +69,25 @@ that was run with its result and date. Written by `setup-master.prepare-environm
 `setup-master.register-with-harness`; those are the only writers.
 
 It is a **record, not configuration**. Nothing is executed because it appears here, and it never
-becomes a second home for bindings: a machine-specific value a skill declares stays under that
-skill's subsection in section 3, and this section adds only provenance and verification. Its one
+becomes a second home for bindings: a machine-specific value a package declares stays under that
+package's subsection in section 3, and this section adds only provenance and verification. Its one
 reader is `setup-master.check-environment`, which treats it as *dated evidence* — never stronger than
 a fresh probe, and good only while the thing it names still resolves at the recorded location. Free
 text elsewhere in the file is not a record and is not read as one.
 
-### 7. Harness registration (optional; written by setup-master)
+### 6. Harness registration (optional; written by setup-master)
 
-What was established about how the harness in use presents this repository's content to an agent, and
-what registration created as a result: each location created, the canonical name it was created from,
-the mechanism used, and the date. Written by `setup-master.register-with-harness` only.
+What was established about how the harness in use loads a package of this kind, and what registration
+did as a result: the mechanism the harness offers, where this package — or a link to it — was placed,
+the date, and what the anchor probe established, namely whether a file presented to an agent also
+states where it lives. That last one is recorded because it is what lets a run find the rest of this
+package. Written by `setup-master.register-with-harness` only.
 
 It exists so that a later pass can reconcile — add what is missing, remove what no longer has a
-canonical source — instead of silently repeating itself, and so that a kind of thing which **could
-not** be registered is recorded as such, with the manual steps, rather than being retried every run.
-Anything recorded here is a generated pointer to the canonical definition; it is never authority, and
-a flow reached through it still reads the canonical file.
+canonical source — instead of silently repeating itself, and so that anything that **could not** be
+registered is recorded as such, with the manual steps, rather than being retried every run. Anything
+recorded here is a pointer to the canonical package; it is never authority, and a skill reached
+through it still reads the canonical file.
 
 ## Resolution
 
@@ -114,7 +110,7 @@ format differ per harness** and are determined by `setup-master.bootstrap` from 
 never assumed here. Using that file makes the context simply present, with zero resolution steps, and
 lets the same file carry any personal rules the user wants honoured.
 
-The repository does **not** ship this file. `setup-master.bootstrap` creates or updates it from the
+The package does **not** ship this file. `setup-master.bootstrap` creates or updates it from the
 template below, merging sections and never overwriting existing content without confirmation.
 
 The file is **gitignored** (`*.local.md`) and must never be committed: it contains real paths and
@@ -130,17 +126,14 @@ Free-form input needs checking, not guessing. At preflight a flow validates the 
 
 - the experience-source list is non-empty, and each source is readable (an unreadable source is
   reported per source — it never crashes the flow; see the curator's freshness capability);
-- every validation-set entry has a name and a kind, and resolves to an existing skill;
-- every per-skill settings subsection names a skill that exists, and its keys are recognized by that
-  skill's `SKILL.md` — unrecognized keys are reported, never silently ignored;
+- every validation-set entry has a name and a kind, and resolves to an existing check;
+- every per-skill settings subsection names a package that exists, and its keys are recognized by
+  that package's own definition file — unrecognized keys are reported, never silently ignored;
 - when the flow's export naming needs candidate identity, the knowledge bank has a `## Candidate`
   section; if it does not, the flow asks the user or triggers a bank refresh;
-- if a `validate-cv-*` skill shipped in this repository is absent from the recorded set, the flow
-  **warns** — adding a validation skill without recording it leaves it inactive. The supported way
-  to change the set is `setup-master.register-skill` / `setup-master.update-settings`;
-- the toolchain directories are recorded and each one exists, whenever a name in the rules has to be
-  resolved to a file. A missing directory, or one that no longer exists, is reported and asked about
-  — a flow never guesses a path in its place, and an unresolved name is reported as unresolved.
+- if a `validate-cv-*` tool shipped in this package is absent from the recorded set, the flow
+  **warns** — adding a check without recording it leaves it inactive. The supported way to change
+  the set is `setup-master.register-skill` / `setup-master.update-settings`.
 
 The environment record and the harness-registration record are **never** preflight requirements: a
 flow neither needs them nor acts on them. They are read by `setup-master` alone.
@@ -160,24 +153,19 @@ them (identity included — no separate "candidate" entry is needed):
 - <path or description>
 
 ## Validation skills (the ACTIVE set; managed by setup-master.register-skill)
-- <validator-skill-name>   (internal)
-- <validator-skill-name>   (external)
+- <check-name>   (internal)
+- <check-name>   (external)
 # OPTIONAL validators only — the mandatory fact-check is a reviewer capability, not listed here.
-# User skills may live outside this repo — register them here with kind + location.
+# A check may be one your own environment holds — register it here with kind + location.
 
-## Skill settings (optional; ONE subsection per skill — keys defined by that skill's SKILL.md)
-### <skill-name>
+## Skill settings (optional; ONE subsection per skill or tool — keys defined by that package)
+### <package-name>
 - <key>: <value>
-### <skill-name>
+### <package-name>
 - <per-service settings and dependency bindings for this machine>
 
 ## Additional rules (optional)
 (free text the flows must honor)
-
-## Toolchain directories (recorded at setup; how a name in the rules resolves to a file)
-- contracts: <path to the directory holding the artifact contracts>
-- roles: <path to the directory holding the role packages>
-- skills: <path to the directory holding the skill packages>
 
 ## Environment record (written by setup-master; a record of this machine, not configuration)
 - <what was prepared or bound>: <resolved location>

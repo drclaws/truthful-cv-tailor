@@ -3,10 +3,11 @@
 ## Purpose
 
 Answers one question: *what will actually run on this machine, and what will not?* It aggregates the
-`## Dependencies` sections of the shipped and registered skills — transitively — checks each
-dependency, and reports the **dependency matrix**: dependency → status → the evidence that produced
-that status → the skills and steps it affects. An unbound dependency is not a defect; it means those
-steps will run SKIPPED or manual, and the report says exactly which ones.
+`## Dependencies` sections of this package's skills and tools and of the registered checks —
+transitively — checks each dependency, and reports the **dependency matrix**: dependency → status →
+the evidence that produced that status → the packages and steps it affects. An unbound dependency is
+not a defect; it means those steps will run SKIPPED or manual, and the report says exactly which
+ones.
 
 It reports and writes nothing: no file, no run folder, no installation, no binding.
 
@@ -17,15 +18,16 @@ to decide something for itself is a place where two matrices diverge.
 
 ## Inputs
 
-- `skills_root` — path to the directory holding this repository's shipped skills (workflows and
-  tools) — required.
+- `package_root` — the resolved root of this package — required. Two fixed directories inside it hold
+  everything this package declares: the public skills, and the tools. Contract `user-context` is read
+  from it as well, when the environment record has to be interpreted — it is the authority on what
+  that record is and is not.
 - `local_rules_file` — path to the harness-native local rules file — optional, and it carries three
-  distinct things this capability reads: the **active validation set** (including skills kept outside
-  this repository, with their locations), the **per-skill bindings** the user recorded, and the
+  distinct things this capability reads: the **active validation set** (including checks kept outside
+  this package, with their locations), the **per-package bindings** the user recorded, and the
   **environment record** — dated evidence of what setup already prepared and how it was verified.
-  Without it only the shipped skills are covered, nothing is instantiated, and the report says so.
-- `user_context_contract` — path to the `user-context` contract file — optional; the authority on
-  what the environment record is and is not, when the record has to be interpreted.
+  Without it only this package's own skills and tools are covered, nothing is instantiated, and the
+  report says so.
 - `scripts/check_environment.py` — this role's bundled probe script, resolved beside `ROLE.md`.
 
 ## Outputs
@@ -37,20 +39,25 @@ to decide something for itself is a place where two matrices diverge.
 
 1. **Assemble the entity set, and keep coverage and instantiation apart.** They are two different
    questions and the matrix answers both:
-   - **Covered** — every skill under `skills_root`, workflows and tools alike, *plus* every skill
-     recorded in `local_rules_file` wherever it lives; an out-of-repo skill is read at its recorded
-     location. Coverage exists so that the user can see what the repository holds, whether or not
-     they use it.
-   - **Instantiated** — of those, the ones a workflow step will actually run: the tool skills the
-     step tables name, and the members of the recorded validation set for the steps that run that
-     set. **Registered-set membership decides instantiation and never coverage.**
+   - **Covered** — every public skill in the skills directory, every tool in the tools directory,
+     *plus* every validator recorded in `local_rules_file` wherever it lives; one kept outside this
+     package is read at its recorded location. Coverage exists so that the user can see what this
+     package holds, whether or not they use it.
+   - **Instantiated** — of those, the ones a workflow step will actually run: the tools the step
+     tables name, and the members of the recorded validation set for the steps that run that set.
+     **Registered-set membership decides instantiation and never coverage.**
 
-   A covered skill that is not instantiated still contributes its rows, and their `Affects` cell
-   reads *"no step instantiated — skill not in the registered set"*. Such a row is a note, not a gap:
-   it can never make a flow unrunnable, and the consequences section says so in those words. Report
-   the set you assembled, split into those two groups, before the matrix. If a shipped
-   `validate-cv-*` skill is absent from the recorded set, warn — it exists but will not run until it
-   is registered.
+   **That split is now readable off the layout, and it was worth making it so.** It used to be a rule
+   an auditor had to apply to one directory of mixed things, telling a flow from an operation by
+   reading them. Orchestration and operations sit in separate directories now, so which a package is
+   is a fact about where it lives, and two auditors read the same answer off the tree.
+
+   A covered package that is not instantiated still contributes its rows, and their `Affects` cell
+   reads *"no step instantiated — not in the registered set"*. Such a row is a note, not a gap: it
+   can never make a flow unrunnable, and the consequences section says so in those words. Report the
+   set you assembled, split into those two groups, before the matrix. If a `validate-cv-*` tool
+   shipped here is absent from the recorded set, warn — it exists but will not run until it is
+   registered.
 
 2. **Read each `## Dependencies` section.** What a declaration must *contain* — the columns, the
    entry kinds, and what each kind states beyond them — is owned by `skill-conventions`. Read it
@@ -58,28 +65,29 @@ to decide something for itself is a place where two matrices diverge.
    and what counts as evidence for the status it gets.
 
    An entry with missing or contradictory fields is reported as **malformed** and carried into the
-   matrix with status `unknown`. Never repair it by guessing, and never invent an entry that no skill
+   matrix with status `unknown`. Never repair it by guessing, and never invent an entry that no package
    declared.
 
 3. **Resolve transitively, and derive every step from the workflow's own step table.** A workflow
    declares only its *direct* dependencies and inherits the rest from what it invokes. Walk its step
-   table: for each step take the tool skill or the `role.capability` its executor names, and add that
+   table: for each step take the tool or the `role.capability` its executor names, and add that
    entity's dependencies to the workflow's effective set. Keep the chain
-   `workflow → step → skill → dependency` for the *Affects* column.
+   `workflow → step → package → dependency` for the *Affects* column.
 
    **Where the step comes from, and it is only ever one place.** The step is the **row of the
-   workflow's own step table whose executor names that tool skill or that `role.capability`**. A tool
-   skill never names a calling step — its *needed for* field names the task the dependency serves, a
-   gate or a check item, not a caller — and it must never be asked to: a tool is invocable standalone,
-   and making it name a workflow step would couple tools to flows, which the interaction model
-   forbids. The workflow knows both halves; the tool knows neither. So the mapping is derived
-   **downward from the workflow**, never read upward out of the tool.
+   workflow's own step table whose executor names that tool or that `role.capability`**. A tool never
+   names a calling step — its *needed for* field names the task the dependency serves, a gate or a
+   check item, not a caller — and it must never be asked to: a tool is invocable standalone, and
+   making it name a workflow step would couple tools to flows. `tool-conventions` states that rule
+   for exactly this reason, so what this walk relies on is guaranteed by the tool's own conventions
+   rather than assumed here. The workflow knows both halves; the tool knows neither. So the mapping
+   is derived **downward from the workflow**, never read upward out of the tool.
 
    - For a step that runs the **registered validation set**, that single step row is the step, and
      the matrix row names the instance — `<step> (registered set) → <validator>`. One step therefore
      appears against as many rows as the set has members.
    - A dependency that attaches to **no** step of any workflow is an **unattached row**: its
-     `Affects` cell says exactly that and names the skill that declared it. Never give a row an
+     `Affects` cell says exactly that and names the package that declared it. Never give a row an
      invented step, and never drop a row for want of one.
 
    Rules while walking:
@@ -87,26 +95,26 @@ to decide something for itself is a place where two matrices diverge.
      every step it affects;
    - a required dependency of an inherited step stays required for the inheriting workflow; a
      dependency inherited only through optional steps stays optional;
-   - a step referencing a skill that cannot be found is reported as an **unresolved reference**, not
+   - a step referencing a package that cannot be found is reported as an **unresolved reference**, not
      silently dropped;
    - **role cards carry no dependencies.** Their `## Tool requirements` are abstract by design; never
      mint a matrix row from one. If a role's abstract need has no corresponding dependency entry in
-     any skill that invokes it, report that as a documentation gap.
+     any package that invokes it, report that as a documentation gap.
 
 4. **Establish each row's status from the best evidence available.** The ladder is ordered best
    first, it applies to **every** entry kind, a rung is used only where the rungs above it cannot be
    reached, and **every row names the rung that produced it**.
 
-   1. **Recorded binding.** A value in `local_rules_file`, under the declaring skill's own settings
-      subsection, naming the concrete thing that skill will use — then verified the way its kind
+   1. **Recorded binding.** A value in `local_rules_file`, under the declaring package's own settings
+      subsection, naming the concrete thing that package will use — then verified the way its kind
       allows. This rung applies to `tool` entries every bit as much as to `capability` ones, and it
       settles the question a bare tool name cannot: **a row is probed against whatever would actually
-      run.** Where the skill records an interpreter, an installation or a service for that tool, the
+      run.** Where the package records an interpreter, an installation or a service for that tool, the
       probe runs *there* and the evidence names which one answered; where it records none, the probe
       runs against the executable search path. Where a recorded binding and a search-path entry both
-      exist and differ, **report both**, and say which one the skill would use.
+      exist and differ, **report both**, and say which one the package would use.
    2. **Direct probe.** The check that kind allows, run now: the bundled script for a `tool` row, the
-      declaring skill's own declared check for a `component-set` row (step 5). The strongest evidence
+      declaring package's own declared check for a `component-set` row (step 5). The strongest evidence
       available for anything discoverable on this machine.
    3. **Harness probe** — and this is what one *is*, because an undefined rung is an invitation to
       invent. A harness probe is an **inspection of the executing session for a named facility**
@@ -136,7 +144,7 @@ to decide something for itself is a place where two matrices diverge.
 
    **`tool` — the bundled script.** Pass the concrete names, and any minimum versions, that you
    aggregated, as explicit arguments. The script checks exactly what it is told to check: it never
-   reads a `SKILL.md`, a rules file, or any other file to discover work.
+   reads a package's definition file, a rules file, or any other file to discover work.
 
    ```text
    check_environment.py --tool <name> --tool <name>@<min-version> --path <location> --json
@@ -147,47 +155,59 @@ to decide something for itself is a place where two matrices diverge.
    version could not be read while a minimum was required), `unreadable` (a path exists but cannot be
    read). It exits 0 even when everything is missing — a missing tool is a result, not an error. The
    names above are placeholders: this role requires no tool of its own, and every name passed in came
-   from a skill's declaration.
+   from a package's declaration.
 
    **The version argument is declared, never chosen here.** The script tries a fixed sequence of
    arguments and some tools answer to only one of them — so an auditor free to pick a flag is an
    auditor whose matrix disagrees with the next one's. A tool that does not answer to `--version` has
-   the argument it *does* answer to **declared by the skill that needs it**; pass that argument
+   the argument it *does* answer to **declared by the package that needs it**; pass that argument
    through unchanged (`--version-arg <name>=<argument>`). A declared minimum with no working probe is
    `version-unknown` — never a pass, never a mismatch — and is reported as a documentation gap
-   against the declaring skill. Trying arguments until one answers is not permitted, even when one
+   against the declaring package. Trying arguments until one answers is not permitted, even when one
    plainly would.
 
-   **`component-set` — the check the declaring skill states.** A `tool` row names one checkable
+   **`component-set` — the check the declaring package states.** A `tool` row names one checkable
    thing. A requirement met by a set of components that are not individually discoverable as
    executables — a package set, a font set, a language pack — is its own row, and the **declaring
-   skill states the exact check**, one command per component. Run that check **verbatim, as the skill
-   wrote it**, and record its output as the evidence: the row is `bound` only when every component
+   package states the exact check**, one command per component. Run that check **verbatim, as the
+   package wrote it**, and record its output as the evidence: the row is `bound` only when every component
    answers, and otherwise `unbound`, naming the ones that did not. Running it is not inventing a
-   procedure — the skill authored the command, and this capability only runs what it was handed. A
+   procedure — the package authored the command, and this capability only runs what it was handed. A
    `component-set` row that declares **no** check is `unknown`, plus a documentation gap reported
-   against that skill: never closed by composing a check here, and never quietly folded into the
+   against that package: never closed by composing a check here, and never quietly folded into the
    neighbouring `tool` row.
 
    **`capability` — the ladder, without the script.** An abstract capability cannot be found by
    looking for a binary: a recorded binding turns it into whatever probe its own kind allows;
    otherwise the harness probe of rung 3; otherwise the user, recorded as *user-confirmed*.
 
-   **`setting` — recorded, or not recorded.** A settings key the declaring skill marks `required`
+   **A `capability` row's `Candidate means` is never something to probe for.** That optional field,
+   whose format `skill-conventions` owns, lists the *kinds* of thing that would satisfy the need. It
+   exists so that `prepare-environment` has something concrete to put in front of the user, and it is
+   a menu for a conversation and nothing else. Do not go looking for what it names. Searching the
+   machine for a candidate the user has not named is a **scan**, which the discovery boundary in this
+   role's `## Authority` forbids — and forbids for a reason that applies here exactly: what such a
+   search turns up is not the user's answer, so a matrix that reported it would have recorded a guess
+   as evidence and made itself unreproducible besides. A candidate is probed only where it is already
+   inside the boundary: a **recorded binding** (rung 1), something on the executable search path that
+   the row itself names, or something the user names in this session. Carry the list through to the
+   report untouched, so the conversation that follows has it.
+
+   **`setting` — recorded, or not recorded.** A settings key the declaring package marks `required`
    with **no default** is a row of this kind. Its status is `recorded` or `not recorded` and nothing
    else, and the row states only *that* the key is recorded — never its value, which is the user's
    and is sometimes private. Its evidence rung is always rung 1: the local rules file is the only
    place a setting can be recorded, so nothing else can produce this row's status, and the key is
-   never asked for here. `If unbound` is the behaviour the skill declares for the key's absence.
+   never asked for here. `If unbound` is the behaviour the package declares for the key's absence.
    This row kind exists because such a key otherwise has **no moment at which anyone is obliged to
    notice it is missing**: a setup pass would step over it as "not an environment binding", and run
-   time cannot reach it until the skill is in the registered set. The row is that moment.
-   `register-skill` asks for the key when the skill is registered; this matrix is where the gap stays
+   time cannot reach it until the check is in the registered set. The row is that moment.
+   `register-skill` asks for the key when the check is registered; this matrix is where the gap stays
    visible until it is answered.
 
 6. **Build the matrix.** One row per distinct dependency:
 
-   | Dependency | Kind | Status | Evidence rung | Evidence | Required/optional | Affects (skill → step) | If unbound |
+   | Dependency | Kind | Status | Evidence rung | Evidence | Required/optional | Affects (package → step) | If unbound |
    |---|---|---|---|---|---|---|---|
 
    `Evidence rung` names which rung of step 4 produced the status. `Evidence` is what that rung
@@ -199,24 +219,24 @@ to decide something for itself is a place where two matrices diverge.
 7. **Report the consequences, in plain words.** After the matrix: which flows are fully runnable as
    things stand; which steps will run SKIPPED or manual and what that means for their output; which
    registered validators will not run; and what could be bound to close each gap — quoting the
-   declaring skill's runbook. Never invent an installation procedure and never give OS-specific
-   instructions of your own: if the skill's runbook does not say how, report that as a gap in the
-   skill.
+   declaring package's runbook. Never invent an installation procedure and never give OS-specific
+   instructions of your own: if that runbook does not say how, report it as a gap in the declaring
+   package.
 
-   Say plainly what an uninstantiated row costs, which is nothing: it belongs to a skill that no step
-   runs, so it cannot make any flow unrunnable, and it is listed only so the user can see what
-   registering that skill would require.
+   Say plainly what an uninstantiated row costs, which is nothing: it belongs to a package that no
+   step runs, so it cannot make any flow unrunnable, and it is listed only so the user can see what
+   registering that check would require.
 
    **Then hand the gaps over.** Sort them in two: the ones `prepare-environment` could close on this
    machine with the user's assent, and the ones that are **structural** — no network in this session,
    no interactive desktop session, a policy that forbids the change, or a documentation gap in the
-   declaring skill that has to be fixed before anything can be prepared at all. Name which is which,
+   declaring package that has to be fixed before anything can be prepared at all. Name which is which,
    and name `prepare-environment` as where the first group is closed. This capability closes none of
    them itself.
 
 ## Rules
 
-- **Aggregate, never author.** The matrix contains exactly what skills declared, plus statuses. A
+- **Aggregate, never author.** The matrix contains exactly what packages declared, plus statuses. A
   dependency this role thinks would be nice is not a row.
 - **Unbound is a status, not a failure.** The capability succeeds with a fully unbound environment;
   the report is then simply a list of what will be skipped.
@@ -244,18 +264,20 @@ to decide something for itself is a place where two matrices diverge.
 
 | Situation | Behaviour |
 |---|---|
-| `skills_root` holds no skills yet | Report an empty matrix and say which entities were looked for. Not an error. |
-| `local_rules_file` is absent or has no recorded set | Cover the shipped skills only; state the limitation, note that nothing is instantiated, and that a validator not recorded does not run. |
-| A registered out-of-repo skill cannot be read | Row per that skill with status `unknown` and the reason; the rest of the matrix is still produced. |
+| The skills directory holds no public skills | Report that group as empty and say which entities were looked for. Not an error. |
+| The tools directory holds no tools | Report that group as empty and say which entities were looked for. Not an error. Nothing is instantiated either, because a step table's tools are what instantiate. |
+| `local_rules_file` is absent or has no recorded set | Cover this package's own skills and tools only; state the limitation, note that nothing is instantiated, and that a validator not recorded does not run. |
+| A registered check kept outside this package cannot be read | Row per that check with status `unknown` and the reason; the rest of the matrix is still produced. |
 | A `## Dependencies` entry is malformed | Status `unknown`, flagged as malformed, with the field that is missing. Never repaired by guessing. |
-| A step references a skill that does not exist | Reported as an unresolved reference against that workflow. |
-| A dependency attaches to no step of any workflow | Reported as an **unattached row**, naming the skill that declared it. Never given an invented step, never dropped. |
-| The declaring skill is covered but not in the registered set | Rows are produced; `Affects` reads *"no step instantiated — skill not in the registered set"*. A note, not a gap. |
+| A step references a package that does not exist | Reported as an unresolved reference against that workflow. |
+| A dependency attaches to no step of any workflow | Reported as an **unattached row**, naming the package that declared it. Never given an invented step, never dropped. |
+| The declaring package is covered but not in the registered set | Rows are produced; `Affects` reads *"no step instantiated — not in the registered set"*. A note, not a gap. |
 | The bundled script cannot be executed | Fall back to asking the user per concrete tool; mark those rows user-confirmed and say the probe was unavailable. |
 | A version probe hangs or errors | The script reports it as `version-unknown` with the reason and moves on; the matrix is still complete. |
-| A tool declares a minimum but answers to no argument the skill declared | `version-unknown`, plus a documentation gap against that skill. Never resolved by trying other arguments. |
-| A `component-set` row declares no check | Status `unknown`, plus a documentation gap against that skill. Never folded into another row and never checked by an improvised command. |
+| A tool declares a minimum but answers to no argument the declaring package stated | `version-unknown`, plus a documentation gap against that package. Never resolved by trying other arguments. |
+| A `component-set` row declares no check | Status `unknown`, plus a documentation gap against that package. Never folded into another row and never checked by an improvised command. |
 | The harness offers no introspection | Rung 3 is unavailable for that row: say so and fall through to the next rung. Never guessed. |
 | A recorded verification names something that no longer resolves | `unknown — recorded verification is stale`, naming what no longer resolves. Report it; correcting the record belongs to the capability that wrote it. |
-| A `setting` row's key is not recorded | Status `not recorded`, with the behaviour the skill declares for its absence. Not an error, and the value is never asked for here — `register-skill` and `update-settings` own that. |
+| A `setting` row's key is not recorded | Status `not recorded`, with the behaviour the package declares for its absence. Not an error, and the value is never asked for here — `register-skill` and `update-settings` own that. |
 | A capability cannot be probed and the user cannot say | Status `unknown`; treat as unbound in the consequences section and say which steps that would skip. |
+| A `capability` row lists `Candidate means` | It changes no status here. The row is settled by the ladder as any other, and the list is carried through to the report for `prepare-environment`'s conversation. Never probed for: looking for what it names is a scan. |

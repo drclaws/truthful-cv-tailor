@@ -122,7 +122,7 @@ The four kinds:
 
 | Kind | What it declares | What the row must additionally state |
 |---|---|---|
-| `capability` | some tool able to perform a stated task, named abstractly ("browser automation", "text extraction") | nothing beyond the columns |
+| `capability` | some tool able to perform a stated task, named abstractly ("browser automation", "text extraction") | nothing beyond the columns; optionally `Candidate means`, below |
 | `tool` | one concrete instrument the implementation genuinely requires, and **one checkable thing** — not a set | when it does not answer to `--version`, the argument it does answer to; when it is probed against a binding recorded in user context rather than against `PATH`, which binding |
 | `component-set` | a requirement satisfied by a set of components that are not individually discoverable as executables | the **exact check** to run, as a command the skill itself authors, one per component |
 | `setting` | a user-context settings key the skill declares required with no default | what the skill does when the key is not recorded |
@@ -133,6 +133,27 @@ Two rules that follow from `tool` meaning one checkable thing:
   `component-set` row for the packages, with the check the skill declares;
 - a declared minimum version with no working probe is a documentation gap in this skill, not
   something the reading capability resolves by choosing a flag itself.
+
+**`Candidate means` (optional, `capability` rows only).** A non-exhaustive, non-binding list of the
+*kinds* of thing that would satisfy this need — "a browser-automation driver that ships its own
+browser build"; "a typesetting distribution providing the engine and the packages listed in the
+neighbouring row". It is a menu for a conversation, never a requirement and never a pin: an
+environment that already satisfies the need by some other means satisfies it, and the agent may add
+to the list from what the machine is already known to offer, within the discovery boundary the
+reading capability works under. A row with no `Candidate means` is not defective; it means the
+declaring package has nothing useful to suggest.
+
+The field exists because a `capability` row names an abstraction, and an abstraction is not something
+a user can answer. Without a menu, a setup pass either says "some tool able to drive a browser" and
+stops there, or invents a shortlist — and inventing one is precisely what `setup-master` is forbidden
+to do, because a means the agent chose would afterwards read as this package's requirement.
+
+**More than one candidate present is a question, never a choice.** Where the machine already offers
+two of the kinds listed, the user is asked which to use. Say so here as well as there: a reader
+meeting "some tool able to perform a stated task" will otherwise assume the agent picks one, and a
+picked one is a guess wearing the clothes of a decision.
+
+It names kinds and never releases, so it does not weaken the rule that follows.
 
 **No version pinning.** A skill declares what it must be able to do, not which release does it. A
 genuine requirement — a specific engine because the shipped material uses that engine's primitives —
