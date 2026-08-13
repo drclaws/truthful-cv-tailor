@@ -69,8 +69,8 @@ that was run with its result and date. Written by `setup-master.prepare-environm
 `setup-master.register-with-harness`; those are the only writers.
 
 It is a **record, not configuration**. Nothing is executed because it appears here, and it never
-becomes a second home for bindings: a machine-specific value a skill declares stays under that
-skill's subsection in section 3, and this section adds only provenance and verification. Its one
+becomes a second home for bindings: a machine-specific value a package declares stays under that
+package's subsection in section 3, and this section adds only provenance and verification. Its one
 reader is `setup-master.check-environment`, which treats it as *dated evidence* — never stronger than
 a fresh probe, and good only while the thing it names still resolves at the recorded location. Free
 text elsewhere in the file is not a record and is not read as one.
@@ -110,7 +110,7 @@ format differ per harness** and are determined by `setup-master.bootstrap` from 
 never assumed here. Using that file makes the context simply present, with zero resolution steps, and
 lets the same file carry any personal rules the user wants honoured.
 
-The repository does **not** ship this file. `setup-master.bootstrap` creates or updates it from the
+The package does **not** ship this file. `setup-master.bootstrap` creates or updates it from the
 template below, merging sections and never overwriting existing content without confirmation.
 
 The file is **gitignored** (`*.local.md`) and must never be committed: it contains real paths and
