@@ -1,6 +1,6 @@
 ---
 name: refresh-knowledge-bank
-description: Rebuilds the candidate's knowledge bank from the canonical experience sources — resolves the sources from user context, checks freshness, runs the curator's build with its self-check and coverage gates, writes the source metadata, appends the refresh log, and closes by ingesting constraint proposals into the ledger.
+description: Rebuilds the candidate's knowledge bank from the canonical experience sources — resolves those sources from the user's own context, checks freshness, runs the curator's build behind its self-check and coverage gates, writes the source metadata, appends the refresh log, and closes by ingesting constraint proposals into the ledger. Reach for it when a request sounds like rebuild the bank from my experience notes, I updated my CV folder and it should catch up, I added a new source, the bank is stale, or build the bank for the first time — it is also where a CV run sends itself when its preflight finds the bank stale or missing the candidate section. It prepares evidence and nothing else; it writes no CV and reads no vacancy, which is generate-targeted-cv, and it is not the way to correct the bank by hand — the bank is derived, so a wrong entry is fixed at its source and refreshed, or recorded in the constraints ledger.
 ---
 
 # Workflow: refresh-knowledge-bank

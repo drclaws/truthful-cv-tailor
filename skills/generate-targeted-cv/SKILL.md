@@ -1,6 +1,6 @@
 ---
 name: generate-targeted-cv
-description: Produces a truthful, target-specific CV for one vacancy — analyses the job side, retrieves cited evidence from the knowledge bank, writes and checks the document, renders the PDF deliverable, runs the registered external checks, and closes with the gap report, the bank update brief and the ledger ingestion.
+description: Produces the truthful, target-specific CV for one vacancy — one run, one run directory, holding the job-side analysis, the cited evidence map, the checked document, the reports of whichever checks the user registered, the rendered PDF wherever a typesetting toolchain is bound, the gap report and the bank update brief, with every claim traceable to the knowledge bank and every gap written down rather than papered over. Reach for it when a request sounds like tailor my CV for this job, write a CV for this vacancy, here is a job description and I want a CV from it, or I am applying to this role — it wants that vacancy's own material, at minimum a readable job description, and a knowledge bank that already exists. It is not the cheap answer to whether a vacancy is worth applying to at all; vacancy-analyst.score-fit answers that against the bank without producing a CV. It never writes the knowledge bank either — a stale or missing bank routes to refresh-knowledge-bank first, and this flow resumes afterwards.
 ---
 
 # Workflow: generate-targeted-cv
