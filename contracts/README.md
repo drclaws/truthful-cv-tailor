@@ -12,7 +12,7 @@ explicit parameter.
 
 ## What is in here
 
-Three kinds of file, and nothing else:
+Four kinds of file, and nothing else:
 
 - **the contracts themselves** — one file per artifact, each declaring its own `Version:`, its status
   vocabulary and its sections;
@@ -20,6 +20,13 @@ Three kinds of file, and nothing else:
   common envelope, artifact naming, truthfulness, run isolation, constraint proposals, versioning,
   and which capability produces which artifact. It is an entity of this directory, not a second
   README;
+- **the engine's runtime conventions** — one ordinary document holding the rules a *run* obeys rather
+  than the rules an artifact obeys: the invariants every step is bound by, how a name written in one
+  file resolves to a file on disk, how an agent works out where this package sits on the machine,
+  what each step loads, and where results are written. It lives here rather than at the package root
+  because a root instruction file is not loaded when this package is installed rather than cloned,
+  and a rule that never reaches the agent running the flow is not doing its job. Also an entity of
+  this directory, not a second README;
 - **an archival map** from the rules of the predecessor engine this repository replaced to the files
   that own them today.
 
