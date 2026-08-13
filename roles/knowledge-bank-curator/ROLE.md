@@ -75,8 +75,11 @@ Abstract needs only.
 
 ## Invariants
 
-Repository-wide invariants apply in full: truthfulness, run isolation, the sole-writer rule, and the
-artifact rules of `artifact-conventions`. Role-specific hard rules:
+Repository-wide invariants apply in full — truthfulness, run isolation, the sole-writer rule — and
+their home is `engine-conventions`; the artifact-wide rules are in `artifact-conventions`. The
+interaction model in `role-conventions` applies throughout: every path is a parameter, this role
+invokes no other role, and what it writes reaches whoever needs it next as an artifact the flow
+routes. Role-specific hard rules:
 
 1. **Canonical sources outrank the bank.** The bank is derived; it never overrides a canonical source
    unless the ledger or the user documents a correction explicitly.

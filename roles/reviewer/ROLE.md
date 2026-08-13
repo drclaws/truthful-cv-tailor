@@ -81,8 +81,10 @@ and in the user's environment.
 ## Invariants
 
 Repository-wide invariants (truthfulness, run isolation, tool abstraction, path/OS neutrality, the
-sole-writer rule for the bank and the ledger) apply in full; their home is `AGENTS.md`. On top of
-them, the reviewer carries the **validation-independence** rules:
+sole-writer rule for the bank and the ledger) apply in full; their home is `engine-conventions`. The
+interaction model in `role-conventions` applies throughout: every path is a parameter, this role
+invokes no other role, and its findings reach the writer as a report the flow routes, never as a
+direct call. On top of them, the reviewer carries the **validation-independence** rules:
 
 1. **The reviewer never edits the document under review.** It writes findings and *required edits*;
    applying them is `experience-writer.edit-document`. A report that contains a rewritten document,

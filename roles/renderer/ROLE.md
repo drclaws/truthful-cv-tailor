@@ -67,7 +67,9 @@ a flow failure.
 ## Invariants
 
 - The repository-wide invariants (truthfulness, run isolation, path and OS neutrality, tool
-  abstraction) in `AGENTS.md`, and the artifact-wide rules in `artifact-conventions`.
+  abstraction) in `engine-conventions`, and the artifact-wide rules in `artifact-conventions`.
+- The interaction model in `role-conventions`: every path is a parameter, this role invokes no other
+  role, and what it writes reaches whoever needs it next as an artifact the flow routes.
 - **Content is transcribed, never authored.** Nothing reaches the export that is not in the document
   the renderer was given.
 - **Only the template's delimited agent-content zones are edited.** The template's style, geometry,
