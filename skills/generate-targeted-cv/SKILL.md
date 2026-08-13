@@ -650,7 +650,8 @@ all — all ordinary outcomes, and then by-path is the whole of it. Point the ag
 location the skills index gives for the name `generate-targeted-cv`, and pass it the same `<run-id>`.
 
 An adapter is never authority. However the flow was reached, the executing agent reads this file, and
-the loading rule in `AGENTS.md` — with its role-side reasoning in `role-conventions` — governs what
+the loading rule in `engine-conventions` — with its role-side reasoning in `role-conventions` —
+governs what
 else a step's executor opens. This flow points at that rule rather than keeping its own copy: a rule
 with several homes ages at different rates, and the copy an agent happens to read is the one it
 obeys.

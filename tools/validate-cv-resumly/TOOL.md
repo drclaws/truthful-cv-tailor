@@ -25,7 +25,7 @@ whole procedure is a checklist a person follows, written to be executable from t
   is `reviewer.gate-external-recommendations`. This skill hands back raw material and stops. It
   never chains those steps itself.
 - Repository-wide invariants (truthfulness, run isolation, tool abstraction, path/OS neutrality) apply
-  as stated in `AGENTS.md`.
+  as stated in `engine-conventions`.
 
 ## Inputs
 
