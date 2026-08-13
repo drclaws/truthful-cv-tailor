@@ -102,10 +102,11 @@ section that owns it. This flow hardcodes no path and infers nothing from reposi
 
 | Input | Contract / description | Required |
 |---|---|---|
+| `output_root` | the directory this engine writes into: this run's directory is `<output-root>/refresh-knowledge-bank/<run-id>/`, and the knowledge bank is `<output-root>/knowledge-bank/` unless `bank_dir` is passed separately. Supplied with the request, never inside this package, never defaulted — the rule and its reasons are `engine-conventions` → *Where a run writes*. | required |
 | `run_id` | the refresh date, built as *Run identifier and output layout* above defines it | required |
 | user context | contract `user-context`, resolved at step 1 through the declared order. *User-context settings* below states what this flow reads from it. | required |
 | canonical experience sources | the resolved source set — files, directories, URLs, descriptions, dictated content. The **only** input to the rebuild; an empty list stops the flow with a question at step 1. | required |
-| `bank_dir` | the knowledge bank directory (contract `knowledge-bank`), passed to the curator as an explicit parameter and created at step 2 if it does not exist | required |
+| `bank_dir` | the knowledge bank directory (contract `knowledge-bank`), passed to the curator as an explicit parameter and created at step 2 if it does not exist; defaults to `<output-root>/knowledge-bank/` when it is not passed separately — derived from a value the request supplied, never from where these files sit | required |
 | `report_paths` | reports carrying `## Constraint proposals` that were never ingested — a CV run whose closing step was interrupted, say. Passed through to step 9. | optional |
 
 The rebuild scope is **not** an input: it is decided at step 5 from the freshness verdict and the
@@ -171,7 +172,8 @@ Validate what came back, per the preflight rules of the user-context contract:
 - anything ambiguous is asked about, never interpreted.
 
 Record in `run.md` `## User context`: which resolution supplied the values, and the resolved snapshot
-itself. That snapshot is what makes the refresh reviewable later.
+itself — the `output_root` this run was given included, as contract `run-manifest` requires of that
+snapshot. That snapshot is what makes the refresh reviewable later.
 
 ### 2. Scaffold the run and seed the manifest
 
