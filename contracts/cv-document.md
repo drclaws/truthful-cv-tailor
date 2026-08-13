@@ -1,6 +1,6 @@
 # Contract: cv-document
 
-Version: 1.0
+Version: 1.1
 
 ## Purpose
 
@@ -8,10 +8,13 @@ A CV document is the candidate-facing deliverable in text form: a plain, linear,
 markdown document that a renderer can turn into the final file and a reviewer can check claim by
 claim.
 
-**This contract owns the CV format.** Every structural and formatting rule of the CV lives here, so
-that the writing role stays document-format-agnostic and can be reused for other document kinds, and
-so that a reviewer and a renderer read the same definition of "correct" that the writer wrote
-against.
+**This contract owns the CV format.** Every rule specific to the CV's shape lives here, so that the
+writing role stays document-format-agnostic and can be reused for other document kinds, and so that a
+reviewer and a renderer read the same definition of "correct" that the writer wrote against.
+
+What a CV shares with every other document a person sends or publishes is not a CV rule and is not
+repeated here. `cv-document` is a **deliverable-document contract**, and it inherits that family's
+presentation neutrality and content-first fit policy from `artifact-conventions.md`.
 
 ## Status values
 
@@ -54,10 +57,12 @@ Standard section names, in this order:
 6. `Certifications` — when any exist
 7. `Languages` — when relevant
 
-Names are standard: no invented, clever, or renamed headings. An optional section with no supported
-content is **omitted entirely**, never kept as an empty heading. The order is the document's order; a
-renderer may place sections differently on the page as long as it preserves the standard headings and
-the document text survives extraction.
+This set is the CV's declared section names, and this order is the document's order. That the names
+are used exactly as declared, and that an optional section with no supported content is omitted
+rather than left standing empty, are the deliverable-document family's rules in
+`artifact-conventions.md`; what is CV-specific, and stated here, is which sections exist and in what
+sequence. A downstream surface may place sections differently as long as it preserves these headings
+and the document text survives extraction.
 
 ## The header title
 
@@ -161,35 +166,28 @@ Placement rules:
 
 ## Length and compression
 
-The document's **length target is declared by the caller** — the flow or the render operation that
-knows what the deliverable must fit. This contract does not fix a page or word count; it fixes what
-happens when the content exceeds the target.
+`cv-document` is a **deliverable-document contract**, so the **content-first fit policy** of that
+family in `artifact-conventions.md` governs what happens when the content exceeds its target: the
+caller declares the target, the evidence-carrying section is compressed first and gradually, space
+that later edits free is refilled, and restyling the delivered result to make content fit is out of
+bounds — a fit problem is a content problem. That policy is stated once there and is not restated
+here.
 
-When the document must shrink:
-
-1. **Experience content is compressed first.** Merge overlapping bullets, shorten wording, and remove
-   lower-value detail, keeping the strongest supported evidence for this target.
-2. **Compress gradually.** The goal is a complete, readable document that fits — not the shortest
-   possible document. Nothing is cut more aggressively than the target requires.
-3. **Freed space is refilled.** When later edits open room, it goes to the highest-value supported
-   material that improves target fit, within the same target.
-4. **A presentational change is never the answer.** Restyling the rendered result — geometry,
-   margins, type sizes, spacing, colors, column widths, section styling — to make content fit is out
-   of bounds, and this document never proposes one. A fit problem is a content problem.
+What this contract adds is the one thing the family leaves to it: **in a CV the evidence-carrying
+section is `Experience`**, and compressing it means merging overlapping bullets, shortening wording,
+and dropping lower-value detail while keeping the strongest supported evidence for this target. This
+contract fixes no page or word count of its own.
 
 ## Format rules
 
-The markdown document stays **plain, linear and machine-readable**:
+The markdown document stays **plain, linear and machine-readable** — which is exactly the
+**presentation neutrality** the deliverable-document family requires, and `artifact-conventions.md`
+is where those rules are stated. They apply here in full and are not repeated, because a rule written
+down in two contracts is a rule that will eventually differ between them.
 
-- No tables in CV content.
-- No images, graphics, skill bars, or rating marks.
-- No fact carried only by an icon, a color, an alignment, or a position on the page.
-- No critical information placed only in a running header or footer.
-- Simple bullet points; standard headings.
-- Columns and decorative contact icons are the renderer's business, permitted only while the rendered
-  file's text extraction stays readable — never introduced into the markdown document.
-- Characters that a downstream renderer must escape are written naturally here; escaping is the
-  renderer's responsibility, not a reason to distort the text.
+What is CV-specific is stated where it belongs above: the section set and its order, the two position
+header shapes, the header title format, and the contact block, whose facts must each be readable on
+their own.
 
 ## Truthfulness rules
 
