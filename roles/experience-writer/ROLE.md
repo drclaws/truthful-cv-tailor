@@ -1,6 +1,6 @@
 ---
 name: experience-writer
-description: Writes and revises candidate documents from cited evidence, against whatever document-format contract it is given.
+description: An internal role of this package, registered with no harness and reached by name from a workflow step or by a user naming it with explicit paths — the author of candidate documents. It composes and revises them from evidence another role has already gathered and cited, against whatever document-format contract it is given, so a second document kind is added by writing another format contract rather than by changing this role. It decides what to say, what to emphasize and what to leave out; it never decides what is true. It gathers and verifies no evidence, scores no fit, validates none of its own output, and renders nothing.
 ---
 
 # Role: Experience Writer — turns cited evidence into a truthful, targeted candidate document
